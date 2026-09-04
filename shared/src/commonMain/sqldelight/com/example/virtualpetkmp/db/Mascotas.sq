@@ -1,0 +1,34 @@
+CREATE TABLE mascotas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    especie TEXT NOT NULL,
+    raza TEXT NOT NULL,
+    fechaNacimiento TEXT NOT NULL,
+    sexo TEXT NOT NULL,
+    color TEXT NOT NULL,
+    microchip TEXT
+);
+
+selectAll:
+SELECT * FROM mascotas;
+
+selectById:
+SELECT * FROM mascotas WHERE id = ?;
+
+checkNombreUnico:
+SELECT id FROM mascotas WHERE LOWER(nombre) = LOWER(?);
+
+insert:
+INSERT INTO mascotas(nombre, especie, raza, fechaNacimiento, sexo, color, microchip)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE mascotas
+SET nombre = ?, especie = ?, raza = ?, fechaNacimiento = ?, sexo = ?, color = ?, microchip = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM mascotas WHERE id = ?;
+
+getLastInsertedId:
+SELECT last_insert_rowid() AS id;
