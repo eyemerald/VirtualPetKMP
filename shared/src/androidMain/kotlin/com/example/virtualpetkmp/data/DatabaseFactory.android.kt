@@ -12,6 +12,12 @@ actual class DatabaseFactory(private val context: Context) {
             context = context,
             name = "virtualpet.db"
         )
+
+        // SQLite tiene las claves foráneas desactivadas por defecto.
+        // Sin esto, ON DELETE CASCADE de las tablas relacionadas (notas, etc.)
+        // no se ejecutaría realmente al borrar una mascota.
+        driver.execute(null, "PRAGMA foreign_keys = ON;", 0)
+
         return VirtualPetDatabase(driver)
     }
 }

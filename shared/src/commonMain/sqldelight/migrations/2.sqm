@@ -1,0 +1,8 @@
+CREATE TABLE pesos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mascotaId INTEGER NOT NULL,
+    fecha TEXT NOT NULL,
+    peso REAL NOT NULL,
+    notas TEXT,
+    FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
+);

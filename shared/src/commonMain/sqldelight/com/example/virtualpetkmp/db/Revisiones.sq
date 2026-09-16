@@ -1,0 +1,25 @@
+CREATE TABLE revisiones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mascotaId INTEGER NOT NULL,
+    fecha TEXT NOT NULL,
+    motivo TEXT NOT NULL,
+    diagnostico TEXT,
+    notas TEXT,
+    veterinario TEXT,
+    FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
+);
+
+selectByMascotaId:
+SELECT * FROM revisiones WHERE mascotaId = ? ORDER BY fecha DESC;
+
+insert:
+INSERT INTO revisiones(mascotaId, fecha, motivo, diagnostico, notas, veterinario)
+VALUES (?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE revisiones 
+SET fecha = ?, motivo = ?, diagnostico = ?, notas = ?, veterinario = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM revisiones WHERE id = ?;

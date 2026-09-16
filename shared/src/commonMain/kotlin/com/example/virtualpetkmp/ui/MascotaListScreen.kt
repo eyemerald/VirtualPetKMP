@@ -8,7 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MascotaListScreen(
     viewModel: MascotaViewModel,
@@ -61,7 +62,7 @@ fun MascotaListScreen(
                     ) {
                         Text(
                             text = errorMessage!!,
-                            color = MaterialTheme.colors.error
+                            color = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(onClick = {
@@ -82,13 +83,13 @@ fun MascotaListScreen(
                     ) {
                         Text(
                             text = "No hay mascotas registradas",
-                            style = MaterialTheme.typography.body1
+                            style = MaterialTheme.typography.bodyLarge
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Toca el botón + para agregar una",
-                            style = MaterialTheme.typography.body2,
-                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -112,7 +113,7 @@ fun MascotaListScreen(
         }
     }
 
-    // Delete confirmation dialog
+    // Diálogo de confirmación de eliminación
     showDeleteDialog?.let { id ->
         AlertDialog(
             onDismissRequest = { showDeleteDialog = null },
@@ -145,13 +146,11 @@ fun MascotaCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    var showMenu by remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        elevation = 2.dp
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -163,20 +162,20 @@ fun MascotaCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = mascota.nombre,
-                    style = MaterialTheme.typography.h6,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "${mascota.especie} - ${mascota.raza}",
-                    style = MaterialTheme.typography.body1,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = mascota.sexo,
-                    style = MaterialTheme.typography.body2,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             }
 
@@ -188,7 +187,7 @@ fun MascotaCard(
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "Eliminar",
-                        tint = MaterialTheme.colors.error
+                        tint = MaterialTheme.colorScheme.error
                     )
                 }
             }

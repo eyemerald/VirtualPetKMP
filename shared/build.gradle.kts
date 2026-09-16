@@ -22,6 +22,8 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)
             implementation(libs.sqldelight.android.driver)
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.core.ktx)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -32,6 +34,9 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.kotlinx.datetime)
             implementation(libs.sqldelight.coroutines.extensions)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.materialIconsExtended)
+            implementation("io.github.rikoappdev:compose-pdf:0.9.0")
         }
         jvmMain.dependencies {
             implementation("app.cash.sqldelight:sqlite-driver:2.0.0")

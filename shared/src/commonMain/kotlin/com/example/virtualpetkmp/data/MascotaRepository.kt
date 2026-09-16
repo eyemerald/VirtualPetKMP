@@ -22,11 +22,12 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
 
     suspend fun insertMascota(mascota: Mascota): Result<Long> = withContext(Dispatchers.IO) {
         try {
-            // Check if nombre already exists (case-insensitive)
-            val existing = database.mascotasQueries.checkNombreUnico(mascota.nombre)
-                .executeAsOneOrNull()
-            
-            if (existing != null) {
+            // Comprobar si el nombre ya existe (sin distinguir mayúsculas/minúsculas)
+            val existente = database.mascotasQueries.checkNombreUnico(mascota.nombre)
+                .executeAsList()
+                .firstOrNull()
+
+            if (existente != null) {
                 return@withContext Result.failure(Exception("Ya existe una mascota con ese nombre"))
             }
 
@@ -39,12 +40,12 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
                 color = mascota.color,
                 microchip = mascota.microchip
             )
-            
-            // Get the inserted ID using last_insert_rowid()
-            val insertedId = database.mascotasQueries.getLastInsertedId()
+
+            // Obtener el ID insertado usando last_insert_rowid()
+            val idInsertado = database.mascotasQueries.getLastInsertedId()
                 .executeAsOne()
-            
-            Result.success(insertedId)
+
+            Result.success(idInsertado)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -56,11 +57,12 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
                 return@withContext Result.failure(Exception("ID es requerido para actualizar"))
             }
 
-            // Check if nombre already exists (case-insensitive), excluding current id
-            val existing = database.mascotasQueries.checkNombreUnico(mascota.nombre)
-                .executeAsOneOrNull()
-            
-            if (existing != null && existing != mascota.id) {
+            // Comprobar si el nombre ya existe (sin distinguir mayúsculas/minúsculas), excluyendo el id actual
+            val existente = database.mascotasQueries.checkNombreUnico(mascota.nombre)
+                .executeAsList()
+                .firstOrNull()
+
+            if (existente != null && existente != mascota.id) {
                 return@withContext Result.failure(Exception("Ya existe una mascota con ese nombre"))
             }
 
@@ -74,7 +76,7 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
                 microchip = mascota.microchip,
                 id = mascota.id
             )
-            
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

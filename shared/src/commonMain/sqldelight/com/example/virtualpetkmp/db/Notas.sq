@@ -1,0 +1,18 @@
+CREATE TABLE notas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mascotaId INTEGER NOT NULL,
+    texto TEXT NOT NULL,
+    FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
+);
+
+selectByMascotaId:
+SELECT * FROM notas WHERE mascotaId = ? ORDER BY id DESC;
+
+insert:
+INSERT INTO notas(mascotaId, texto) VALUES (?, ?);
+
+update:
+UPDATE notas SET texto = ? WHERE id = ?;
+
+delete:
+DELETE FROM notas WHERE id = ?;

@@ -1,7 +1,7 @@
 [versions]
 agp = "9.0.1"
-android-compileSdk = "36"
-android-minSdk = "24"
+android-compileSdk = "37"
+android-minSdk = "26"
 android-targetSdk = "34"
 androidx-activity = "1.8.0"
 androidx-appcompat = "1.6.1"
@@ -9,7 +9,7 @@ androidx-core = "1.12.0"
 androidx-espresso = "3.5.1"
 androidx-lifecycle = "2.8.0"
 androidx-testExt = "1.1.5"
-composeMultiplatform = "1.6.10"
+composeMultiplatform = "1.7.3"
 junit = "4.13.2"
 kotlin = "2.2.10"
 kotlinx-coroutines = "1.8.0"
@@ -32,10 +32,12 @@ androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
 compose-material = { module = "org.jetbrains.compose.material:material", version.ref = "composeMultiplatform" }
-compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "composeMultiplatform" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
 compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
+compose-materialIconsExtended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "composeMultiplatform" }
+pdfkmp = { module = "io.github.conamobiledev:pdfkmp", version = "1.0.0" }
 kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }

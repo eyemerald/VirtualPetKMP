@@ -1,31 +1,25 @@
-This is a Kotlin Multiplatform project targeting Android, Desktop (JVM).
+Este es un proyecto Kotlin Multiplatform dirigido a Android y Escritorio (JVM).
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-    - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-    - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-      For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-      the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-      Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-      folder is the appropriate location.
+* [/shared](https://github.com/eyemerald/VirtualPetKMP/blob/main/shared/src) contiene el código compartido entre las aplicaciones de Compose Multiplatform. Incluye varias subcarpetas:
+   * [commonMain](https://github.com/eyemerald/VirtualPetKMP/blob/main/shared/src/commonMain/kotlin) contiene el código común para todas las plataformas.
+   * Las demás carpetas contienen código Kotlin que se compila únicamente para la plataforma indicada en el nombre de la carpeta. Por ejemplo, si quisieras usar CoreCrypto de Apple para la parte de iOS de tu app Kotlin, la carpeta [iosMain](https://github.com/eyemerald/VirtualPetKMP/blob/main/shared/src/iosMain/kotlin) sería el lugar adecuado para esas llamadas. Del mismo modo, si quieres editar la parte específica de Escritorio (JVM), la carpeta [jvmMain](https://github.com/eyemerald/VirtualPetKMP/blob/main/shared/src/jvmMain/kotlin) es la ubicación apropiada.
 
-### Running the apps
+## Ejecutar las aplicaciones
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and
-options:
+Usa las configuraciones de ejecución que ofrece el widget de "run" en la barra de herramientas de tu IDE. También puedes usar estos comandos:
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- Desktop app:
-    - Hot reload: `./gradlew :desktopApp:hotRun --auto`
-    - Standard run: `./gradlew :desktopApp:run`
+* App de Android: `./gradlew :androidApp:assembleDebug`
+* App de Escritorio:
+   * Hot reload: `./gradlew :desktopApp:hotRun --auto`
+   * Ejecución estándar: `./gradlew :desktopApp:run`
 
-### Running tests
+## Ejecutar los tests
 
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
+Usa el botón de ejecución en el margen del editor de tu IDE, o ejecuta los tests mediante tareas de Gradle:
 
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- Desktop tests: `./gradlew :shared:jvmTest`
+* Tests de Android: `./gradlew :shared:testAndroidHostTest`
+* Tests de Escritorio: `./gradlew :shared:jvmTest`
 
 ---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+Más información sobre [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…

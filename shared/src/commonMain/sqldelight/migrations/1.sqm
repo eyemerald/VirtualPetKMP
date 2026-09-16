@@ -1,0 +1,6 @@
+CREATE TABLE notas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mascotaId INTEGER NOT NULL,
+    texto TEXT NOT NULL,
+    FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
+);

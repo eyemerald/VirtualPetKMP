@@ -4,17 +4,20 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Mascota
+import com.example.virtualpetkmp.util.parseFormatoEuropeo
+import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MascotaFormScreen(
     viewModel: MascotaViewModel,
@@ -24,25 +27,29 @@ fun MascotaFormScreen(
     var nombre by remember { mutableStateOf("") }
     var especie by remember { mutableStateOf("") }
     var raza by remember { mutableStateOf("") }
-    var fechaNacimientoStr by remember { mutableStateOf(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()) }
+    var fechaNacimientoStr by remember {
+        mutableStateOf(
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toFormatoEuropeo()
+        )
+    }
     var sexo by remember { mutableStateOf("") }
     var color by remember { mutableStateOf("") }
     var microchip by remember { mutableStateOf("") }
-    
+
 
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     val mascotas by viewModel.mascotas.collectAsState()
 
-    // Load existing mascota data if editing
+    // Cargar los datos de la mascota existente si se está editando
     LaunchedEffect(mascotaId) {
         if (mascotaId != null) {
             mascotas.find { it.id == mascotaId }?.let { mascota ->
                 nombre = mascota.nombre
                 especie = mascota.especie
                 raza = mascota.raza
-                fechaNacimientoStr = mascota.fechaNacimiento.toString()
+                fechaNacimientoStr = mascota.fechaNacimiento.toFormatoEuropeo()
                 sexo = mascota.sexo
                 color = mascota.color
                 microchip = mascota.microchip ?: ""
@@ -56,7 +63,7 @@ fun MascotaFormScreen(
                 title = { Text(if (mascotaId == null) "Nueva Mascota" else "Editar Mascota") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 }
             )
@@ -98,13 +105,13 @@ fun MascotaFormScreen(
             )
 
             OutlinedTextField(
-                            value = fechaNacimientoStr,
-                            onValueChange = { fechaNacimientoStr = it },
-                            label = { Text("Fecha de Nacimiento (YYYY-MM-DD) *") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            isError = fechaNacimientoStr.isBlank()
-                        )
+                value = fechaNacimientoStr,
+                onValueChange = { fechaNacimientoStr = it },
+                label = { Text("Fecha de Nacimiento (DD/MM/AAAA) *") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                isError = fechaNacimientoStr.isBlank()
+            )
 
             OutlinedTextField(
                 value = sexo,
@@ -134,12 +141,14 @@ fun MascotaFormScreen(
 
             if (errorMessage != null) {
                 Card(
-                    backgroundColor = MaterialTheme.colors.error.copy(alpha = 0.1f),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = errorMessage!!,
-                        color = MaterialTheme.colors.error,
+                        color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(16.dp)
                     )
                 }
@@ -147,9 +156,16 @@ fun MascotaFormScreen(
 
             Button(
                 onClick = {
-                    if (nombre.isBlank() || especie.isBlank() || raza.isBlank() || 
+                    if (nombre.isBlank() || especie.isBlank() || raza.isBlank() ||
                         sexo.isBlank() || color.isBlank()) {
-                        viewModel.clearError()
+                        viewModel.setError("Completa todos los campos obligatorios")
+                        return@Button
+                    }
+
+                    val fecha = try {
+                        parseFormatoEuropeo(fechaNacimientoStr)
+                    } catch (e: Exception) {
+                        viewModel.setError("La fecha debe tener el formato DD/MM/AAAA")
                         return@Button
                     }
 
@@ -158,7 +174,7 @@ fun MascotaFormScreen(
                         nombre = nombre,
                         especie = especie,
                         raza = raza,
-                                            fechaNacimiento = kotlinx.datetime.LocalDate.parse(fechaNacimientoStr),
+                        fechaNacimiento = fecha,
                         sexo = sexo,
                         color = color,
                         microchip = microchip.ifBlank { null }
@@ -174,7 +190,7 @@ fun MascotaFormScreen(
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colors.onPrimary
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
                     Text(if (mascotaId == null) "Guardar Mascota" else "Actualizar Mascota")

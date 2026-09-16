@@ -50,7 +50,7 @@ class MascotaViewModel(private val repository: MascotaRepository) {
                 } else {
                     repository.updateMascota(mascota)
                 }
-                
+
                 if (result.isFailure) {
                     _errorMessage.value = result.exceptionOrNull()?.message
                 } else {
@@ -83,5 +83,9 @@ class MascotaViewModel(private val repository: MascotaRepository) {
 
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    fun setError(message: String) {
+        _errorMessage.value = message
     }
 }

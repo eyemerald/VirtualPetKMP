@@ -1,0 +1,25 @@
+CREATE TABLE tratamientos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mascotaId INTEGER NOT NULL,
+    nombreMedicamento TEXT NOT NULL,
+    dosis TEXT,
+    frecuencia TEXT,
+    fechaInicio TEXT NOT NULL,
+    fechaFin TEXT,
+    FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
+);
+
+selectByMascotaId:
+SELECT * FROM tratamientos WHERE mascotaId = ? ORDER BY fechaInicio DESC;
+
+insert:
+INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin)
+VALUES (?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE tratamientos 
+SET nombreMedicamento = ?, dosis = ?, frecuencia = ?, fechaInicio = ?, fechaFin = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM tratamientos WHERE id = ?;

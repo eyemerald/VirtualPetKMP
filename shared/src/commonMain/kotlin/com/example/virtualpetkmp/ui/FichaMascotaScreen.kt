@@ -1,0 +1,505 @@
+package com.example.virtualpetkmp.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MedicalServices
+import androidx.compose.material.icons.filled.MedicalInformation
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Note
+import androidx.compose.material.icons.filled.Scale
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.virtualpetkmp.Mascota
+import kotlinx.coroutines.launch
+import com.example.virtualpetkmp.util.ExportadorPdf
+import com.example.virtualpetkmp.util.VersionPdf
+import com.example.virtualpetkmp.util.calcularEdad
+import com.example.virtualpetkmp.util.guardarArchivo
+import com.example.virtualpetkmp.util.rememberAbridorArchivo
+import com.example.virtualpetkmp.util.rememberSelectorArchivo
+import com.example.virtualpetkmp.util.toFormatoEuropeo
+import com.example.virtualpetkmp.viewmodel.FichaMascotaViewModel
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
+
+private data class TarjetaFicha(
+    val icono: androidx.compose.ui.graphics.vector.ImageVector,
+    val titulo: String,
+    val valorPrincipal: String,
+    val subtexto: String,
+    val destino: String,
+    val destacar: Boolean = false
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FichaMascotaScreen(
+    mascota: Mascota,
+    viewModel: FichaMascotaViewModel,
+    onBack: () -> Unit,
+    onModificar: () -> Unit,
+    onNavegar: (String) -> Unit
+) {
+    val resumen by viewModel.resumen.collectAsState()
+    val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    
+    var mostrarDialogoExportar by remember { mutableStateOf(false) }
+    var exportando by remember { mutableStateOf(false) }
+    var mensajeExportar by remember { mutableStateOf<String?>(null) }
+    var versionSeleccionada by remember { mutableStateOf(VersionPdf.COMPLETA) }
+
+    val scope = rememberCoroutineScope()
+    val exportador = remember { ExportadorPdf() }
+    val abrirArchivo = rememberAbridorArchivo()
+    val seleccionarDestino = rememberSelectorArchivo { _, rutaArchivo ->
+        scope.launch {
+            try {
+                exportando = true
+                val rutaValida = normalizarRutaDestinoPdf(rutaArchivo, mascota.nombre)
+                val datosPdf = viewModel.obtenerDatosPdf()
+                val pdf = exportador.exportarFichaMascota(
+                    mascota = mascota,
+                    vacunas = datosPdf.vacunas,
+                    revisiones = datosPdf.revisiones,
+                    tratamientos = datosPdf.tratamientos,
+                    pesos = datosPdf.pesos,
+                    informes = datosPdf.informes,
+                    notas = datosPdf.notas,
+                    version = versionSeleccionada
+                )
+
+                // Validar que el PDF tiene cabecera PDF
+                val isPdf = pdf.size >= 4 && pdf[0] == 0x25.toByte() && pdf[1] == 0x50.toByte() && pdf[2] == 0x44.toByte() && pdf[3] == 0x46.toByte()
+                if (!isPdf) {
+                    mensajeExportar = "El contenido generado no parece un PDF válido (size=${pdf.size}). No se guardó."
+                    exportando = false
+                    mostrarDialogoExportar = false
+                    return@launch
+                }
+
+                val guardado = guardarArchivo(rutaValida, pdf)
+
+                if (guardado) {
+                    val abierto = abrirArchivo(rutaValida)
+                    mensajeExportar = if (abierto) {
+                        "PDF generado y abierto correctamente."
+                    } else {
+                        "PDF generado y guardado en: $rutaValida"
+                    }
+                } else {
+                    mensajeExportar = "No se pudo guardar el PDF en la ruta seleccionada."
+                }
+            } catch (e: Exception) {
+                mensajeExportar = "Error al generar el PDF: ${e.message ?: "desconocido"}"
+            } finally {
+                exportando = false
+                mostrarDialogoExportar = false
+            }
+        }
+    }
+
+    val tarjetas = listOf(
+        TarjetaFicha(
+            icono = Icons.Default.MedicalServices,
+            titulo = "Vacunas",
+            valorPrincipal = "${resumen.totalVacunas}",
+            subtexto = if (resumen.vacunasVencidas > 0) "${resumen.vacunasVencidas} vencida(s)" else "al día",
+            destino = "vacunas",
+            destacar = resumen.vacunasVencidas > 0
+        ),
+        TarjetaFicha(
+            icono = Icons.Default.MedicalInformation,
+            titulo = "Revisiones",
+            valorPrincipal = "${resumen.totalRevisiones}",
+            subtexto = "registradas",
+            destino = "revisiones"
+        ),
+        TarjetaFicha(
+            icono = Icons.Default.Medication,
+            titulo = "Tratamientos",
+            valorPrincipal = "${resumen.tratamientosActivos}",
+            subtexto = "activo(s) de ${resumen.totalTratamientos}",
+            destino = "tratamientos",
+            destacar = resumen.tratamientosActivos > 0
+        ),
+        TarjetaFicha(
+            icono = Icons.Default.Description,
+            titulo = "Informes",
+            valorPrincipal = "${resumen.totalInformes}",
+            subtexto = "documento(s)",
+            destino = "informes"
+        ),
+        TarjetaFicha(
+            icono = Icons.Default.Note,
+            titulo = "A tener en cuenta",
+            valorPrincipal = "${resumen.totalNotas}",
+            subtexto = "nota(s)",
+            destino = "notas"
+        )
+    )
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(mascota.nombre) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { mostrarDialogoExportar = true }) {
+                        Icon(Icons.Default.Share, contentDescription = "Exportar PDF")
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+        ) {
+            // Cabecera con avatar y datos básicos
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = mascota.nombre.take(1).uppercase(),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = "${mascota.especie} · ${mascota.raza}",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = calcularEdad(mascota.fechaNacimiento, hoy),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Tarjeta hero: peso, más grande y con tendencia
+            TarjetaPesoHero(
+                ultimoPeso = resumen.ultimoPeso,
+                pesoAnterior = resumen.pesoAnterior,
+                pesos = resumen.pesosRecientes,
+                onClick = { onNavegar("pesos") }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Rejilla del resto de tarjetas, con color e icono por categoría
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                items(tarjetas) { tarjeta ->
+                    TarjetaResumen(
+                        tarjeta = tarjeta,
+                        onClick = { onNavegar(tarjeta.destino) }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = onModificar,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Modificar datos")
+            }
+
+            if (mensajeExportar != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = mensajeExportar!!,
+                    color = if (mensajeExportar!!.contains("Error", ignoreCase = true) || mensajeExportar!!.contains("No se pudo", ignoreCase = true)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+    }
+
+    if (mostrarDialogoExportar) {
+        AlertDialog(
+            onDismissRequest = { if (!exportando) mostrarDialogoExportar = false },
+            title = { Text("Exportar ficha PDF") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Selecciona la versión que quieres exportar:")
+                    FilterChip(
+                        selected = versionSeleccionada == VersionPdf.RESUMIDA,
+                        onClick = { versionSeleccionada = VersionPdf.RESUMIDA },
+                        label = { Text("Resumida") }
+                    )
+                    FilterChip(
+                        selected = versionSeleccionada == VersionPdf.COMPLETA,
+                        onClick = { versionSeleccionada = VersionPdf.COMPLETA },
+                        label = { Text("Completa") }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { seleccionarDestino() }, enabled = !exportando) {
+                    Text(if (exportando) "Exportando..." else "Aceptar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { if (!exportando) mostrarDialogoExportar = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+}
+
+private fun normalizarRutaDestinoPdf(rutaArchivo: String, nombreMascota: String): String {
+    val nombreBase = nombreMascota.replace(Regex("[^A-Za-z0-9]+"), "_").trim('_').ifEmpty { "mascota" }
+    val ruta = rutaArchivo.trim()
+    if (ruta.isEmpty()) {
+        val carpeta = java.io.File(System.getProperty("user.home"), ".virtualpet/exportaciones")
+        carpeta.mkdirs()
+        return java.io.File(carpeta, "${nombreBase}_${System.currentTimeMillis()}.pdf").absolutePath
+    }
+
+    // If the selector returned a content URI, keep it as-is
+    if (ruta.startsWith("content://") || ruta.startsWith("file://")) return ruta
+
+    val archivo = java.io.File(ruta)
+    return if (archivo.exists() && archivo.isDirectory) {
+        java.io.File(archivo, "${nombreBase}_${System.currentTimeMillis()}.pdf").absolutePath
+    } else {
+        val pathConExtension = if (ruta.lowercase().endsWith(".pdf")) ruta else "$ruta.pdf"
+        pathConExtension
+    }
+}
+
+@Composable
+private fun TarjetaPesoHero(
+    ultimoPeso: Double?,
+    pesoAnterior: Double?,
+    pesos: List<com.example.virtualpetkmp.Peso>,
+    onClick: () -> Unit
+) {
+    val subiendo = ultimoPeso != null && pesoAnterior != null && ultimoPeso > pesoAnterior
+    val bajando = ultimoPeso != null && pesoAnterior != null && ultimoPeso < pesoAnterior
+    val colorTendencia = when {
+        subiendo -> Color(0xFFB3261E)
+        bajando -> Color(0xFF3F6B4A)
+        else -> MaterialTheme.colorScheme.onTertiaryContainer
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(130.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        ),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(0.4f)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Scale,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Peso",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = ultimoPeso?.let { "$it kg" } ?: "Sin datos",
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+
+            if (pesos.size >= 2) {
+                MiniGraficoPeso(
+                    pesos = pesos,
+                    colorLinea = colorTendencia,
+                    colorTexto = MaterialTheme.colorScheme.onTertiaryContainer,
+                    modifier = Modifier
+                        .weight(0.6f)
+                        .fillMaxHeight()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MiniGraficoPeso(
+    pesos: List<com.example.virtualpetkmp.Peso>,
+    colorLinea: Color,
+    colorTexto: Color,
+    modifier: Modifier = Modifier
+) {
+    val ultimos = remember(pesos) {
+        pesos.sortedBy { it.fecha }.takeLast(8)
+    }
+
+    val minPeso = ultimos.minOf { it.peso }
+    val maxPeso = ultimos.maxOf { it.peso }
+    val rango = (maxPeso - minPeso).coerceAtLeast(0.1)
+
+    val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
+    val margenDerechoPx = with(androidx.compose.ui.platform.LocalDensity.current) { 34.dp.toPx() }
+
+    androidx.compose.foundation.Canvas(modifier = modifier) {
+        val anchoGrafico = (size.width - margenDerechoPx).coerceAtLeast(1f)
+        val alto = size.height
+
+        fun x(indice: Int): Float {
+            if (ultimos.size == 1) return anchoGrafico / 2f
+            return (indice.toFloat() / (ultimos.size - 1)) * anchoGrafico
+        }
+
+        fun y(peso: Double): Float {
+            return alto - ((peso - minPeso) / rango).toFloat() * alto
+        }
+
+        // Etiquetas de referencia a la derecha del gráfico (no pegadas al número grande)
+        val etiquetaMax = "$maxPeso"
+        val etiquetaMin = "$minPeso"
+        val medidaMax = textMeasurer.measure(etiquetaMax, style = androidx.compose.ui.text.TextStyle(fontSize = 10.sp, color = colorTexto))
+        val medidaMin = textMeasurer.measure(etiquetaMin, style = androidx.compose.ui.text.TextStyle(fontSize = 10.sp, color = colorTexto))
+
+        drawText(
+            textMeasurer = textMeasurer,
+            text = etiquetaMax,
+            topLeft = Offset(anchoGrafico + 6f, 0f),
+            style = androidx.compose.ui.text.TextStyle(fontSize = 10.sp, color = colorTexto)
+        )
+        drawText(
+            textMeasurer = textMeasurer,
+            text = etiquetaMin,
+            topLeft = Offset(anchoGrafico + 6f, alto - medidaMin.size.height),
+            style = androidx.compose.ui.text.TextStyle(fontSize = 10.sp, color = colorTexto)
+        )
+
+        val path = Path()
+        ultimos.forEachIndexed { indice, registro ->
+            val px = x(indice)
+            val py = y(registro.peso)
+            if (indice == 0) path.moveTo(px, py) else path.lineTo(px, py)
+        }
+        drawPath(path = path, color = colorLinea, style = Stroke(width = 2.5.dp.toPx()))
+
+        ultimos.forEachIndexed { indice, registro ->
+            drawCircle(
+                color = colorLinea,
+                radius = 3.dp.toPx(),
+                center = Offset(x(indice), y(registro.peso))
+            )
+        }
+    }
+}
+
+@Composable
+private fun TarjetaResumen(
+    tarjeta: TarjetaFicha,
+    onClick: () -> Unit
+) {
+    val colorFondo = if (tarjeta.destacar) {
+        MaterialTheme.colorScheme.errorContainer
+    } else {
+        MaterialTheme.colorScheme.secondaryContainer
+    }
+    val colorTexto = if (tarjeta.destacar) {
+        MaterialTheme.colorScheme.onErrorContainer
+    } else {
+        MaterialTheme.colorScheme.onSecondaryContainer
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(110.dp),
+        colors = CardDefaults.cardColors(containerColor = colorFondo),
+        onClick = onClick
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Icon(
+                imageVector = tarjeta.icono,
+                contentDescription = null,
+                tint = colorTexto,
+                modifier = Modifier.size(24.dp)
+            )
+            Column {
+                Text(
+                    text = tarjeta.valorPrincipal,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colorTexto
+                )
+                Text(
+                    text = tarjeta.titulo,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colorTexto
+                )
+                Text(
+                    text = tarjeta.subtexto,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colorTexto.copy(alpha = 0.8f)
+                )
+            }
+        }
+    }
+}
