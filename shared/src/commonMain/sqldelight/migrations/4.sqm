@@ -1,0 +1,10 @@
+CREATE TABLE revisiones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mascotaId INTEGER NOT NULL,
+    fecha TEXT NOT NULL,
+    motivo TEXT NOT NULL,
+    diagnostico TEXT,
+    notas TEXT,
+    veterinario TEXT,
+    FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
+);

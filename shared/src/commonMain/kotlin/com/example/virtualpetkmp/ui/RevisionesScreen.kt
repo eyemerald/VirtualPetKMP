@@ -223,13 +223,12 @@ private fun RevisionDialog(
         title = { Text(if (revision == null) "Añadir revisión" else "Editar revisión") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = fechaStr,
-                    onValueChange = { fechaStr = it },
-                    label = { Text("Fecha (DD/MM/AAAA)") },
+                CampoFecha(
+                    valor = fechaStr,
+                    onValorCambia = { fechaStr = it },
+                    etiqueta = "Fecha (DD/MM/AAAA)",
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = errorFecha != null
+                    esError = errorFecha != null
                 )
                 if (errorFecha != null) {
                     Text(

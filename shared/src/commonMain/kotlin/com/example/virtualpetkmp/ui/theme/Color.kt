@@ -5,17 +5,17 @@ import androidx.compose.ui.graphics.Color
 // Modo claro
 val VerdePrimario = Color(0xFF3F6B4A)
 val OnVerdePrimario = Color(0xFFFFFFFF)
-val VerdePrimarioContenedor = Color(0xFFC0EFC4)
+val VerdePrimarioContenedor = Color(0xFFDCE8DC)
 val OnVerdePrimarioContenedor = Color(0xFF002107)
 
 val MarronSecundario = Color(0xFF745B41)
 val OnMarronSecundario = Color(0xFFFFFFFF)
-val MarronSecundarioContenedor = Color(0xFFFFDDB6)
+val MarronSecundarioContenedor = Color(0xFFECE0D0)
 val OnMarronSecundarioContenedor = Color(0xFF291800)
 
 val TealTerciario = Color(0xFF3A6659)
 val OnTealTerciario = Color(0xFFFFFFFF)
-val TealTerciarioContenedor = Color(0xFFBCECDB)
+val TealTerciarioContenedor = Color(0xFFD6E5DF)
 val OnTealTerciarioContenedor = Color(0xFF002019)
 
 val ErrorClaro = Color(0xFFBA1A1A)
@@ -27,25 +27,25 @@ val FondoClaro = Color(0xFFFBFDF7)
 val OnFondoClaro = Color(0xFF1A1C19)
 val SuperficieClaro = Color(0xFFFBFDF7)
 val OnSuperficieClaro = Color(0xFF1A1C19)
-val SuperficieVarianteClaro = Color(0xFFDEE5D8)
+val SuperficieVarianteClaro = Color(0xFFE7E9E3)
 val OnSuperficieVarianteClaro = Color(0xFF424940)
 val ContornoClaro = Color(0xFF72796F)
 
 // Modo oscuro
 val VerdePrimarioOscuro = Color(0xFFA5D3AA)
 val OnVerdePrimarioOscuro = Color(0xFF10381D)
-val VerdePrimarioContenedorOscuro = Color(0xFF265130)
-val OnVerdePrimarioContenedorOscuro = Color(0xFFC0EFC4)
+val VerdePrimarioContenedorOscuro = Color(0xFF2E4A34)
+val OnVerdePrimarioContenedorOscuro = Color(0xFFDCE8DC)
 
 val MarronSecundarioOscuro = Color(0xFFE3C29B)
 val OnMarronSecundarioOscuro = Color(0xFF402D17)
-val MarronSecundarioContenedorOscuro = Color(0xFF58432B)
-val OnMarronSecundarioContenedorOscuro = Color(0xFFFFDDB6)
+val MarronSecundarioContenedorOscuro = Color(0xFF4A3D2C)
+val OnMarronSecundarioContenedorOscuro = Color(0xFFECE0D0)
 
 val TealTerciarioOscuro = Color(0xFFA1D0C1)
 val OnTealTerciarioOscuro = Color(0xFF05372C)
-val TealTerciarioContenedorOscuro = Color(0xFF204E42)
-val OnTealTerciarioContenedorOscuro = Color(0xFFBCECDB)
+val TealTerciarioContenedorOscuro = Color(0xFF2C4640)
+val OnTealTerciarioContenedorOscuro = Color(0xFFD6E5DF)
 
 val ErrorOscuro = Color(0xFFFFB4AB)
 val OnErrorOscuro = Color(0xFF690005)

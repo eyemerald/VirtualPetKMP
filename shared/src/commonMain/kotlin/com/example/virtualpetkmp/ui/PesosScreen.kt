@@ -216,19 +216,17 @@ fun PesosScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedTextField(
-                                value = fechaDesdeTexto,
-                                onValueChange = { fechaDesdeTexto = it },
-                                label = { Text("Desde") },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true
+                            CampoFecha(
+                                valor = fechaDesdeTexto,
+                                onValorCambia = { fechaDesdeTexto = it },
+                                etiqueta = "Desde",
+                                modifier = Modifier.weight(1f)
                             )
-                            OutlinedTextField(
-                                value = fechaHastaTexto,
-                                onValueChange = { fechaHastaTexto = it },
-                                label = { Text("Hasta") },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true
+                            CampoFecha(
+                                valor = fechaHastaTexto,
+                                onValorCambia = { fechaHastaTexto = it },
+                                etiqueta = "Hasta",
+                                modifier = Modifier.weight(1f)
                             )
                         }
 
@@ -340,12 +338,11 @@ fun PesosScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            OutlinedTextField(
-                value = fechaTexto,
-                onValueChange = { fechaTexto = it },
-                label = { Text("Fecha (DD/MM/AAAA)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+            CampoFecha(
+                valor = fechaTexto,
+                onValorCambia = { fechaTexto = it },
+                etiqueta = "Fecha (DD/MM/AAAA)",
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(8.dp))

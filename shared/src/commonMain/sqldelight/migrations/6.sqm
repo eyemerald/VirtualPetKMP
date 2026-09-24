@@ -1,0 +1,10 @@
+CREATE TABLE informes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mascotaId INTEGER NOT NULL,
+    tipo TEXT NOT NULL,
+    descripcion TEXT,
+    fecha TEXT NOT NULL,
+    nombreArchivo TEXT NOT NULL,
+    rutaArchivo TEXT NOT NULL,
+    FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
+);

@@ -246,13 +246,12 @@ private fun VacunaDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-                OutlinedTextField(
-                    value = fechaAplicacionStr,
-                    onValueChange = { fechaAplicacionStr = it },
-                    label = { Text("Fecha de aplicación (DD/MM/AAAA)") },
+                CampoFecha(
+                    valor = fechaAplicacionStr,
+                    onValorCambia = { fechaAplicacionStr = it },
+                    etiqueta = "Fecha de aplicación (DD/MM/AAAA)",
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = errorFecha != null
+                    esError = errorFecha != null
                 )
                 if (errorFecha != null) {
                     Text(
@@ -261,13 +260,12 @@ private fun VacunaDialog(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-                OutlinedTextField(
-                    value = fechaProximaDosisStr,
-                    onValueChange = { fechaProximaDosisStr = it },
-                    label = { Text("Próxima dosis (DD/MM/AAAA)") },
+                CampoFecha(
+                    valor = fechaProximaDosisStr,
+                    onValorCambia = { fechaProximaDosisStr = it },
+                    etiqueta = "Próxima dosis (DD/MM/AAAA)",
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = errorFecha != null
+                    esError = errorFecha != null
                 )
                 OutlinedTextField(
                     value = veterinario,

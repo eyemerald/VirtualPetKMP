@@ -2,10 +2,9 @@ package com.example.virtualpetkmp.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MedicalServices
@@ -48,6 +47,7 @@ private data class TarjetaFicha(
     val valorPrincipal: String,
     val subtexto: String,
     val destino: String,
+    val colorAcento: Color,
     val destacar: Boolean = false
 )
 
@@ -62,7 +62,7 @@ fun FichaMascotaScreen(
 ) {
     val resumen by viewModel.resumen.collectAsState()
     val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
-    
+
     var mostrarDialogoExportar by remember { mutableStateOf(false) }
     var exportando by remember { mutableStateOf(false) }
     var mensajeExportar by remember { mutableStateOf<String?>(null) }
@@ -88,7 +88,6 @@ fun FichaMascotaScreen(
                     version = versionSeleccionada
                 )
 
-                // Validar que el PDF tiene cabecera PDF
                 val isPdf = pdf.size >= 4 && pdf[0] == 0x25.toByte() && pdf[1] == 0x50.toByte() && pdf[2] == 0x44.toByte() && pdf[3] == 0x46.toByte()
                 if (!isPdf) {
                     mensajeExportar = "El contenido generado no parece un PDF válido (size=${pdf.size}). No se guardó."
@@ -125,6 +124,7 @@ fun FichaMascotaScreen(
             valorPrincipal = "${resumen.totalVacunas}",
             subtexto = if (resumen.vacunasVencidas > 0) "${resumen.vacunasVencidas} vencida(s)" else "al día",
             destino = "vacunas",
+            colorAcento = MaterialTheme.colorScheme.primary,
             destacar = resumen.vacunasVencidas > 0
         ),
         TarjetaFicha(
@@ -132,7 +132,8 @@ fun FichaMascotaScreen(
             titulo = "Revisiones",
             valorPrincipal = "${resumen.totalRevisiones}",
             subtexto = "registradas",
-            destino = "revisiones"
+            destino = "revisiones",
+            colorAcento = MaterialTheme.colorScheme.tertiary
         ),
         TarjetaFicha(
             icono = Icons.Default.Medication,
@@ -140,6 +141,7 @@ fun FichaMascotaScreen(
             valorPrincipal = "${resumen.tratamientosActivos}",
             subtexto = "activo(s) de ${resumen.totalTratamientos}",
             destino = "tratamientos",
+            colorAcento = MaterialTheme.colorScheme.secondary,
             destacar = resumen.tratamientosActivos > 0
         ),
         TarjetaFicha(
@@ -147,14 +149,16 @@ fun FichaMascotaScreen(
             titulo = "Informes",
             valorPrincipal = "${resumen.totalInformes}",
             subtexto = "documento(s)",
-            destino = "informes"
+            destino = "informes",
+            colorAcento = MaterialTheme.colorScheme.primary
         ),
         TarjetaFicha(
             icono = Icons.Default.Note,
             titulo = "A tener en cuenta",
             valorPrincipal = "${resumen.totalNotas}",
             subtexto = "nota(s)",
-            destino = "notas"
+            destino = "notas",
+            colorAcento = MaterialTheme.colorScheme.tertiary
         )
     )
 
@@ -180,6 +184,7 @@ fun FichaMascotaScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             // Cabecera con avatar y datos básicos
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -212,7 +217,6 @@ fun FichaMascotaScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Tarjeta hero: peso, más grande y con tendencia
             TarjetaPesoHero(
                 ultimoPeso = resumen.ultimoPeso,
                 pesoAnterior = resumen.pesoAnterior,
@@ -222,22 +226,25 @@ fun FichaMascotaScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Rejilla del resto de tarjetas, con color e icono por categoría
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                items(tarjetas) { tarjeta ->
-                    TarjetaResumen(
-                        tarjeta = tarjeta,
-                        onClick = { onNavegar(tarjeta.destino) }
-                    )
+            // Rejilla de tarjetas (2 columnas), formando parte del mismo scroll que el resto
+            tarjetas.chunked(2).forEach { fila ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    fila.forEach { tarjeta ->
+                        TarjetaResumen(
+                            tarjeta = tarjeta,
+                            onClick = { onNavegar(tarjeta.destino) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    if (fila.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
+                Spacer(modifier = Modifier.height(12.dp))
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             Button(
                 onClick = onModificar,
@@ -299,7 +306,6 @@ private fun normalizarRutaDestinoPdf(rutaArchivo: String, nombreMascota: String)
         return java.io.File(carpeta, "${nombreBase}_${System.currentTimeMillis()}.pdf").absolutePath
     }
 
-    // If the selector returned a content URI, keep it as-is
     if (ruta.startsWith("content://") || ruta.startsWith("file://")) return ruta
 
     val archivo = java.io.File(ruta)
@@ -410,7 +416,6 @@ private fun MiniGraficoPeso(
             return alto - ((peso - minPeso) / rango).toFloat() * alto
         }
 
-        // Etiquetas de referencia a la derecha del gráfico (no pegadas al número grande)
         val etiquetaMax = "$maxPeso"
         val etiquetaMin = "$minPeso"
         val medidaMax = textMeasurer.measure(etiquetaMax, style = androidx.compose.ui.text.TextStyle(fontSize = 10.sp, color = colorTexto))
@@ -450,23 +455,27 @@ private fun MiniGraficoPeso(
 @Composable
 private fun TarjetaResumen(
     tarjeta: TarjetaFicha,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colorFondo = if (tarjeta.destacar) {
         MaterialTheme.colorScheme.errorContainer
     } else {
-        MaterialTheme.colorScheme.secondaryContainer
+        MaterialTheme.colorScheme.surfaceVariant
     }
     val colorTexto = if (tarjeta.destacar) {
         MaterialTheme.colorScheme.onErrorContainer
     } else {
-        MaterialTheme.colorScheme.onSecondaryContainer
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val colorIcono = if (tarjeta.destacar) {
+        MaterialTheme.colorScheme.error
+    } else {
+        tarjeta.colorAcento
     }
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(110.dp),
+        modifier = modifier.height(110.dp),
         colors = CardDefaults.cardColors(containerColor = colorFondo),
         onClick = onClick
     ) {
@@ -476,16 +485,24 @@ private fun TarjetaResumen(
                 .padding(12.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(
-                imageVector = tarjeta.icono,
-                contentDescription = null,
-                tint = colorTexto,
-                modifier = Modifier.size(24.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(colorIcono.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = tarjeta.icono,
+                    contentDescription = null,
+                    tint = colorIcono,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
             Column {
                 Text(
                     text = tarjeta.valorPrincipal,
-                    fontSize = 24.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = colorTexto
                 )
@@ -497,7 +514,7 @@ private fun TarjetaResumen(
                 Text(
                     text = tarjeta.subtexto,
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorTexto.copy(alpha = 0.8f)
+                    color = colorTexto.copy(alpha = 0.7f)
                 )
             }
         }

@@ -265,13 +265,12 @@ private fun InformeDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-                OutlinedTextField(
-                    value = fechaStr,
-                    onValueChange = { fechaStr = it },
-                    label = { Text("Fecha (DD/MM/AAAA)") },
+                CampoFecha(
+                    valor = fechaStr,
+                    onValorCambia = { fechaStr = it },
+                    etiqueta = "Fecha (DD/MM/AAAA)",
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = errorFecha != null
+                    esError = errorFecha != null
                 )
                 if (errorFecha != null) {
                     Text(

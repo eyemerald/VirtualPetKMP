@@ -1,0 +1,10 @@
+CREATE TABLE tratamientos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mascotaId INTEGER NOT NULL,
+    nombreMedicamento TEXT NOT NULL,
+    dosis TEXT,
+    frecuencia TEXT,
+    fechaInicio TEXT NOT NULL,
+    fechaFin TEXT,
+    FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
+);

@@ -256,13 +256,12 @@ private fun TratamientoDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-                OutlinedTextField(
-                    value = fechaInicioStr,
-                    onValueChange = { fechaInicioStr = it },
-                    label = { Text("Fecha inicio (DD/MM/AAAA)") },
+                CampoFecha(
+                    valor = fechaInicioStr,
+                    onValorCambia = { fechaInicioStr = it },
+                    etiqueta = "Fecha inicio (DD/MM/AAAA)",
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = errorFecha != null
+                    esError = errorFecha != null
                 )
                 if (errorFecha != null) {
                     Text(
@@ -282,13 +281,12 @@ private fun TratamientoDialog(
                     Text("Sin fecha fin (crónico)")
                 }
                 if (!esCronico) {
-                    OutlinedTextField(
-                        value = fechaFinStr,
-                        onValueChange = { fechaFinStr = it },
-                        label = { Text("Fecha fin (DD/MM/AAAA)") },
+                    CampoFecha(
+                        valor = fechaFinStr,
+                        onValorCambia = { fechaFinStr = it },
+                        etiqueta = "Fecha fin (DD/MM/AAAA)",
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        isError = errorFecha != null
+                        esError = errorFecha != null
                     )
                 }
             }

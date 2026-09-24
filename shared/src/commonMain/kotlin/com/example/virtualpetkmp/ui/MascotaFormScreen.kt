@@ -10,6 +10,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Mascota
+import com.example.virtualpetkmp.util.ESPECIES
+import com.example.virtualpetkmp.util.RAZAS_POR_ESPECIE
 import com.example.virtualpetkmp.util.parseFormatoEuropeo
 import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
@@ -25,21 +27,25 @@ fun MascotaFormScreen(
     onBack: () -> Unit
 ) {
     var nombre by remember { mutableStateOf("") }
-    var especie by remember { mutableStateOf("") }
-    var raza by remember { mutableStateOf("") }
+
+    var especieSeleccionada by remember { mutableStateOf(ESPECIES.first()) }
+    var especieRazaOtroTexto by remember { mutableStateOf("") }
+
+    var razaSeleccionada by remember { mutableStateOf("") }
+    var razaPersonalizadaTexto by remember { mutableStateOf("") }
+
+    var sexo by remember { mutableStateOf("Macho") }
+
     var fechaNacimientoStr by remember {
         mutableStateOf(
             Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toFormatoEuropeo()
         )
     }
-    var sexo by remember { mutableStateOf("") }
     var color by remember { mutableStateOf("") }
     var microchip by remember { mutableStateOf("") }
 
-
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-
     val mascotas by viewModel.mascotas.collectAsState()
 
     // Cargar los datos de la mascota existente si se está editando
@@ -47,13 +53,37 @@ fun MascotaFormScreen(
         if (mascotaId != null) {
             mascotas.find { it.id == mascotaId }?.let { mascota ->
                 nombre = mascota.nombre
-                especie = mascota.especie
-                raza = mascota.raza
                 fechaNacimientoStr = mascota.fechaNacimiento.toFormatoEuropeo()
                 sexo = mascota.sexo
                 color = mascota.color
                 microchip = mascota.microchip ?: ""
+
+                if (mascota.especie in ESPECIES && mascota.especie != "Otro") {
+                    especieSeleccionada = mascota.especie
+                    val razasDeEstaEspecie = RAZAS_POR_ESPECIE[mascota.especie].orEmpty()
+                    if (mascota.raza in razasDeEstaEspecie) {
+                        razaSeleccionada = mascota.raza
+                    } else {
+                        razaSeleccionada = "Otra"
+                        razaPersonalizadaTexto = mascota.raza
+                    }
+                } else {
+                    especieSeleccionada = "Otro"
+                    especieRazaOtroTexto = if (mascota.raza.isNotBlank()) {
+                        "${mascota.especie} - ${mascota.raza}"
+                    } else {
+                        mascota.especie
+                    }
+                }
             }
+        }
+    }
+
+    // Al cambiar de especie, selecciona la primera raza disponible por defecto
+    LaunchedEffect(especieSeleccionada) {
+        val razas = RAZAS_POR_ESPECIE[especieSeleccionada].orEmpty()
+        if (razaSeleccionada !in razas) {
+            razaSeleccionada = razas.firstOrNull() ?: ""
         }
     }
 
@@ -86,40 +116,111 @@ fun MascotaFormScreen(
                 isError = nombre.isBlank()
             )
 
-            OutlinedTextField(
-                value = especie,
-                onValueChange = { especie = it },
-                label = { Text("Especie *") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                isError = especie.isBlank()
-            )
+            // Especie
+            var expandedEspecie by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = expandedEspecie,
+                onExpandedChange = { expandedEspecie = it }
+            ) {
+                OutlinedTextField(
+                    value = especieSeleccionada,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Especie *") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedEspecie) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = expandedEspecie,
+                    onDismissRequest = { expandedEspecie = false }
+                ) {
+                    ESPECIES.forEach { especie ->
+                        DropdownMenuItem(
+                            text = { Text(especie) },
+                            onClick = {
+                                especieSeleccionada = especie
+                                expandedEspecie = false
+                            }
+                        )
+                    }
+                }
+            }
 
-            OutlinedTextField(
-                value = raza,
-                onValueChange = { raza = it },
-                label = { Text("Raza *") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                isError = raza.isBlank()
-            )
+            if (especieSeleccionada == "Otro") {
+                OutlinedTextField(
+                    value = especieRazaOtroTexto,
+                    onValueChange = { especieRazaOtroTexto = it },
+                    label = { Text("Especifica especie y raza *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    isError = especieRazaOtroTexto.isBlank()
+                )
+            } else {
+                // Raza (depende de la especie elegida)
+                var expandedRaza by remember { mutableStateOf(false) }
+                val razasDisponibles = RAZAS_POR_ESPECIE[especieSeleccionada].orEmpty()
 
-            OutlinedTextField(
-                value = fechaNacimientoStr,
-                onValueChange = { fechaNacimientoStr = it },
-                label = { Text("Fecha de Nacimiento (DD/MM/AAAA) *") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                isError = fechaNacimientoStr.isBlank()
-            )
+                ExposedDropdownMenuBox(
+                    expanded = expandedRaza,
+                    onExpandedChange = { expandedRaza = it }
+                ) {
+                    OutlinedTextField(
+                        value = razaSeleccionada,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Raza *") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRaza) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedRaza,
+                        onDismissRequest = { expandedRaza = false }
+                    ) {
+                        razasDisponibles.forEach { raza ->
+                            DropdownMenuItem(
+                                text = { Text(raza) },
+                                onClick = {
+                                    razaSeleccionada = raza
+                                    expandedRaza = false
+                                }
+                            )
+                        }
+                    }
+                }
 
-            OutlinedTextField(
-                value = sexo,
-                onValueChange = { sexo = it },
-                label = { Text("Sexo *") },
+                if (razaSeleccionada == "Otra") {
+                    OutlinedTextField(
+                        value = razaPersonalizadaTexto,
+                        onValueChange = { razaPersonalizadaTexto = it },
+                        label = { Text("Especifica la raza *") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        isError = razaPersonalizadaTexto.isBlank()
+                    )
+                }
+            }
+
+            // Sexo
+            Column {
+                Text("Sexo *", style = MaterialTheme.typography.bodySmall)
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("Macho", "Hembra").forEach { opcion ->
+                        FilterChip(
+                            selected = sexo == opcion,
+                            onClick = { sexo = opcion },
+                            label = { Text(opcion) }
+                        )
+                    }
+                }
+            }
+
+            CampoFecha(
+                valor = fechaNacimientoStr,
+                onValorCambia = { fechaNacimientoStr = it },
+                etiqueta = "Fecha de Nacimiento (DD/MM/AAAA) *",
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                isError = sexo.isBlank()
+                esError = fechaNacimientoStr.isBlank()
             )
 
             OutlinedTextField(
@@ -156,8 +257,10 @@ fun MascotaFormScreen(
 
             Button(
                 onClick = {
-                    if (nombre.isBlank() || especie.isBlank() || raza.isBlank() ||
-                        sexo.isBlank() || color.isBlank()) {
+                    val especieRazaOtroValida = especieSeleccionada != "Otro" || especieRazaOtroTexto.isNotBlank()
+                    val razaPersonalizadaValida = razaSeleccionada != "Otra" || razaPersonalizadaTexto.isNotBlank()
+
+                    if (nombre.isBlank() || color.isBlank() || !especieRazaOtroValida || !razaPersonalizadaValida) {
                         viewModel.setError("Completa todos los campos obligatorios")
                         return@Button
                     }
@@ -169,11 +272,21 @@ fun MascotaFormScreen(
                         return@Button
                     }
 
+                    val especieFinal: String
+                    val razaFinal: String
+                    if (especieSeleccionada == "Otro") {
+                        especieFinal = especieRazaOtroTexto
+                        razaFinal = ""
+                    } else {
+                        especieFinal = especieSeleccionada
+                        razaFinal = if (razaSeleccionada == "Otra") razaPersonalizadaTexto else razaSeleccionada
+                    }
+
                     val mascota = Mascota(
                         id = mascotaId,
                         nombre = nombre,
-                        especie = especie,
-                        raza = raza,
+                        especie = especieFinal,
+                        raza = razaFinal,
                         fechaNacimiento = fecha,
                         sexo = sexo,
                         color = color,
@@ -198,5 +311,4 @@ fun MascotaFormScreen(
             }
         }
     }
-
 }
