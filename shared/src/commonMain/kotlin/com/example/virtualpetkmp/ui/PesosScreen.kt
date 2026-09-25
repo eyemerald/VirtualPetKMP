@@ -665,9 +665,20 @@ private fun GraficoPesoCanvas(filtrados: List<Peso>, modifier: Modifier) {
             )
         } else {
             val path = Path()
-            filtrados.indices.forEach { indice ->
-                val posicion = posicionDe(indice)
-                if (indice == 0) path.moveTo(posicion.x, posicion.y) else path.lineTo(posicion.x, posicion.y)
+            val puntos = filtrados.indices.map { posicionDe(it) }
+            if (puntos.size >= 2) {
+                path.moveTo(puntos[0].x, puntos[0].y)
+                for (i in 0 until puntos.size - 1) {
+                    val p0 = if (i == 0) puntos[i] else puntos[i - 1]
+                    val p1 = puntos[i]
+                    val p2 = puntos[i + 1]
+                    val p3 = if (i + 2 < puntos.size) puntos[i + 2] else puntos[i + 1]
+                    val c1x = p1.x + (p2.x - p0.x) / 6f
+                    val c1y = p1.y + (p2.y - p0.y) / 6f
+                    val c2x = p2.x - (p3.x - p1.x) / 6f
+                    val c2y = p2.y - (p3.y - p1.y) / 6f
+                    path.cubicTo(c1x, c1y, c2x, c2y, p2.x, p2.y)
+                }
             }
             drawPath(path = path, color = colorLinea, style = Stroke(width = 2.dp.toPx()))
 
