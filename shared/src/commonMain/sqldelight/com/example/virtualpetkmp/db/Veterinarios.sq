@@ -1,0 +1,32 @@
+CREATE TABLE veterinarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombreClinica TEXT NOT NULL,
+    nombreVeterinario TEXT,
+    telefono TEXT NOT NULL,
+    direccion TEXT NOT NULL,
+    esUrgencias INTEGER NOT NULL DEFAULT 0
+);
+
+selectAll:
+SELECT * FROM veterinarios ORDER BY esUrgencias DESC, nombreClinica ASC;
+
+selectById:
+SELECT * FROM veterinarios WHERE id = ?;
+
+selectUrgencias:
+SELECT * FROM veterinarios WHERE esUrgencias = 1;
+
+insert:
+INSERT INTO veterinarios(nombreClinica, nombreVeterinario, telefono, direccion, esUrgencias)
+VALUES (?, ?, ?, ?, ?);
+
+update:
+UPDATE veterinarios
+SET nombreClinica = ?, nombreVeterinario = ?, telefono = ?, direccion = ?, esUrgencias = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM veterinarios WHERE id = ?;
+
+getLastInsertedId:
+SELECT last_insert_rowid() AS id;
