@@ -113,6 +113,13 @@ fun VeterinariosListScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
+                        OutlinedButton(
+                            onClick = { abrirMapa("veterinarios cerca de mí") },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Veterinarios cercanos")
+                        }
+                        Spacer(modifier = Modifier.height(24.dp))
                         Text(
                             text = "No hay veterinarios registrados",
                             style = MaterialTheme.typography.bodyLarge

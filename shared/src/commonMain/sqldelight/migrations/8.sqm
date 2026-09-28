@@ -1,0 +1,6 @@
+DELETE FROM pesos WHERE mascotaId NOT IN (SELECT id FROM mascotas);
+DELETE FROM vacunas WHERE mascotaId NOT IN (SELECT id FROM mascotas);
+DELETE FROM revisiones WHERE mascotaId NOT IN (SELECT id FROM mascotas);
+DELETE FROM tratamientos WHERE mascotaId NOT IN (SELECT id FROM mascotas);
+DELETE FROM informes WHERE mascotaId NOT IN (SELECT id FROM mascotas);
+DELETE FROM notas WHERE mascotaId NOT IN (SELECT id FROM mascotas);

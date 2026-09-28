@@ -52,6 +52,7 @@ sqldelight {
     databases {
         create("VirtualPetDatabase") {
             packageName.set("com.example.virtualpetkmp.db")
+            schemaOutputDirectory.set(file("src/commonMain/sqldelight/databases"))
         }
     }
 }
