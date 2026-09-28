@@ -1,0 +1,29 @@
+CREATE TABLE preventivos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mascotaId INTEGER NOT NULL,
+    tipo TEXT NOT NULL,
+    nombre TEXT NOT NULL,
+    fechaAplicacion TEXT NOT NULL,
+    fechaProximaDosis TEXT NOT NULL,
+    veterinario TEXT,
+    lote TEXT,
+    FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
+);
+
+selectByMascotaId:
+SELECT * FROM preventivos WHERE mascotaId = ? ORDER BY fechaAplicacion DESC;
+
+selectByMascotaIdAndTipo:
+SELECT * FROM preventivos WHERE mascotaId = ? AND tipo = ? ORDER BY fechaAplicacion DESC;
+
+insert:
+INSERT INTO preventivos(mascotaId, tipo, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE preventivos
+SET tipo = ?, nombre = ?, fechaAplicacion = ?, fechaProximaDosis = ?, veterinario = ?, lote = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM preventivos WHERE id = ?;

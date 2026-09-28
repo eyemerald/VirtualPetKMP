@@ -3,12 +3,14 @@ package com.example.virtualpetkmp.viewmodel
 import com.example.virtualpetkmp.Informe
 import com.example.virtualpetkmp.Nota
 import com.example.virtualpetkmp.Peso
+import com.example.virtualpetkmp.Preventivo
 import com.example.virtualpetkmp.Revision
 import com.example.virtualpetkmp.Tratamiento
 import com.example.virtualpetkmp.Vacuna
 import com.example.virtualpetkmp.data.InformeRepository
 import com.example.virtualpetkmp.data.NotaRepository
 import com.example.virtualpetkmp.data.PesoRepository
+import com.example.virtualpetkmp.data.PreventivoRepository
 import com.example.virtualpetkmp.data.RevisionRepository
 import com.example.virtualpetkmp.data.TratamientoRepository
 import com.example.virtualpetkmp.data.VacunaRepository
@@ -33,7 +35,9 @@ data class ResumenFicha(
     val pesoAnterior: Double? = null,
     val pesosRecientes: List<Peso> = emptyList(),
     val totalInformes: Int = 0,
-    val totalNotas: Int = 0
+    val totalNotas: Int = 0,
+    val totalPreventivos: Int = 0,
+    val preventivosVencidos: Int = 0
 )
 
 data class DatosFichaPdf(
@@ -42,7 +46,8 @@ data class DatosFichaPdf(
     val tratamientos: List<Tratamiento> = emptyList(),
     val pesos: List<Peso> = emptyList(),
     val informes: List<Informe> = emptyList(),
-    val notas: List<Nota> = emptyList()
+    val notas: List<Nota> = emptyList(),
+    val preventivos: List<Preventivo> = emptyList()
 )
 
 class FichaMascotaViewModel(
@@ -52,7 +57,8 @@ class FichaMascotaViewModel(
     private val tratamientoRepository: TratamientoRepository,
     private val pesoRepository: PesoRepository,
     private val informeRepository: InformeRepository,
-    private val notaRepository: NotaRepository
+    private val notaRepository: NotaRepository,
+    private val preventivoRepository: PreventivoRepository
 ) {
     private val scope = CoroutineScope(Dispatchers.Main + Job())
 
@@ -77,6 +83,7 @@ class FichaMascotaViewModel(
             val pesos = pesoRepository.getPesosByMascotaId(mascotaId)
             val informes = informeRepository.getInformesByMascotaId(mascotaId)
             val notas = notaRepository.getNotasByMascotaId(mascotaId)
+            val preventivos = preventivoRepository.getPreventivosByMascotaId(mascotaId)
 
             val pesosOrdenados = pesos.sortedByDescending { it.fecha }
 
@@ -92,7 +99,9 @@ class FichaMascotaViewModel(
                 pesoAnterior = pesosOrdenados.getOrNull(1)?.peso,
                 pesosRecientes = pesos,
                 totalInformes = informes.size,
-                totalNotas = notas.size
+                totalNotas = notas.size,
+                totalPreventivos = preventivos.size,
+                preventivosVencidos = preventivos.count { it.fechaProximaDosis < hoy }
             )
             _isLoading.value = false
         }
@@ -105,6 +114,7 @@ class FichaMascotaViewModel(
         val pesos = pesoRepository.getPesosByMascotaId(mascotaId)
         val informes = informeRepository.getInformesByMascotaId(mascotaId)
         val notas = notaRepository.getNotasByMascotaId(mascotaId)
+        val preventivos = preventivoRepository.getPreventivosByMascotaId(mascotaId)
 
         return DatosFichaPdf(
             vacunas = vacunas,
@@ -112,7 +122,8 @@ class FichaMascotaViewModel(
             tratamientos = tratamientos,
             pesos = pesos,
             informes = informes,
-            notas = notas
+            notas = notas,
+            preventivos = preventivos
         )
     }
 }

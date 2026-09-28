@@ -6,6 +6,7 @@ import com.example.virtualpetkmp.data.MascotaRepository
 import com.example.virtualpetkmp.data.NotaRepository
 import com.example.virtualpetkmp.data.PesoRepository
 import com.example.virtualpetkmp.data.VacunaRepository
+import com.example.virtualpetkmp.data.PreventivoRepository
 import com.example.virtualpetkmp.data.RevisionRepository
 import com.example.virtualpetkmp.data.TratamientoRepository
 import com.example.virtualpetkmp.data.InformeRepository
@@ -16,6 +17,7 @@ import com.example.virtualpetkmp.ui.FichaMascotaScreen
 import com.example.virtualpetkmp.ui.NotasScreen
 import com.example.virtualpetkmp.ui.PesosScreen
 import com.example.virtualpetkmp.ui.VacunasScreen
+import com.example.virtualpetkmp.ui.PreventivosScreen
 import com.example.virtualpetkmp.ui.RevisionesScreen
 import com.example.virtualpetkmp.ui.TratamientosScreen
 import com.example.virtualpetkmp.ui.InformesScreen
@@ -26,6 +28,7 @@ import com.example.virtualpetkmp.viewmodel.MascotaViewModel
 import com.example.virtualpetkmp.viewmodel.NotaViewModel
 import com.example.virtualpetkmp.viewmodel.PesoViewModel
 import com.example.virtualpetkmp.viewmodel.VacunaViewModel
+import com.example.virtualpetkmp.viewmodel.PreventivoViewModel
 import com.example.virtualpetkmp.viewmodel.RevisionViewModel
 import com.example.virtualpetkmp.viewmodel.TratamientoViewModel
 import com.example.virtualpetkmp.viewmodel.InformeViewModel
@@ -44,6 +47,7 @@ fun App(databaseFactory: DatabaseFactory) {
     val tratamientoRepository = remember { TratamientoRepository(database) }
     val informeRepository = remember { InformeRepository(database) }
     val veterinarioRepository = remember { VeterinarioRepository(database) }
+    val preventivoRepository = remember { PreventivoRepository(database) }
     val viewModel = remember { MascotaViewModel(repository) }
     val veterinarioViewModel = remember { VeterinarioViewModel(veterinarioRepository) }
 
@@ -83,7 +87,8 @@ fun App(databaseFactory: DatabaseFactory) {
                                     tratamientoRepository = tratamientoRepository,
                                     pesoRepository = pesoRepository,
                                     informeRepository = informeRepository,
-                                    notaRepository = notaRepository
+                                    notaRepository = notaRepository,
+                                    preventivoRepository = preventivoRepository
                                 )
                             }
                             FichaMascotaScreen(
@@ -141,6 +146,18 @@ fun App(databaseFactory: DatabaseFactory) {
                             val vacunaViewModel = remember(mascotaId) { VacunaViewModel(vacunaRepository, mascotaId) }
                             VacunasScreen(
                                 viewModel = vacunaViewModel,
+                                onBack = {
+                                    currentScreen = "ficha"
+                                }
+                            )
+                        }
+                    }
+                    "preventivos" -> {
+                        val mascotaId = selectedMascotaId
+                        if (mascotaId != null) {
+                            val preventivoViewModel = remember(mascotaId) { PreventivoViewModel(preventivoRepository, mascotaId) }
+                            PreventivosScreen(
+                                viewModel = preventivoViewModel,
                                 onBack = {
                                     currentScreen = "ficha"
                                 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.MedicalInformation
 import androidx.compose.material.icons.filled.Medication
@@ -126,6 +127,15 @@ fun FichaMascotaScreen(
             destino = "vacunas",
             colorAcento = MaterialTheme.colorScheme.primary,
             destacar = resumen.vacunasVencidas > 0
+        ),
+        TarjetaFicha(
+            icono = Icons.Default.BugReport,
+            titulo = "Preventivos",
+            valorPrincipal = "${resumen.preventivosVencidos}",
+            subtexto = if (resumen.preventivosVencidos > 0) "${resumen.preventivosVencidos} vencido(s)" else "${resumen.totalPreventivos} registrado(s) · al día",
+            destino = "preventivos",
+            colorAcento = MaterialTheme.colorScheme.secondary,
+            destacar = resumen.preventivosVencidos > 0
         ),
         TarjetaFicha(
             icono = Icons.Default.MedicalInformation,
