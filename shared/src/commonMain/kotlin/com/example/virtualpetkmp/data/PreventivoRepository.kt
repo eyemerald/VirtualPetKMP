@@ -50,7 +50,7 @@ class PreventivoRepository(private val database: VirtualPetDatabase) {
         fechaProximaDosis: LocalDate,
         veterinario: String?,
         lote: String?
-    ): Result<Unit> = withContext(Dispatchers.IO) {
+    ): Result<Long> = withContext(Dispatchers.IO) {
         try {
             database.preventivosQueries.insert(
                 mascotaId = mascotaId,
@@ -61,7 +61,11 @@ class PreventivoRepository(private val database: VirtualPetDatabase) {
                 veterinario = veterinario,
                 lote = lote
             )
-            Result.success(Unit)
+
+            val idInsertado = database.preventivosQueries.getLastInsertedId()
+                .executeAsOne()
+
+            Result.success(idInsertado)
         } catch (e: Exception) {
             Result.failure(e)
         }

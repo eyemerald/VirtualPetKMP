@@ -18,6 +18,7 @@ import com.example.virtualpetkmp.Preventivo
 import com.example.virtualpetkmp.util.parseFormatoEuropeo
 import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.viewmodel.PreventivoViewModel
+import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -220,14 +221,16 @@ private fun PreventivoItem(
     val hoy = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val diasHastaProxima = calculateDaysBetween(hoy, preventivo.fechaProximaDosis)
     
+    val extras = LocalExtrasColors.current
+    
     val colorFondo = when {
         diasHastaProxima < 0 -> MaterialTheme.colorScheme.errorContainer
-        diasHastaProxima <= 30 -> MaterialTheme.colorScheme.tertiaryContainer
+        diasHastaProxima <= 30 -> extras.proximaContenedor
         else -> MaterialTheme.colorScheme.secondaryContainer
     }
     val colorTexto = when {
         diasHastaProxima < 0 -> MaterialTheme.colorScheme.onErrorContainer
-        diasHastaProxima <= 30 -> MaterialTheme.colorScheme.onTertiaryContainer
+        diasHastaProxima <= 30 -> extras.onProximaContenedor
         else -> MaterialTheme.colorScheme.onSecondaryContainer
     }
 

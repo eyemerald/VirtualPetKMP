@@ -27,3 +27,6 @@ WHERE id = ?;
 
 delete:
 DELETE FROM preventivos WHERE id = ?;
+
+getLastInsertedId:
+SELECT last_insert_rowid() AS id;

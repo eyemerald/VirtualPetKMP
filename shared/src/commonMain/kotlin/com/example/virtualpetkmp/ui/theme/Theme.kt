@@ -5,6 +5,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 
 private val EsquemaClaro = lightColorScheme(
     primary = VerdePrimario,
@@ -58,12 +62,40 @@ private val EsquemaOscuro = darkColorScheme(
     outline = ContornoOscuro
 )
 
+@Immutable
+data class ExtrasColors(
+    val proximaContenedor: Color,
+    val onProximaContenedor: Color
+)
+
+val LocalExtrasColors = staticCompositionLocalOf {
+    ExtrasColors(
+        proximaContenedor = ProximaContenedor,
+        onProximaContenedor = OnProximaContenedor
+    )
+}
+
 @Composable
 fun VirtualPetTheme(content: @Composable () -> Unit) {
-    val esquemaColor = if (isSystemInDarkTheme()) EsquemaOscuro else EsquemaClaro
+    val esOscuro = isSystemInDarkTheme()
+    val esquemaColor = if (esOscuro) EsquemaOscuro else EsquemaClaro
 
-    MaterialTheme(
-        colorScheme = esquemaColor,
-        content = content
-    )
+    val extrasColors = if (esOscuro) {
+        ExtrasColors(
+            proximaContenedor = ProximaContenedorOscuro,
+            onProximaContenedor = OnProximaContenedorOscuro
+        )
+    } else {
+        ExtrasColors(
+            proximaContenedor = ProximaContenedor,
+            onProximaContenedor = OnProximaContenedor
+        )
+    }
+
+    CompositionLocalProvider(LocalExtrasColors provides extrasColors) {
+        MaterialTheme(
+            colorScheme = esquemaColor,
+            content = content
+        )
+    }
 }

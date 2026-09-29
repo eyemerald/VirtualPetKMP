@@ -2,6 +2,7 @@ package com.example.virtualpetkmp.viewmodel
 
 import com.example.virtualpetkmp.Vacuna
 import com.example.virtualpetkmp.data.VacunaRepository
+import com.example.virtualpetkmp.util.ProgramadorNotificaciones
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -9,11 +10,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.minus
+import kotlinx.datetime.toInstant
 
 class VacunaViewModel(
     private val repository: VacunaRepository,
-    private val mascotaId: Long
+    private val mascotaId: Long,
+    private val programador: ProgramadorNotificaciones
 ) {
     private val scope = CoroutineScope(Dispatchers.Main + Job())
 
@@ -44,6 +53,28 @@ class VacunaViewModel(
         }
     }
 
+    private fun programarNotificacionVacuna(vacunaId: Long, nombre: String, fechaProximaDosis: LocalDate) {
+        try {
+            // 15 días antes
+            val fechaAviso = fechaProximaDosis.minus(DatePeriod(days = 15))
+            // A las 9:00 de la mañana
+            val fechaHora = LocalDateTime(fechaAviso.year, fechaAviso.monthNumber, fechaAviso.dayOfMonth, 9, 0)
+            val millis = fechaHora.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+
+            // Solo programar si la fecha es futura
+            if (millis > Clock.System.now().toEpochMilliseconds()) {
+                programador.programar(
+                    id = vacunaId,
+                    titulo = "Vacuna pendiente",
+                    mensaje = "A tu mascota le toca la vacuna \"$nombre\" el ${fechaProximaDosis.dayOfMonth}/${fechaProximaDosis.monthNumber}/${fechaProximaDosis.year}",
+                    fechaDisparoMillis = millis
+                )
+            }
+        } catch (e: Exception) {
+            println("Error programando notificación: ${e.message}")
+        }
+    }
+
     fun addVacuna(
         nombre: String,
         fechaAplicacion: LocalDate,
@@ -65,6 +96,9 @@ class VacunaViewModel(
             if (resultado.isFailure) {
                 _errorMessage.value = resultado.exceptionOrNull()?.message
             } else {
+                resultado.getOrNull()?.let { id ->
+                    programarNotificacionVacuna(id, nombre, fechaProximaDosis)
+                }
                 loadVacunas()
             }
             _isLoading.value = false
@@ -93,6 +127,8 @@ class VacunaViewModel(
             if (resultado.isFailure) {
                 _errorMessage.value = resultado.exceptionOrNull()?.message
             } else {
+                programador.cancelar(id)
+                programarNotificacionVacuna(id, nombre, fechaProximaDosis)
                 loadVacunas()
             }
             _isLoading.value = false
@@ -107,6 +143,7 @@ class VacunaViewModel(
             if (resultado.isFailure) {
                 _errorMessage.value = resultado.exceptionOrNull()?.message
             } else {
+                programador.cancelar(id)
                 loadVacunas()
             }
             _isLoading.value = false

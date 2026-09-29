@@ -35,6 +35,7 @@ import com.example.virtualpetkmp.viewmodel.InformeViewModel
 import com.example.virtualpetkmp.viewmodel.FichaMascotaViewModel
 import com.example.virtualpetkmp.viewmodel.VeterinarioViewModel
 import com.example.virtualpetkmp.ui.theme.VirtualPetTheme
+import com.example.virtualpetkmp.util.rememberProgramadorNotificaciones
 
 @Composable
 fun App(databaseFactory: DatabaseFactory) {
@@ -50,6 +51,7 @@ fun App(databaseFactory: DatabaseFactory) {
     val preventivoRepository = remember { PreventivoRepository(database) }
     val viewModel = remember { MascotaViewModel(repository) }
     val veterinarioViewModel = remember { VeterinarioViewModel(veterinarioRepository) }
+    val programador = rememberProgramadorNotificaciones()
 
     var currentScreen by remember { mutableStateOf("list") }
     var selectedMascotaId by remember { mutableStateOf<Long?>(null) }
@@ -143,7 +145,7 @@ fun App(databaseFactory: DatabaseFactory) {
                     "vacunas" -> {
                         val mascotaId = selectedMascotaId
                         if (mascotaId != null) {
-                            val vacunaViewModel = remember(mascotaId) { VacunaViewModel(vacunaRepository, mascotaId) }
+                            val vacunaViewModel = remember(mascotaId) { VacunaViewModel(vacunaRepository, mascotaId, programador) }
                             VacunasScreen(
                                 viewModel = vacunaViewModel,
                                 onBack = {
@@ -155,7 +157,7 @@ fun App(databaseFactory: DatabaseFactory) {
                     "preventivos" -> {
                         val mascotaId = selectedMascotaId
                         if (mascotaId != null) {
-                            val preventivoViewModel = remember(mascotaId) { PreventivoViewModel(preventivoRepository, mascotaId) }
+                            val preventivoViewModel = remember(mascotaId) { PreventivoViewModel(preventivoRepository, mascotaId, programador) }
                             PreventivosScreen(
                                 viewModel = preventivoViewModel,
                                 onBack = {

@@ -2,6 +2,7 @@ package com.example.virtualpetkmp.viewmodel
 
 import com.example.virtualpetkmp.Preventivo
 import com.example.virtualpetkmp.data.PreventivoRepository
+import com.example.virtualpetkmp.util.ProgramadorNotificaciones
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -9,11 +10,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.minus
+import kotlinx.datetime.toInstant
 
 class PreventivoViewModel(
     private val repository: PreventivoRepository,
-    private val mascotaId: Long
+    private val mascotaId: Long,
+    private val programador: ProgramadorNotificaciones
 ) {
     private val scope = CoroutineScope(Dispatchers.Main + Job())
 
@@ -44,6 +53,28 @@ class PreventivoViewModel(
         }
     }
 
+    private fun programarNotificacionPreventivo(preventivoId: Long, nombre: String, fechaProximaDosis: LocalDate) {
+        try {
+            // 1 día antes
+            val fechaAviso = fechaProximaDosis.minus(DatePeriod(days = 1))
+            // A las 9:00 de la mañana
+            val fechaHora = LocalDateTime(fechaAviso.year, fechaAviso.monthNumber, fechaAviso.dayOfMonth, 9, 0)
+            val millis = fechaHora.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+
+            // Solo programar si la fecha es futura
+            if (millis > Clock.System.now().toEpochMilliseconds()) {
+                programador.programar(
+                    id = preventivoId,
+                    titulo = "Preventivo pendiente",
+                    mensaje = "A tu mascota le toca el preventivo \"$nombre\" el ${fechaProximaDosis.dayOfMonth}/${fechaProximaDosis.monthNumber}/${fechaProximaDosis.year}",
+                    fechaDisparoMillis = millis
+                )
+            }
+        } catch (e: Exception) {
+            println("Error programando notificación: ${e.message}")
+        }
+    }
+
     fun addPreventivo(
         tipo: String,
         nombre: String,
@@ -67,6 +98,9 @@ class PreventivoViewModel(
             if (resultado.isFailure) {
                 _errorMessage.value = resultado.exceptionOrNull()?.message
             } else {
+                resultado.getOrNull()?.let { id ->
+                    programarNotificacionPreventivo(id, nombre, fechaProximaDosis)
+                }
                 loadPreventivos()
             }
             _isLoading.value = false
@@ -97,6 +131,8 @@ class PreventivoViewModel(
             if (resultado.isFailure) {
                 _errorMessage.value = resultado.exceptionOrNull()?.message
             } else {
+                programador.cancelar(id)
+                programarNotificacionPreventivo(id, nombre, fechaProximaDosis)
                 loadPreventivos()
             }
             _isLoading.value = false
@@ -111,6 +147,7 @@ class PreventivoViewModel(
             if (resultado.isFailure) {
                 _errorMessage.value = resultado.exceptionOrNull()?.message
             } else {
+                programador.cancelar(id)
                 loadPreventivos()
             }
             _isLoading.value = false

@@ -23,3 +23,6 @@ WHERE id = ?;
 
 delete:
 DELETE FROM vacunas WHERE id = ?;
+
+getLastInsertedId:
+SELECT last_insert_rowid() AS id;

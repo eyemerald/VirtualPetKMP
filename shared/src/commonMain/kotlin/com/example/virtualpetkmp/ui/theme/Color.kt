@@ -59,3 +59,10 @@ val OnSuperficieOscuro = Color(0xFFE2E3DD)
 val SuperficieVarianteOscuro = Color(0xFF424940)
 val OnSuperficieVarianteOscuro = Color(0xFFC2C9BC)
 val ContornoOscuro = Color(0xFF8C9388)
+
+// Colores custom para el estado "próxima a vencer" (naranja)
+val ProximaContenedor = Color(0xFFFFE0B2)         // naranja suave claro
+val OnProximaContenedor = Color(0xFF3D2A00)       // texto marrón oscuro
+
+val ProximaContenedorOscuro = Color(0xFF5A4210)   // naranja oscuro
+val OnProximaContenedorOscuro = Color(0xFFFFE0B2) // texto naranja claro

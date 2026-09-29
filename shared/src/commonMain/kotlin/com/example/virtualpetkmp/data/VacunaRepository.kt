@@ -31,7 +31,7 @@ class VacunaRepository(private val database: VirtualPetDatabase) {
         fechaProximaDosis: LocalDate,
         veterinario: String?,
         lote: String?
-    ): Result<Unit> = withContext(Dispatchers.IO) {
+    ): Result<Long> = withContext(Dispatchers.IO) {
         try {
             database.vacunasQueries.insert(
                 mascotaId = mascotaId,
@@ -41,7 +41,11 @@ class VacunaRepository(private val database: VirtualPetDatabase) {
                 veterinario = veterinario,
                 lote = lote
             )
-            Result.success(Unit)
+
+            val idInsertado = database.vacunasQueries.getLastInsertedId()
+                .executeAsOne()
+
+            Result.success(idInsertado)
         } catch (e: Exception) {
             Result.failure(e)
         }
