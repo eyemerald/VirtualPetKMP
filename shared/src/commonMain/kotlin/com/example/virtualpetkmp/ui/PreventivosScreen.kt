@@ -19,6 +19,7 @@ import com.example.virtualpetkmp.util.parseFormatoEuropeo
 import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.viewmodel.PreventivoViewModel
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
+import com.example.virtualpetkmp.util.rememberComprobadorPermisoExacto
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -36,6 +37,9 @@ fun PreventivosScreen(
     var showAddDialog by remember { mutableStateOf<String?>(null) }
     var preventivoSeleccionado by remember { mutableStateOf<Preventivo?>(null) }
     var preventivoAEliminar by remember { mutableStateOf<Long?>(null) }
+
+    val comprobador = rememberComprobadorPermisoExacto()
+    var mostrarDialogoPermiso by remember { mutableStateOf(false) }
 
     val pipetas = preventivos.filter { it.tipo == "Pipeta" }
     val desparasitaciones = preventivos.filter { it.tipo == "Desparasitación" }
@@ -111,6 +115,9 @@ fun PreventivosScreen(
             onSave = { tipo, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote ->
                 viewModel.addPreventivo(tipo, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote)
                 showAddDialog = null
+                if (!comprobador.puedeProgramarExacto()) {
+                    mostrarDialogoPermiso = true
+                }
             }
         )
     }
@@ -131,6 +138,9 @@ fun PreventivosScreen(
                     lote
                 )
                 preventivoSeleccionado = null
+                if (!comprobador.puedeProgramarExacto()) {
+                    mostrarDialogoPermiso = true
+                }
             }
         )
     }
@@ -151,6 +161,29 @@ fun PreventivosScreen(
             dismissButton = {
                 TextButton(onClick = { preventivoAEliminar = null }) {
                     Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    if (mostrarDialogoPermiso) {
+        AlertDialog(
+            onDismissRequest = { mostrarDialogoPermiso = false },
+            title = { Text("Recordatorios a tiempo") },
+            text = {
+                Text("Para que las notificaciones de recordatorio lleguen a la hora exacta, la app necesita permiso para programar alarmas. Sin él, los recordatorios pueden retrasarse algunas horas, pero funcionarán igualmente.")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    comprobador.pedirPermiso()
+                    mostrarDialogoPermiso = false
+                }) {
+                    Text("Conceder permiso")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { mostrarDialogoPermiso = false }) {
+                    Text("Ahora no")
                 }
             }
         )

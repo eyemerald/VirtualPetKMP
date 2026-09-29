@@ -56,3 +56,13 @@ actual fun rememberProgramadorNotificaciones(): ProgramadorNotificaciones {
         }
     }
 }
+
+@Composable
+actual fun rememberComprobadorPermisoExacto(): ComprobadorPermisoExacto {
+    return remember {
+        object : ComprobadorPermisoExacto {
+            override fun puedeProgramarExacto(): Boolean = true
+            override fun pedirPermiso() { /* no-op en JVM */ }
+        }
+    }
+}

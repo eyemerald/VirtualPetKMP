@@ -39,3 +39,19 @@ interface ProgramadorNotificaciones {
      */
     fun cancelar(id: Long)
 }
+
+/**
+ * Comprueba si el usuario ha concedido permiso para programar alarmas exactas.
+ * En Android 12+ esto requiere el permiso SCHEDULE_EXACT_ALARM.
+ * En versiones anteriores y en otras plataformas siempre devuelve true.
+ */
+@Composable
+expect fun rememberComprobadorPermisoExacto(): ComprobadorPermisoExacto
+
+interface ComprobadorPermisoExacto {
+    /** True si podemos programar alarmas exactas en este dispositivo. */
+    fun puedeProgramarExacto(): Boolean
+
+    /** Abre los ajustes de Android para que el usuario conceda el permiso. */
+    fun pedirPermiso()
+}
