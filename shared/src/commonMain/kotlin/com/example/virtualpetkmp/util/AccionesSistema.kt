@@ -16,3 +16,26 @@ expect fun rememberLlamador(): (telefono: String) -> Boolean
  */
 @Composable
 expect fun rememberAbridorMapa(): (query: String) -> Boolean
+
+/**
+ * Devuelve un programador de notificaciones que permite programar y cancelar
+ * notificaciones locales para recordar fechas futuras.
+ */
+@Composable
+expect fun rememberProgramadorNotificaciones(): ProgramadorNotificaciones
+
+interface ProgramadorNotificaciones {
+    /**
+     * Programa una notificación que se mostrará en la fecha indicada.
+     * @param id Identificador único (usar el id del registro de la BD).
+     * @param titulo Título de la notificación.
+     * @param mensaje Cuerpo de la notificación.
+     * @param fechaDisparoMillis Timestamp en milisegundos desde epoch.
+     */
+    fun programar(id: Long, titulo: String, mensaje: String, fechaDisparoMillis: Long)
+
+    /**
+     * Cancela la notificación previamente programada con ese id.
+     */
+    fun cancelar(id: Long)
+}

@@ -1,6 +1,7 @@
 package com.example.virtualpetkmp.util
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import java.awt.Desktop
 import java.net.URI
 
@@ -35,6 +36,23 @@ actual fun rememberAbridorMapa(): (String) -> Boolean {
             }
         } catch (e: Exception) {
             false
+        }
+    }
+}
+
+@Composable
+actual fun rememberProgramadorNotificaciones(): ProgramadorNotificaciones {
+    return remember {
+        object : ProgramadorNotificaciones {
+            override fun programar(id: Long, titulo: String, mensaje: String, fechaDisparoMillis: Long) {
+                // En JVM/Desktop no hay notificaciones nativas programadas.
+                // Simplemente dejamos constancia en consola para debug.
+                println("[Notificación programada] id=$id | $titulo | $mensaje | disparo a las $fechaDisparoMillis")
+            }
+
+            override fun cancelar(id: Long) {
+                println("[Notificación cancelada] id=$id")
+            }
         }
     }
 }
