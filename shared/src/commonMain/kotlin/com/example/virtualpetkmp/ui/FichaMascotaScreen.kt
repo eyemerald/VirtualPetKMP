@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Note
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
+import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,7 +50,8 @@ private data class TarjetaFicha(
     val subtexto: String,
     val destino: String,
     val colorAcento: Color,
-    val destacar: Boolean = false
+    val destacar: Boolean = false,
+    val esProxima: Boolean = false
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -123,19 +125,29 @@ fun FichaMascotaScreen(
             icono = Icons.Default.MedicalServices,
             titulo = "Vacunas",
             valorPrincipal = "${resumen.totalVacunas}",
-            subtexto = if (resumen.vacunasVencidas > 0) "${resumen.vacunasVencidas} vencida(s)" else "al día",
+            subtexto = construirSubtexto(
+                vencidas = resumen.vacunasVencidas,
+                proximas = resumen.vacunasProximas,
+                total = resumen.totalVacunas
+            ),
             destino = "vacunas",
             colorAcento = MaterialTheme.colorScheme.primary,
-            destacar = resumen.vacunasVencidas > 0
+            destacar = resumen.vacunasVencidas > 0,
+            esProxima = resumen.vacunasVencidas == 0 && resumen.vacunasProximas > 0
         ),
         TarjetaFicha(
             icono = Icons.Default.BugReport,
             titulo = "Preventivos",
-            valorPrincipal = "${resumen.preventivosVencidos}",
-            subtexto = if (resumen.preventivosVencidos > 0) "${resumen.preventivosVencidos} vencido(s)" else "${resumen.totalPreventivos} registrado(s) · al día",
+            valorPrincipal = "${resumen.totalPreventivos}",
+            subtexto = construirSubtexto(
+                vencidas = resumen.preventivosVencidos,
+                proximas = resumen.preventivosProximos,
+                total = resumen.totalPreventivos
+            ),
             destino = "preventivos",
             colorAcento = MaterialTheme.colorScheme.secondary,
-            destacar = resumen.preventivosVencidos > 0
+            destacar = resumen.preventivosVencidos > 0,
+            esProxima = resumen.preventivosVencidos == 0 && resumen.preventivosProximos > 0
         ),
         TarjetaFicha(
             icono = Icons.Default.MedicalInformation,
@@ -479,20 +491,21 @@ private fun TarjetaResumen(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colorFondo = if (tarjeta.destacar) {
-        MaterialTheme.colorScheme.errorContainer
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant
+    val extras = LocalExtrasColors.current
+    val colorFondo = when {
+        tarjeta.destacar -> MaterialTheme.colorScheme.errorContainer
+        tarjeta.esProxima -> extras.proximaContenedor
+        else -> MaterialTheme.colorScheme.surfaceVariant
     }
-    val colorTexto = if (tarjeta.destacar) {
-        MaterialTheme.colorScheme.onErrorContainer
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
+    val colorTexto = when {
+        tarjeta.destacar -> MaterialTheme.colorScheme.onErrorContainer
+        tarjeta.esProxima -> extras.onProximaContenedor
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
-    val colorIcono = if (tarjeta.destacar) {
-        MaterialTheme.colorScheme.error
-    } else {
-        tarjeta.colorAcento
+    val colorIcono = when {
+        tarjeta.destacar -> MaterialTheme.colorScheme.error
+        tarjeta.esProxima -> extras.onProximaContenedor
+        else -> tarjeta.colorAcento
     }
 
     Card(
@@ -540,4 +553,14 @@ private fun TarjetaResumen(
             }
         }
     }
+}
+
+private fun construirSubtexto(vencidas: Int, proximas: Int, total: Int): String {
+    val alDia = total - vencidas - proximas
+    val partes = mutableListOf<String>()
+    if (vencidas > 0) partes.add("$vencidas vencida${if (vencidas == 1) "" else "s"}")
+    if (proximas > 0) partes.add("$proximas próxima${if (proximas == 1) "" else "s"}")
+    if (alDia > 0) partes.add("$alDia al día")
+    if (partes.isEmpty()) return "Sin registros"
+    return partes.joinToString(" · ")
 }

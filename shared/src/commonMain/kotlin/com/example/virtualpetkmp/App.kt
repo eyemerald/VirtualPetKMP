@@ -1,6 +1,7 @@
 package com.example.virtualpetkmp
 
 import androidx.compose.runtime.*
+import androidx.compose.runtime.LaunchedEffect
 import com.example.virtualpetkmp.data.DatabaseFactory
 import com.example.virtualpetkmp.data.MascotaRepository
 import com.example.virtualpetkmp.data.NotaRepository
@@ -36,6 +37,8 @@ import com.example.virtualpetkmp.viewmodel.FichaMascotaViewModel
 import com.example.virtualpetkmp.viewmodel.VeterinarioViewModel
 import com.example.virtualpetkmp.ui.theme.VirtualPetTheme
 import com.example.virtualpetkmp.util.rememberProgramadorNotificaciones
+import com.example.virtualpetkmp.util.ReprogramadorNotificaciones
+import kotlinx.coroutines.launch
 
 @Composable
 fun App(databaseFactory: DatabaseFactory) {
@@ -52,6 +55,28 @@ fun App(databaseFactory: DatabaseFactory) {
     val viewModel = remember { MascotaViewModel(repository) }
     val veterinarioViewModel = remember { VeterinarioViewModel(veterinarioRepository) }
     val programador = rememberProgramadorNotificaciones()
+    val scope = rememberCoroutineScope()
+
+    // Al arrancar la app, reprogramar todas las notificaciones
+    LaunchedEffect(Unit) {
+        try {
+            // Cancelar y reprogramar todas las vacunas
+            val todasVacunas = vacunaRepository.getAllVacunas()
+            todasVacunas.forEach { vacuna ->
+                ReprogramadorNotificaciones.cancelar(programador, vacuna.id ?: return@forEach)
+                ReprogramadorNotificaciones.programarVacuna(programador, vacuna)
+            }
+
+            // Cancelar y reprogramar todos los preventivos
+            val todosPreventivos = preventivoRepository.getAllPreventivos()
+            todosPreventivos.forEach { preventivo ->
+                ReprogramadorNotificaciones.cancelar(programador, preventivo.id ?: return@forEach)
+                ReprogramadorNotificaciones.programarPreventivo(programador, preventivo)
+            }
+        } catch (e: Exception) {
+            println("Error reprogramando notificaciones al arrancar: ${e.message}")
+        }
+    }
 
     var currentScreen by remember { mutableStateOf("list") }
     var selectedMascotaId by remember { mutableStateOf<Long?>(null) }

@@ -26,3 +26,6 @@ DELETE FROM vacunas WHERE id = ?;
 
 getLastInsertedId:
 SELECT last_insert_rowid() AS id;
+
+selectAll:
+SELECT * FROM vacunas ORDER BY fechaAplicacion DESC;

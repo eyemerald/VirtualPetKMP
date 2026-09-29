@@ -30,3 +30,6 @@ DELETE FROM preventivos WHERE id = ?;
 
 getLastInsertedId:
 SELECT last_insert_rowid() AS id;
+
+selectAll:
+SELECT * FROM preventivos ORDER BY fechaAplicacion DESC;

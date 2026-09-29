@@ -3,6 +3,7 @@ package com.example.virtualpetkmp.viewmodel
 import com.example.virtualpetkmp.Preventivo
 import com.example.virtualpetkmp.data.PreventivoRepository
 import com.example.virtualpetkmp.util.ProgramadorNotificaciones
+import com.example.virtualpetkmp.util.ReprogramadorNotificaciones
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -10,14 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
-import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atTime
-import kotlinx.datetime.minus
-import kotlinx.datetime.toInstant
 
 class PreventivoViewModel(
     private val repository: PreventivoRepository,
@@ -53,28 +47,6 @@ class PreventivoViewModel(
         }
     }
 
-    private fun programarNotificacionPreventivo(preventivoId: Long, nombre: String, fechaProximaDosis: LocalDate) {
-        try {
-            // 1 día antes
-            val fechaAviso = fechaProximaDosis.minus(DatePeriod(days = 1))
-            // A las 9:00 de la mañana
-            val fechaHora = LocalDateTime(fechaAviso.year, fechaAviso.monthNumber, fechaAviso.dayOfMonth, 9, 0)
-            val millis = fechaHora.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-
-            // Solo programar si la fecha es futura
-            if (millis > Clock.System.now().toEpochMilliseconds()) {
-                programador.programar(
-                    id = preventivoId,
-                    titulo = "Preventivo pendiente",
-                    mensaje = "A tu mascota le toca el preventivo \"$nombre\" el ${fechaProximaDosis.dayOfMonth}/${fechaProximaDosis.monthNumber}/${fechaProximaDosis.year}",
-                    fechaDisparoMillis = millis
-                )
-            }
-        } catch (e: Exception) {
-            println("Error programando notificación: ${e.message}")
-        }
-    }
-
     fun addPreventivo(
         tipo: String,
         nombre: String,
@@ -87,19 +59,23 @@ class PreventivoViewModel(
             _isLoading.value = true
             _errorMessage.value = null
             val resultado = repository.insertPreventivo(
-                mascotaId,
-                tipo,
-                nombre,
-                fechaAplicacion,
-                fechaProximaDosis,
-                veterinario,
-                lote
+                mascotaId, tipo, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote
             )
             if (resultado.isFailure) {
                 _errorMessage.value = resultado.exceptionOrNull()?.message
             } else {
                 resultado.getOrNull()?.let { id ->
-                    programarNotificacionPreventivo(id, nombre, fechaProximaDosis)
+                    val nuevo = Preventivo(
+                        id = id,
+                        mascotaId = mascotaId,
+                        tipo = tipo,
+                        nombre = nombre,
+                        fechaAplicacion = fechaAplicacion,
+                        fechaProximaDosis = fechaProximaDosis,
+                        veterinario = veterinario,
+                        lote = lote
+                    )
+                    ReprogramadorNotificaciones.programarPreventivo(programador, nuevo)
                 }
                 loadPreventivos()
             }
@@ -119,20 +95,22 @@ class PreventivoViewModel(
         scope.launch {
             _isLoading.value = true
             _errorMessage.value = null
-            val resultado = repository.updatePreventivo(
-                id,
-                tipo,
-                nombre,
-                fechaAplicacion,
-                fechaProximaDosis,
-                veterinario,
-                lote
-            )
+            val resultado = repository.updatePreventivo(id, tipo, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote)
             if (resultado.isFailure) {
                 _errorMessage.value = resultado.exceptionOrNull()?.message
             } else {
-                programador.cancelar(id)
-                programarNotificacionPreventivo(id, nombre, fechaProximaDosis)
+                ReprogramadorNotificaciones.cancelar(programador, id)
+                val actualizado = Preventivo(
+                    id = id,
+                    mascotaId = mascotaId,
+                    tipo = tipo,
+                    nombre = nombre,
+                    fechaAplicacion = fechaAplicacion,
+                    fechaProximaDosis = fechaProximaDosis,
+                    veterinario = veterinario,
+                    lote = lote
+                )
+                ReprogramadorNotificaciones.programarPreventivo(programador, actualizado)
                 loadPreventivos()
             }
             _isLoading.value = false
@@ -147,18 +125,13 @@ class PreventivoViewModel(
             if (resultado.isFailure) {
                 _errorMessage.value = resultado.exceptionOrNull()?.message
             } else {
-                programador.cancelar(id)
+                ReprogramadorNotificaciones.cancelar(programador, id)
                 loadPreventivos()
             }
             _isLoading.value = false
         }
     }
 
-    fun setError(message: String) {
-        _errorMessage.value = message
-    }
-
-    fun clearError() {
-        _errorMessage.value = null
-    }
+    fun setError(message: String) { _errorMessage.value = message }
+    fun clearError() { _errorMessage.value = null }
 }

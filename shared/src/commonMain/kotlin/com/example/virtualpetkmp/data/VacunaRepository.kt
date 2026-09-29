@@ -24,6 +24,22 @@ class VacunaRepository(private val database: VirtualPetDatabase) {
             }
     }
 
+    suspend fun getAllVacunas(): List<Vacuna> = withContext(Dispatchers.IO) {
+        database.vacunasQueries.selectAll()
+            .executeAsList()
+            .map { fila ->
+                Vacuna(
+                    id = fila.id,
+                    mascotaId = fila.mascotaId,
+                    nombre = fila.nombre,
+                    fechaAplicacion = LocalDate.parse(fila.fechaAplicacion),
+                    fechaProximaDosis = LocalDate.parse(fila.fechaProximaDosis),
+                    veterinario = fila.veterinario,
+                    lote = fila.lote
+                )
+            }
+    }
+
     suspend fun insertVacuna(
         mascotaId: Long,
         nombre: String,

@@ -27,7 +27,11 @@ import kotlinx.datetime.todayIn
 
 data class ResumenFicha(
     val vacunasVencidas: Int = 0,
+    val vacunasProximas: Int = 0,
     val totalVacunas: Int = 0,
+    val preventivosVencidos: Int = 0,
+    val preventivosProximos: Int = 0,
+    val totalPreventivos: Int = 0,
     val totalRevisiones: Int = 0,
     val tratamientosActivos: Int = 0,
     val totalTratamientos: Int = 0,
@@ -35,9 +39,7 @@ data class ResumenFicha(
     val pesoAnterior: Double? = null,
     val pesosRecientes: List<Peso> = emptyList(),
     val totalInformes: Int = 0,
-    val totalNotas: Int = 0,
-    val totalPreventivos: Int = 0,
-    val preventivosVencidos: Int = 0
+    val totalNotas: Int = 0
 )
 
 data class DatosFichaPdf(
@@ -76,6 +78,8 @@ class FichaMascotaViewModel(
         scope.launch {
             _isLoading.value = true
             val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
+            val hoyMas15 = kotlinx.datetime.LocalDate.fromEpochDays(hoy.toEpochDays() + 15)
+            val hoyMas5 = kotlinx.datetime.LocalDate.fromEpochDays(hoy.toEpochDays() + 5)
 
             val vacunas = vacunaRepository.getVacunasByMascotaId(mascotaId)
             val revisiones = revisionRepository.getRevisionesByMascotaId(mascotaId)
@@ -89,7 +93,11 @@ class FichaMascotaViewModel(
 
             _resumen.value = ResumenFicha(
                 vacunasVencidas = vacunas.count { it.fechaProximaDosis < hoy },
+                vacunasProximas = vacunas.count { it.fechaProximaDosis >= hoy && it.fechaProximaDosis <= hoyMas15 },
                 totalVacunas = vacunas.size,
+                preventivosVencidos = preventivos.count { it.fechaProximaDosis < hoy },
+                preventivosProximos = preventivos.count { it.fechaProximaDosis >= hoy && it.fechaProximaDosis <= hoyMas5 },
+                totalPreventivos = preventivos.size,
                 totalRevisiones = revisiones.size,
                 tratamientosActivos = tratamientos.count {
                     it.fechaInicio <= hoy && (it.fechaFin == null || it.fechaFin >= hoy)
@@ -99,9 +107,7 @@ class FichaMascotaViewModel(
                 pesoAnterior = pesosOrdenados.getOrNull(1)?.peso,
                 pesosRecientes = pesos,
                 totalInformes = informes.size,
-                totalNotas = notas.size,
-                totalPreventivos = preventivos.size,
-                preventivosVencidos = preventivos.count { it.fechaProximaDosis < hoy }
+                totalNotas = notas.size
             )
             _isLoading.value = false
         }

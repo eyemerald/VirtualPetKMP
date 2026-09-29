@@ -42,6 +42,23 @@ class PreventivoRepository(private val database: VirtualPetDatabase) {
             }
     }
 
+    suspend fun getAllPreventivos(): List<Preventivo> = withContext(Dispatchers.IO) {
+        database.preventivosQueries.selectAll()
+            .executeAsList()
+            .map { fila ->
+                Preventivo(
+                    id = fila.id,
+                    mascotaId = fila.mascotaId,
+                    tipo = fila.tipo,
+                    nombre = fila.nombre,
+                    fechaAplicacion = LocalDate.parse(fila.fechaAplicacion),
+                    fechaProximaDosis = LocalDate.parse(fila.fechaProximaDosis),
+                    veterinario = fila.veterinario,
+                    lote = fila.lote
+                )
+            }
+    }
+
     suspend fun insertPreventivo(
         mascotaId: Long,
         tipo: String,

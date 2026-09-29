@@ -1,0 +1,11 @@
+CREATE TABLE preventivos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mascotaId INTEGER NOT NULL,
+    tipo TEXT NOT NULL,
+    nombre TEXT NOT NULL,
+    fechaAplicacion TEXT NOT NULL,
+    fechaProximaDosis TEXT NOT NULL,
+    veterinario TEXT,
+    lote TEXT,
+    FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
+);

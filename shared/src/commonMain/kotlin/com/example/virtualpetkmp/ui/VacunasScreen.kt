@@ -197,12 +197,12 @@ private fun VacunaItem(
     
     val colorFondo = when {
         diasHastaProxima < 0 -> MaterialTheme.colorScheme.errorContainer
-        diasHastaProxima <= 30 -> extras.proximaContenedor
+        diasHastaProxima <= 15 -> extras.proximaContenedor
         else -> MaterialTheme.colorScheme.secondaryContainer
     }
     val colorTexto = when {
         diasHastaProxima < 0 -> MaterialTheme.colorScheme.onErrorContainer
-        diasHastaProxima <= 30 -> extras.onProximaContenedor
+        diasHastaProxima <= 15 -> extras.onProximaContenedor
         else -> MaterialTheme.colorScheme.onSecondaryContainer
     }
 
