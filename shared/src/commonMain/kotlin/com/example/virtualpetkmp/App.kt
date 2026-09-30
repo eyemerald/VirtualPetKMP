@@ -2,6 +2,7 @@ package com.example.virtualpetkmp
 
 import androidx.compose.runtime.*
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.example.virtualpetkmp.data.DatabaseFactory
 import com.example.virtualpetkmp.data.MascotaRepository
 import com.example.virtualpetkmp.data.NotaRepository
@@ -78,10 +79,10 @@ fun App(databaseFactory: DatabaseFactory) {
         }
     }
 
-    var currentScreen by remember { mutableStateOf("list") }
-    var selectedMascotaId by remember { mutableStateOf<Long?>(null) }
-    var selectedVeterinarioId by remember { mutableStateOf<Long?>(null) }
-    var pantallaVeterinarios by remember { mutableStateOf("lista") }
+    var currentScreen by rememberSaveable { mutableStateOf("list") }
+    var selectedMascotaId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var selectedVeterinarioId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var pantallaVeterinarios by rememberSaveable { mutableStateOf("lista") }
 
     val mascotas by viewModel.mascotas.collectAsState()
 
