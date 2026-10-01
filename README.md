@@ -26,7 +26,25 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 
 ## 📸 Capturas
 
-*(Pendiente de añadir. Se irán subiendo capturas de las pantallas principales.)*
+## 📸 Capturas
+
+### Gestión de mascotas
+
+| Lista de mascotas | Ficha de mascota | Nueva mascota |
+|-------------------|------------------|---------------|
+| ![Mascotas](screenshots/01-mascotas.jpg) | ![Ficha](screenshots/02-ficha-mascota.jpg) | ![Nueva mascota](screenshots/03-nueva-mascota.jpg) |
+
+### Salud y cuidados
+
+| Vacunas | Preventivos | Evolución del peso |
+|---------|-------------|-------------------|
+| ![Vacunas](screenshots/04-vacunas.jpg) | ![Preventivos](screenshots/05-preventivos.jpg) | ![Peso](screenshots/07-registro-peso.jpg) |
+
+### Veterinarios
+
+| Urgencias 24h | Veterinarios cercanos |
+|---------------|----------------------|
+| ![Urgencias](screenshots/06-veterinarios-urgencias.jpg) | ![Mapa](screenshots/08-mapa-veterinarios.jpg) |
 
 ---
 
