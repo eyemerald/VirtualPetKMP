@@ -55,3 +55,12 @@ interface ComprobadorPermisoExacto {
     /** Abre los ajustes de Android para que el usuario conceda el permiso. */
     fun pedirPermiso()
 }
+
+/**
+ * Devuelve una función que intenta añadir un evento al calendario del dispositivo.
+ * El título y la descripción se pasan ya formateados.
+ * La fecha es la del evento (todo el día).
+ * Devuelve true si se pudo abrir el calendario, false si hubo error.
+ */
+@Composable
+expect fun rememberAgregadorCalendario(): (titulo: String, descripcion: String, fechaMillis: Long) -> Boolean

@@ -127,3 +127,27 @@ actual fun rememberComprobadorPermisoExacto(): ComprobadorPermisoExacto {
         }
     }
 }
+
+@Composable
+actual fun rememberAgregadorCalendario(): (String, String, Long) -> Boolean {
+    val context = LocalContext.current
+    return { titulo, descripcion, fechaMillis ->
+        try {
+            val intent = Intent(Intent.ACTION_INSERT).apply {
+                data = android.provider.CalendarContract.Events.CONTENT_URI
+                putExtra(android.provider.CalendarContract.Events.TITLE, titulo)
+                putExtra(android.provider.CalendarContract.Events.DESCRIPTION, descripcion)
+                putExtra(android.provider.CalendarContract.EXTRA_EVENT_ALL_DAY, true)
+                putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, fechaMillis)
+                putExtra(android.provider.CalendarContract.EXTRA_EVENT_END_TIME, fechaMillis + 24 * 60 * 60 * 1000L)
+                // Recordatorio 1 día antes (en minutos: 24 * 60 = 1440)
+                putExtra(android.provider.CalendarContract.Reminders.MINUTES, 1440)
+                putExtra(android.provider.CalendarContract.Reminders.METHOD, android.provider.CalendarContract.Reminders.METHOD_ALERT)
+            }
+            context.startActivity(intent)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+}

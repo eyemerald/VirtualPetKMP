@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,14 +21,17 @@ import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.viewmodel.PreventivoViewModel
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import com.example.virtualpetkmp.util.rememberComprobadorPermisoExacto
+import com.example.virtualpetkmp.util.rememberAgregadorCalendario
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PreventivosScreen(
     viewModel: PreventivoViewModel,
+    nombreMascota: String,
     onBack: () -> Unit
 ) {
     val preventivos by viewModel.preventivos.collectAsState()
@@ -68,6 +72,7 @@ fun PreventivosScreen(
                 BloquePreventivo(
                     titulo = "Pipetas",
                     items = pipetas,
+                    nombreMascota = nombreMascota,
                     onAdd = { showAddDialog = "Pipeta" },
                     onEdit = { preventivoSeleccionado = it },
                     onDelete = { preventivoAEliminar = it.id }
@@ -78,6 +83,7 @@ fun PreventivosScreen(
                 BloquePreventivo(
                     titulo = "Desparasitación",
                     items = desparasitaciones,
+                    nombreMascota = nombreMascota,
                     onAdd = { showAddDialog = "Desparasitación" },
                     onEdit = { preventivoSeleccionado = it },
                     onDelete = { preventivoAEliminar = it.id }
@@ -88,6 +94,7 @@ fun PreventivosScreen(
                 BloquePreventivo(
                     titulo = "Otros preventivos",
                     items = otros,
+                    nombreMascota = nombreMascota,
                     onAdd = { showAddDialog = "Otro" },
                     onEdit = { preventivoSeleccionado = it },
                     onDelete = { preventivoAEliminar = it.id }
@@ -194,6 +201,7 @@ fun PreventivosScreen(
 private fun BloquePreventivo(
     titulo: String,
     items: List<Preventivo>,
+    nombreMascota: String,
     onAdd: () -> Unit,
     onEdit: (Preventivo) -> Unit,
     onDelete: (Preventivo) -> Unit
@@ -235,6 +243,7 @@ private fun BloquePreventivo(
                     items.forEach { preventivo ->
                         PreventivoItem(
                             preventivo = preventivo,
+                            nombreMascota = nombreMascota,
                             onClick = { onEdit(preventivo) },
                             onDelete = { onDelete(preventivo) }
                         )
@@ -248,9 +257,11 @@ private fun BloquePreventivo(
 @Composable
 private fun PreventivoItem(
     preventivo: Preventivo,
+    nombreMascota: String,
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val agregarCalendario = rememberAgregadorCalendario()
     val hoy = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val diasHastaProxima = calculateDaysBetween(hoy, preventivo.fechaProximaDosis)
     
@@ -300,13 +311,29 @@ private fun PreventivoItem(
                     color = colorTexto.copy(alpha = 0.8f)
                 )
             }
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Eliminar",
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(20.dp)
-                )
+            Row {
+                IconButton(onClick = {
+                    try {
+                        val fecha = preventivo.fechaProximaDosis
+                        val localDateTime = kotlinx.datetime.LocalDateTime(fecha.year, fecha.monthNumber, fecha.dayOfMonth, 0, 0)
+                        val fechaMillis = localDateTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+                        val titulo = "Preventivo: ${preventivo.nombre} para $nombreMascota"
+                        val descripcion = "Recuerda poner ${preventivo.nombre} a $nombreMascota el ${preventivo.fechaProximaDosis.toFormatoEuropeo()}"
+                        agregarCalendario(titulo, descripcion, fechaMillis)
+                    } catch (e: Exception) {
+                        // Ignorar
+                    }
+                }) {
+                    Icon(Icons.Default.Event, contentDescription = "Añadir al calendario")
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Eliminar",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }

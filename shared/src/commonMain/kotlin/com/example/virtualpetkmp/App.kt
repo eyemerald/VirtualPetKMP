@@ -172,8 +172,11 @@ fun App(databaseFactory: DatabaseFactory) {
                         val mascotaId = selectedMascotaId
                         if (mascotaId != null) {
                             val vacunaViewModel = remember(mascotaId) { VacunaViewModel(vacunaRepository, mascotaId, programador) }
+                            val mascota = mascotas.find { it.id == mascotaId }
+                            val nombreMascota = mascota?.nombre ?: ""
                             VacunasScreen(
                                 viewModel = vacunaViewModel,
+                                nombreMascota = nombreMascota,
                                 onBack = {
                                     currentScreen = "ficha"
                                 }
@@ -184,8 +187,11 @@ fun App(databaseFactory: DatabaseFactory) {
                         val mascotaId = selectedMascotaId
                         if (mascotaId != null) {
                             val preventivoViewModel = remember(mascotaId) { PreventivoViewModel(preventivoRepository, mascotaId, programador) }
+                            val mascota = mascotas.find { it.id == mascotaId }
+                            val nombreMascota = mascota?.nombre ?: ""
                             PreventivosScreen(
                                 viewModel = preventivoViewModel,
+                                nombreMascota = nombreMascota,
                                 onBack = {
                                     currentScreen = "ficha"
                                 }

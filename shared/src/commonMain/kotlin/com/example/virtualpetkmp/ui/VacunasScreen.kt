@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,14 +23,17 @@ import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.viewmodel.VacunaViewModel
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import com.example.virtualpetkmp.util.rememberComprobadorPermisoExacto
+import com.example.virtualpetkmp.util.rememberAgregadorCalendario
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VacunasScreen(
     viewModel: VacunaViewModel,
+    nombreMascota: String,
     onBack: () -> Unit
 ) {
     val vacunas by viewModel.vacunas.collectAsState()
@@ -86,6 +90,7 @@ fun VacunasScreen(
                     items(vacunas, key = { it.id ?: 0 }) { vacuna ->
                         VacunaItem(
                             vacuna = vacuna,
+                            nombreMascota = nombreMascota,
                             onClick = { vacunaSeleccionada = vacuna },
                             onDelete = { vacunaAEliminar = vacuna.id }
                         )
@@ -187,9 +192,11 @@ fun VacunasScreen(
 @Composable
 private fun VacunaItem(
     vacuna: Vacuna,
+    nombreMascota: String,
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val agregarCalendario = rememberAgregadorCalendario()
     val hoy = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val diasHastaProxima = calculateDaysBetween(hoy, vacuna.fechaProximaDosis)
     
@@ -241,12 +248,29 @@ private fun VacunaItem(
                     color = colorTexto.copy(alpha = 0.8f)
                 )
             }
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Eliminar vacuna",
-                    tint = MaterialTheme.colorScheme.error
-                )
+            Row {
+                IconButton(onClick = {
+                    try {
+                        val fecha = vacuna.fechaProximaDosis
+                        // Convertir LocalDate a millis (a las 00:00 del día)
+                        val localDateTime = kotlinx.datetime.LocalDateTime(fecha.year, fecha.monthNumber, fecha.dayOfMonth, 0, 0)
+                        val fechaMillis = localDateTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+                        val titulo = "Vacuna: ${vacuna.nombre} para $nombreMascota"
+                        val descripcion = "Recuerda poner la vacuna ${vacuna.nombre} a $nombreMascota el ${vacuna.fechaProximaDosis.toFormatoEuropeo()}"
+                        agregarCalendario(titulo, descripcion, fechaMillis)
+                    } catch (e: Exception) {
+                        // Ignorar
+                    }
+                }) {
+                    Icon(Icons.Default.Event, contentDescription = "Añadir al calendario")
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Eliminar vacuna",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }

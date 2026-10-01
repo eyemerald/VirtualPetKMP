@@ -66,3 +66,35 @@ actual fun rememberComprobadorPermisoExacto(): ComprobadorPermisoExacto {
         }
     }
 }
+
+@Composable
+actual fun rememberAgregadorCalendario(): (String, String, Long) -> Boolean {
+    return { titulo, descripcion, fechaMillis ->
+        try {
+            if (Desktop.isDesktopSupported()) {
+                // Convertir millis a formato YYYYMMDD para el enlace de Google Calendar
+                val fecha = java.time.Instant.ofEpochMilli(fechaMillis)
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDate()
+                val fechaStr = fecha.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
+                val fechaFin = fecha.plusDays(1).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
+
+                val tituloEncoded = java.net.URLEncoder.encode(titulo, "UTF-8")
+                val descEncoded = java.net.URLEncoder.encode(descripcion, "UTF-8")
+
+                val url = "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+                        "&text=$tituloEncoded" +
+                        "&dates=$fechaStr/$fechaFin" +
+                        "&details=$descEncoded" +
+                        "&reminders=1day"
+
+                Desktop.getDesktop().browse(URI(url))
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+}
