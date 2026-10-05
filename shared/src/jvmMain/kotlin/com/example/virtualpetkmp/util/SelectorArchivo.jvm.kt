@@ -47,3 +47,33 @@ private fun copiarArchivoALocal(archivoOriginal: File): String? {
         null
     }
 }
+
+@Composable
+actual fun rememberSelectorDestino(
+    nombreSugerido: String,
+    onDestinoSeleccionado: (nombreArchivo: String, rutaArchivo: String) -> Unit
+): () -> Unit {
+    return {
+        try {
+            val selector = JFileChooser()
+            selector.dialogTitle = "Guardar PDF como"
+            selector.fileSelectionMode = JFileChooser.FILES_ONLY
+            selector.selectedFile = File(System.getProperty("user.home"), nombreSugerido.ifBlank { "ficha-mascota.pdf" })
+
+            val resultado = selector.showSaveDialog(null)
+            if (resultado == JFileChooser.APPROVE_OPTION) {
+                val archivoSeleccionado = selector.selectedFile
+                if (archivoSeleccionado != null) {
+                    val rutaFinal = if (archivoSeleccionado.absolutePath.lowercase().endsWith(".pdf")) {
+                        archivoSeleccionado
+                    } else {
+                        File(archivoSeleccionado.parentFile ?: File(System.getProperty("user.home")), "${archivoSeleccionado.name}.pdf")
+                    }
+                    onDestinoSeleccionado(rutaFinal.name, rutaFinal.absolutePath)
+                }
+            }
+        } catch (e: Exception) {
+            println("Error abriendo selector destino JVM: ${e.message}")
+        }
+    }
+}

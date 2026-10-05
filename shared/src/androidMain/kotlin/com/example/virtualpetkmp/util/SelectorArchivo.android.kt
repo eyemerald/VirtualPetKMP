@@ -77,3 +77,28 @@ private fun copiarArchivoALocal(context: Context, uri: Uri, nombreOriginal: Stri
         null
     }
 }
+
+@Composable
+actual fun rememberSelectorDestino(
+    nombreSugerido: String,
+    onDestinoSeleccionado: (nombreArchivo: String, rutaArchivo: String) -> Unit
+): () -> Unit {
+    val context = LocalContext.current
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val nombreFinal = nombreSugerido.ifBlank { "ficha-mascota.pdf" }
+            onDestinoSeleccionado(nombreFinal, uri.toString())
+        }
+    }
+
+    return {
+        try {
+            launcher.launch(nombreSugerido.ifBlank { "ficha-mascota.pdf" })
+        } catch (e: Exception) {
+            println("Error abriendo selector destino: ${e.message}")
+        }
+    }
+}

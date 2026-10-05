@@ -36,7 +36,7 @@ import com.example.virtualpetkmp.util.VersionPdf
 import com.example.virtualpetkmp.util.calcularEdad
 import com.example.virtualpetkmp.util.guardarArchivo
 import com.example.virtualpetkmp.util.rememberAbridorArchivo
-import com.example.virtualpetkmp.util.rememberSelectorArchivo
+import com.example.virtualpetkmp.util.rememberSelectorDestino
 import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.viewmodel.FichaMascotaViewModel
 import kotlinx.datetime.Clock
@@ -74,7 +74,7 @@ fun FichaMascotaScreen(
     val scope = rememberCoroutineScope()
     val exportador = remember { ExportadorPdf() }
     val abrirArchivo = rememberAbridorArchivo()
-    val seleccionarDestino = rememberSelectorArchivo { _, rutaArchivo ->
+    val seleccionarDestino = rememberSelectorDestino(nombreSugerido = "ficha-${mascota.nombre}.pdf") { _, rutaArchivo ->
         scope.launch {
             try {
                 exportando = true
