@@ -12,6 +12,12 @@ kotlin {
     androidLibrary {
         namespace = "com.example.virtualpetkmp.shared"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
+        // Necesario para que los recursos de Compose (composeResources) se empaqueten
+        // como assets de Android. Sin esto, el target androidLibrary de AGP 9 no ejecuta
+        // el pipeline de assets y Res.drawable.* falla en runtime con MissingResourceException.
+        androidResources {
+            enable = true
+        }
     }
     jvm()
 
