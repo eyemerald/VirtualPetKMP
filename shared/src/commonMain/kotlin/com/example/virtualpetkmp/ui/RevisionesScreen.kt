@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MedicalInformation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -32,9 +33,10 @@ fun RevisionesScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
-    var showAddDialog by remember { mutableStateOf(false) }
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+    // revisionSeleccionada NO se migra: Revision es una entidad de SQLDelight y no es serializable.
     var revisionSeleccionada by remember { mutableStateOf<Revision?>(null) }
-    var revisionAEliminar by remember { mutableStateOf<Long?>(null) }
+    var revisionAEliminar by rememberSaveable { mutableStateOf<Long?>(null) }
 
     Scaffold(
         topBar = {
@@ -209,13 +211,14 @@ private fun RevisionDialog(
     onDismiss: () -> Unit,
     onSave: (kotlinx.datetime.LocalDate, String, String?, String?, String?) -> Unit
 ) {
-    var fechaStr by remember { mutableStateOf(
+    var fechaStr by rememberSaveable { mutableStateOf(
         revision?.fecha?.toFormatoEuropeo() ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toFormatoEuropeo()
     )}
-    var motivo by remember { mutableStateOf(revision?.motivo ?: "") }
-    var diagnostico by remember { mutableStateOf(revision?.diagnostico ?: "") }
-    var notas by remember { mutableStateOf(revision?.notas ?: "") }
-    var veterinario by remember { mutableStateOf(revision?.veterinario ?: "") }
+    var motivo by rememberSaveable { mutableStateOf(revision?.motivo ?: "") }
+    var diagnostico by rememberSaveable { mutableStateOf(revision?.diagnostico ?: "") }
+    var notas by rememberSaveable { mutableStateOf(revision?.notas ?: "") }
+    var veterinario by rememberSaveable { mutableStateOf(revision?.veterinario ?: "") }
+    // errorFecha NO se migra: es validación efímera del último intento de guardado.
     var errorFecha by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(

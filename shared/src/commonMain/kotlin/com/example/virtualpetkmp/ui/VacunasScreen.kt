@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,12 +41,13 @@ fun VacunasScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
-    var showAddDialog by remember { mutableStateOf(false) }
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+    // vacunaSeleccionada NO se migra: Vacuna es una entidad de SQLDelight y no es serializable.
     var vacunaSeleccionada by remember { mutableStateOf<Vacuna?>(null) }
-    var vacunaAEliminar by remember { mutableStateOf<Long?>(null) }
+    var vacunaAEliminar by rememberSaveable { mutableStateOf<Long?>(null) }
 
     val comprobador = rememberComprobadorPermisoExacto()
-    var mostrarDialogoPermiso by remember { mutableStateOf(false) }
+    var mostrarDialogoPermiso by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -283,15 +285,16 @@ private fun VacunaDialog(
     onDismiss: () -> Unit,
     onSave: (String, kotlinx.datetime.LocalDate, kotlinx.datetime.LocalDate, String?, String?) -> Unit
 ) {
-    var nombre by remember { mutableStateOf(vacuna?.nombre ?: "") }
-    var fechaAplicacionStr by remember { mutableStateOf(
+    var nombre by rememberSaveable { mutableStateOf(vacuna?.nombre ?: "") }
+    var fechaAplicacionStr by rememberSaveable { mutableStateOf(
         vacuna?.fechaAplicacion?.toFormatoEuropeo() ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toFormatoEuropeo()
     )}
-    var fechaProximaDosisStr by remember { mutableStateOf(
+    var fechaProximaDosisStr by rememberSaveable { mutableStateOf(
         vacuna?.fechaProximaDosis?.toFormatoEuropeo() ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toFormatoEuropeo()
     )}
-    var veterinario by remember { mutableStateOf(vacuna?.veterinario ?: "") }
-    var lote by remember { mutableStateOf(vacuna?.lote ?: "") }
+    var veterinario by rememberSaveable { mutableStateOf(vacuna?.veterinario ?: "") }
+    var lote by rememberSaveable { mutableStateOf(vacuna?.lote ?: "") }
+    // errorFecha NO se migra: es validación efímera del último intento de guardado.
     var errorFecha by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(

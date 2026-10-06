@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,10 +67,11 @@ fun FichaMascotaScreen(
     val resumen by viewModel.resumen.collectAsState()
     val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
-    var mostrarDialogoExportar by remember { mutableStateOf(false) }
+    var mostrarDialogoExportar by rememberSaveable { mutableStateOf(false) }
+    // exportando y mensajeExportar NO se migran: son estado efímero de la exportación en curso.
     var exportando by remember { mutableStateOf(false) }
     var mensajeExportar by remember { mutableStateOf<String?>(null) }
-    var versionSeleccionada by remember { mutableStateOf(VersionPdf.COMPLETA) }
+    var versionSeleccionada by rememberSaveable { mutableStateOf(VersionPdf.COMPLETA) }
 
     val scope = rememberCoroutineScope()
     val exportador = remember { ExportadorPdf() }

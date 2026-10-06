@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -87,20 +88,20 @@ fun PesosScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
-    var modo by remember { mutableStateOf(ModoFiltro.TODO) }
-    var anioSeleccionado by remember { mutableStateOf<Int?>(null) }
-    var fechaDesdeTexto by remember { mutableStateOf("") }
-    var fechaHastaTexto by remember { mutableStateOf("") }
+    var modo by rememberSaveable { mutableStateOf(ModoFiltro.TODO) }
+    var anioSeleccionado by rememberSaveable { mutableStateOf<Int?>(null) }
+    var fechaDesdeTexto by rememberSaveable { mutableStateOf("") }
+    var fechaHastaTexto by rememberSaveable { mutableStateOf("") }
 
-    var fechaTexto by remember {
+    var fechaTexto by rememberSaveable {
         mutableStateOf(
             Clock.System.todayIn(TimeZone.currentSystemDefault()).toFormatoEuropeo()
         )
     }
-    var pesoTexto by remember { mutableStateOf("") }
-    var notasTexto by remember { mutableStateOf("") }
-    var registroSeleccionadoId by remember { mutableStateOf<Long?>(null) }
-    var registroAEliminar by remember { mutableStateOf<Long?>(null) }
+    var pesoTexto by rememberSaveable { mutableStateOf("") }
+    var notasTexto by rememberSaveable { mutableStateOf("") }
+    var registroSeleccionadoId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var registroAEliminar by rememberSaveable { mutableStateOf<Long?>(null) }
 
     Scaffold(
         topBar = {

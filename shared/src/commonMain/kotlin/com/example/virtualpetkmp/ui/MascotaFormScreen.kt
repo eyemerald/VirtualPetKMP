@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Mascota
@@ -26,31 +27,36 @@ fun MascotaFormScreen(
     mascotaId: Long? = null,
     onBack: () -> Unit
 ) {
-    var nombre by remember { mutableStateOf("") }
+    var nombre by rememberSaveable { mutableStateOf("") }
 
-    var especieSeleccionada by remember { mutableStateOf(ESPECIES.first()) }
-    var especieRazaOtroTexto by remember { mutableStateOf("") }
+    var especieSeleccionada by rememberSaveable { mutableStateOf(ESPECIES.first()) }
+    var especieRazaOtroTexto by rememberSaveable { mutableStateOf("") }
 
-    var razaSeleccionada by remember { mutableStateOf("") }
-    var razaPersonalizadaTexto by remember { mutableStateOf("") }
+    var razaSeleccionada by rememberSaveable { mutableStateOf("") }
+    var razaPersonalizadaTexto by rememberSaveable { mutableStateOf("") }
 
-    var sexo by remember { mutableStateOf("Macho") }
+    var sexo by rememberSaveable { mutableStateOf("Macho") }
 
-    var fechaNacimientoStr by remember {
+    var fechaNacimientoStr by rememberSaveable {
         mutableStateOf(
             Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toFormatoEuropeo()
         )
     }
-    var color by remember { mutableStateOf("") }
-    var microchip by remember { mutableStateOf("") }
+    var color by rememberSaveable { mutableStateOf("") }
+    var microchip by rememberSaveable { mutableStateOf("") }
 
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val mascotas by viewModel.mascotas.collectAsState()
 
+    // Bandera de "ya cargado" desde la BD. Es rememberSaveable a propósito: sobrevive a la
+    // rotación, de modo que al recrearse la Activity NO se recargan los datos y se respetan
+    // los cambios que el usuario ya hubiera hecho en los campos.
+    var yaCargado by rememberSaveable { mutableStateOf(false) }
+
     // Cargar los datos de la mascota existente si se está editando
     LaunchedEffect(mascotaId) {
-        if (mascotaId != null) {
+        if (mascotaId != null && !yaCargado) {
             mascotas.find { it.id == mascotaId }?.let { mascota ->
                 nombre = mascota.nombre
                 fechaNacimientoStr = mascota.fechaNacimiento.toFormatoEuropeo()
@@ -75,6 +81,7 @@ fun MascotaFormScreen(
                         mascota.especie
                     }
                 }
+                yaCargado = true
             }
         }
     }

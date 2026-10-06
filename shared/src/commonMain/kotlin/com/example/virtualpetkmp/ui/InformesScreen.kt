@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -34,11 +35,13 @@ fun InformesScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
-    var showAddDialog by remember { mutableStateOf(false) }
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+    // informeSeleccionado NO se migra: Informe es una entidad de SQLDelight y no es serializable.
     var informeSeleccionado by remember { mutableStateOf<Informe?>(null) }
-    var informeAEliminar by remember { mutableStateOf<Long?>(null) }
+    var informeAEliminar by rememberSaveable { mutableStateOf<Long?>(null) }
 
     val abrirArchivo = rememberAbridorArchivo()
+    // errorAlAbrir NO se migra: es un aviso efímero, no estado del usuario.
     var errorAlAbrir by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -229,16 +232,17 @@ private fun InformeDialog(
     onDismiss: () -> Unit,
     onSave: (String, String?, kotlinx.datetime.LocalDate, String, String) -> Unit
 ) {
-    var tipo by remember { mutableStateOf(informe?.tipo ?: "") }
-    var descripcion by remember { mutableStateOf(informe?.descripcion ?: "") }
-    var fechaStr by remember {
+    var tipo by rememberSaveable { mutableStateOf(informe?.tipo ?: "") }
+    var descripcion by rememberSaveable { mutableStateOf(informe?.descripcion ?: "") }
+    var fechaStr by rememberSaveable {
         mutableStateOf(
             informe?.fecha?.toFormatoEuropeo()
                 ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toFormatoEuropeo()
         )
     }
-    var nombreArchivo by remember { mutableStateOf(informe?.nombreArchivo ?: "") }
-    var rutaArchivo by remember { mutableStateOf(informe?.rutaArchivo ?: "") }
+    var nombreArchivo by rememberSaveable { mutableStateOf(informe?.nombreArchivo ?: "") }
+    var rutaArchivo by rememberSaveable { mutableStateOf(informe?.rutaArchivo ?: "") }
+    // errorFecha NO se migra: es validación efímera del último intento de guardado.
     var errorFecha by remember { mutableStateOf<String?>(null) }
 
     val seleccionarArchivo = rememberSelectorArchivo { nombre, ruta ->

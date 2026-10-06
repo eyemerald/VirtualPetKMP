@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -27,7 +28,7 @@ fun MascotaListScreen(
     val mascotas by viewModel.mascotas.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    var showDeleteDialog by remember { mutableStateOf<Long?>(null) }
+    var showDeleteDialog by rememberSaveable { mutableStateOf<Long?>(null) }
 
     Scaffold(
         topBar = {

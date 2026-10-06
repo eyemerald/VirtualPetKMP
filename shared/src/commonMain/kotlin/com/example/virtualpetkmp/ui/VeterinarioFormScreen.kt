@@ -33,7 +33,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -48,11 +48,11 @@ fun VeterinarioFormScreen(
     veterinarioId: Long? = null,
     onBack: () -> Unit
 ) {
-    var nombreClinica by remember { mutableStateOf("") }
-    var nombreVeterinario by remember { mutableStateOf("") }
-    var telefono by remember { mutableStateOf("") }
-    var direccion by remember { mutableStateOf("") }
-    var esUrgencias by remember { mutableStateOf(false) }
+    var nombreClinica by rememberSaveable { mutableStateOf("") }
+    var nombreVeterinario by rememberSaveable { mutableStateOf("") }
+    var telefono by rememberSaveable { mutableStateOf("") }
+    var direccion by rememberSaveable { mutableStateOf("") }
+    var esUrgencias by rememberSaveable { mutableStateOf(false) }
 
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()

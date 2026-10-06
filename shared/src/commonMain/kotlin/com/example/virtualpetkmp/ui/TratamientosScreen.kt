@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -32,9 +33,10 @@ fun TratamientosScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
-    var showAddDialog by remember { mutableStateOf(false) }
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+    // tratamientoSeleccionado NO se migra: Tratamiento es una entidad de SQLDelight y no es serializable.
     var tratamientoSeleccionado by remember { mutableStateOf<Tratamiento?>(null) }
-    var tratamientoAEliminar by remember { mutableStateOf<Long?>(null) }
+    var tratamientoAEliminar by rememberSaveable { mutableStateOf<Long?>(null) }
 
     Scaffold(
         topBar = {
@@ -220,14 +222,15 @@ private fun TratamientoDialog(
     onDismiss: () -> Unit,
     onSave: (String, String?, String?, kotlinx.datetime.LocalDate, kotlinx.datetime.LocalDate?) -> Unit
 ) {
-    var nombreMedicamento by remember { mutableStateOf(tratamiento?.nombreMedicamento ?: "") }
-    var dosis by remember { mutableStateOf(tratamiento?.dosis ?: "") }
-    var frecuencia by remember { mutableStateOf(tratamiento?.frecuencia ?: "") }
-    var fechaInicioStr by remember { mutableStateOf(
+    var nombreMedicamento by rememberSaveable { mutableStateOf(tratamiento?.nombreMedicamento ?: "") }
+    var dosis by rememberSaveable { mutableStateOf(tratamiento?.dosis ?: "") }
+    var frecuencia by rememberSaveable { mutableStateOf(tratamiento?.frecuencia ?: "") }
+    var fechaInicioStr by rememberSaveable { mutableStateOf(
         tratamiento?.fechaInicio?.toFormatoEuropeo() ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toFormatoEuropeo()
     )}
-    var fechaFinStr by remember { mutableStateOf(tratamiento?.fechaFin?.toFormatoEuropeo() ?: "") }
-    var esCronico by remember { mutableStateOf(tratamiento?.fechaFin == null) }
+    var fechaFinStr by rememberSaveable { mutableStateOf(tratamiento?.fechaFin?.toFormatoEuropeo() ?: "") }
+    var esCronico by rememberSaveable { mutableStateOf(tratamiento?.fechaFin == null) }
+    // errorFecha NO se migra: es validación efímera del último intento de guardado.
     var errorFecha by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(

@@ -32,7 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,7 +53,7 @@ fun VeterinariosListScreen(
     val veterinarios by viewModel.veterinarios.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    var showDeleteDialog by remember { mutableStateOf<Long?>(null) }
+    var showDeleteDialog by rememberSaveable { mutableStateOf<Long?>(null) }
 
     val llamar = rememberLlamador()
     val abrirMapa = rememberAbridorMapa()

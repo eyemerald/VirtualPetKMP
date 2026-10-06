@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Note
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -26,9 +27,9 @@ fun NotasScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
-    var textoActual by remember { mutableStateOf("") }
-    var notaSeleccionadaId by remember { mutableStateOf<Long?>(null) }
-    var notaAEliminar by remember { mutableStateOf<Long?>(null) }
+    var textoActual by rememberSaveable { mutableStateOf("") }
+    var notaSeleccionadaId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var notaAEliminar by rememberSaveable { mutableStateOf<Long?>(null) }
 
     Scaffold(
         topBar = {

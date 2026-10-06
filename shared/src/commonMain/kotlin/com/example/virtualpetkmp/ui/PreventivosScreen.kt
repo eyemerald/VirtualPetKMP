@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -38,12 +39,13 @@ fun PreventivosScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
-    var showAddDialog by remember { mutableStateOf<String?>(null) }
+    var showAddDialog by rememberSaveable { mutableStateOf<String?>(null) }
+    // preventivoSeleccionado NO se migra: Preventivo es una entidad de SQLDelight y no es serializable.
     var preventivoSeleccionado by remember { mutableStateOf<Preventivo?>(null) }
-    var preventivoAEliminar by remember { mutableStateOf<Long?>(null) }
+    var preventivoAEliminar by rememberSaveable { mutableStateOf<Long?>(null) }
 
     val comprobador = rememberComprobadorPermisoExacto()
-    var mostrarDialogoPermiso by remember { mutableStateOf(false) }
+    var mostrarDialogoPermiso by rememberSaveable { mutableStateOf(false) }
 
     val pipetas = preventivos.filter { it.tipo == "Pipeta" }
     val desparasitaciones = preventivos.filter { it.tipo == "Desparasitación" }
@@ -347,15 +349,16 @@ private fun PreventivoDialog(
     onDismiss: () -> Unit,
     onSave: (String, String, kotlinx.datetime.LocalDate, kotlinx.datetime.LocalDate, String?, String?) -> Unit
 ) {
-    var nombre by remember { mutableStateOf(preventivo?.nombre ?: if (tipo == "Otro") "" else tipo) }
-    var fechaAplicacionStr by remember { mutableStateOf(
+    var nombre by rememberSaveable { mutableStateOf(preventivo?.nombre ?: if (tipo == "Otro") "" else tipo) }
+    var fechaAplicacionStr by rememberSaveable { mutableStateOf(
         preventivo?.fechaAplicacion?.toFormatoEuropeo() ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toFormatoEuropeo()
     )}
-    var fechaProximaDosisStr by remember { mutableStateOf(
+    var fechaProximaDosisStr by rememberSaveable { mutableStateOf(
         preventivo?.fechaProximaDosis?.toFormatoEuropeo() ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toFormatoEuropeo()
     )}
-    var veterinario by remember { mutableStateOf(preventivo?.veterinario ?: "") }
-    var lote by remember { mutableStateOf(preventivo?.lote ?: "") }
+    var veterinario by rememberSaveable { mutableStateOf(preventivo?.veterinario ?: "") }
+    var lote by rememberSaveable { mutableStateOf(preventivo?.lote ?: "") }
+    // errorFecha NO se migra: es validación efímera del último intento de guardado.
     var errorFecha by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
