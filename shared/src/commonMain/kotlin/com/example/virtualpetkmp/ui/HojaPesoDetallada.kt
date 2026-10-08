@@ -15,11 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -51,7 +47,7 @@ import kotlinx.datetime.todayIn
 /** Qué rango de pesajes se está mostrando en el gráfico. */
 private enum class FiltroPeso(val etiqueta: String) {
     TODO("Todo"),
-    ULTIMO_ANIO("Último año"),
+    ANIO("Año"),
     FECHAS("Elegir fechas")
 }
 
@@ -73,14 +69,21 @@ fun HojaPesoDetallada(
     var hastaTexto by rememberSaveable { mutableStateOf("") }
     var errorFechas by remember { mutableStateOf<String?>(null) }
 
-    val filtrados = remember(pesos, filtro, desdeTexto, hastaTexto) {
+    // Años que tienen algún pesaje, del más reciente al más antiguo: solo esos se ofrecen.
+    val aniosConDatos = remember(pesos) {
+        pesos.map { it.fecha.year }.distinct().sortedDescending()
+    }
+    // Por defecto, el año actual si tiene datos; si no, el más reciente que tenga.
+    val anioPorDefecto = aniosConDatos.firstOrNull { it == hoy.year } ?: aniosConDatos.firstOrNull()
+    var anioSeleccionado by rememberSaveable(aniosConDatos) {
+        mutableStateOf(anioPorDefecto)
+    }
+
+    val filtrados = remember(pesos, filtro, desdeTexto, hastaTexto, anioSeleccionado) {
         val ordenados = pesos.sortedBy { it.fecha }
         when (filtro) {
             FiltroPeso.TODO -> ordenados
-            FiltroPeso.ULTIMO_ANIO -> {
-                val limite = LocalDate.fromEpochDays(hoy.toEpochDays() - 365)
-                ordenados.filter { it.fecha >= limite }
-            }
+            FiltroPeso.ANIO -> ordenados.filter { it.fecha.year == anioSeleccionado }
             FiltroPeso.FECHAS -> {
                 val desde = desdeTexto.toFechaONull()
                 val hasta = hastaTexto.toFechaONull()
@@ -100,7 +103,7 @@ fun HojaPesoDetallada(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 88.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             item(key = "resumen") {
@@ -140,6 +143,32 @@ fun HojaPesoDetallada(
                                 },
                                 label = { Text(opcion.etiqueta) }
                             )
+                        }
+                    }
+                }
+            }
+
+            // Con el filtro "Año" se ofrecen solo los años que tienen pesajes, del más
+            // reciente al más antiguo.
+            if (filtro == FiltroPeso.ANIO) {
+                item(key = "anios") {
+                    Column {
+                        if (aniosConDatos.isEmpty()) {
+                            Text(
+                                text = "Todavía no hay pesajes",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                aniosConDatos.forEach { anio ->
+                                    FilterChip(
+                                        selected = anioSeleccionado == anio,
+                                        onClick = { anioSeleccionado = anio },
+                                        label = { Text("$anio") }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -203,16 +232,7 @@ fun HojaPesoDetallada(
             }
         }
 
-        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
-            Button(
-                onClick = onAgregar,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Añadir pesaje")
-            }
-        }
+        FilaAccionHoja(etiquetaAccion = "Añadir pesaje", onAccion = onAgregar)
     }
 }
 

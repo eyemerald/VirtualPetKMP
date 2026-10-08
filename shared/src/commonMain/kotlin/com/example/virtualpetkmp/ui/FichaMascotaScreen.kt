@@ -298,7 +298,7 @@ fun FichaMascotaScreen(
                     ultimoPeso = resumen.ultimoPeso,
                     pesoAnterior = resumen.pesoAnterior,
                     pesos = resumen.pesosRecientes,
-                    altura = if (compacta) 76.dp else 130.dp,
+                    altura = if (compacta) 88.dp else 130.dp,
                     compacta = compacta,
                     onClick = { activeSheet = ActiveSheet.Weight }
                 )
@@ -719,12 +719,40 @@ private fun TarjetaPesoHero(
             }
 
             if (pesos.size >= 2) {
-                SparklinePeso(
-                    pesos = pesos,
+                Column(
                     modifier = Modifier
                         .weight(0.6f)
                         .fillMaxHeight()
-                )
+                ) {
+                    SparklinePeso(
+                        pesos = pesos,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    )
+                    // Las fechas van fuera del lienzo: así el gráfico nunca les roba sitio
+                    // ni se recortan cuando la tarjeta es baja (apaisado).
+                    val etiquetas = fechasSparkline(pesos)
+                    if (etiquetas != null) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 2.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = etiquetas.first,
+                                fontSize = 9.sp,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.75f)
+                            )
+                            Text(
+                                text = etiquetas.second,
+                                fontSize = 9.sp,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.75f)
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -734,9 +762,13 @@ private fun TarjetaPesoHero(
  * Sparkline del peso: una línea suave y minimalista con las últimas pesadas, tres líneas
  * horizontales muy tenues de referencia y un punto destacado en el último dato.
  *
+ * A la derecha se rotulan el peso máximo y el mínimo del tramo, y abajo las fechas del
+ * primer y último pesaje (con el mes si son del mismo año, o solo el año si no lo son), de
+ * modo que se entiende el gráfico sin tener que abrir la hoja detallada.
+ *
  * La línea es de izquierda a derecha en orden cronológico, y los puntos se reparten a
  * intervalos iguales (no por fecha), para que no queden huecos grandes si hay pesadas de
- * años distintos. La idea es ver de un vistazo si ha habido una bajada o una subida.
+ * años distintos.
  */
 @Composable
 private fun SparklinePeso(
@@ -749,6 +781,11 @@ private fun SparklinePeso(
     val colorLinea = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.55f)
     val colorPunto = LocalExtrasColors.current.barraActual
     val colorReferencia = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.12f)
+    val colorTexto = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.75f)
+
+    val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
+    val estiloEtiqueta = androidx.compose.ui.text.TextStyle(fontSize = 9.sp, color = colorTexto)
+    val margenDerechoPx = with(androidx.compose.ui.platform.LocalDensity.current) { 36.dp.toPx() }
 
     androidx.compose.foundation.Canvas(modifier = modifier) {
         if (puntos.size < 2) return@Canvas
@@ -757,6 +794,7 @@ private fun SparklinePeso(
         val maxPeso = puntos.maxOf { it.peso }
         val rango = (maxPeso - minPeso).toFloat()
         val padV = 4.dp.toPx()
+        val anchoGrafico = (size.width - margenDerechoPx).coerceAtLeast(1f)
         val altoUtil = (size.height - padV * 2).coerceAtLeast(1f)
         val grosorLinea = 1.dp.toPx()
 
@@ -766,13 +804,13 @@ private fun SparklinePeso(
             drawLine(
                 color = colorReferencia,
                 start = Offset(0f, y),
-                end = Offset(size.width, y),
+                end = Offset(anchoGrafico, y),
                 strokeWidth = grosorLinea
             )
         }
 
         fun x(indice: Int): Float =
-            (indice.toFloat() / (puntos.size - 1)) * size.width
+            (indice.toFloat() / (puntos.size - 1)) * anchoGrafico
 
         fun y(peso: Double): Float {
             val normalizado = if (rango <= 0.0001f) 0.5f else ((peso - minPeso) / rango).toFloat()
@@ -781,6 +819,10 @@ private fun SparklinePeso(
         }
 
         val coordenadas = puntos.indices.map { Offset(x(it), y(puntos[it].peso)) }
+
+        // Índices del peso máximo y mínimo: sus etiquetas se alinean con su punto real.
+        val indiceMax = puntos.indices.maxBy { puntos[it].peso }
+        val indiceMin = puntos.indices.minBy { puntos[it].peso }
 
         // Curva suave entre los puntos, con los controles acotados al alto del gráfico.
         val path = Path()
@@ -799,6 +841,28 @@ private fun SparklinePeso(
         }
         drawPath(path = path, color = colorLinea, style = Stroke(width = 2.dp.toPx()))
 
+        // Pesos máximo y mínimo a la derecha, a la altura de su propio punto.
+        val etiquetaMax = formatearPesoDosDecimales(maxPeso)
+        val etiquetaMin = formatearPesoDosDecimales(minPeso)
+        val medidaMax = textMeasurer.measure(etiquetaMax, style = estiloEtiqueta)
+        val medidaMin = textMeasurer.measure(etiquetaMin, style = estiloEtiqueta)
+        val yMaxEtiqueta = (coordenadas[indiceMax].y - medidaMax.size.height / 2f)
+            .coerceIn(0f, (size.height - medidaMax.size.height).coerceAtLeast(0f))
+        val yMinEtiqueta = (coordenadas[indiceMin].y - medidaMin.size.height / 2f)
+            .coerceIn(0f, (size.height - medidaMin.size.height).coerceAtLeast(0f))
+        drawText(
+            textMeasurer = textMeasurer,
+            text = etiquetaMax,
+            topLeft = Offset(anchoGrafico + 4.dp.toPx(), yMaxEtiqueta),
+            style = estiloEtiqueta
+        )
+        drawText(
+            textMeasurer = textMeasurer,
+            text = etiquetaMin,
+            topLeft = Offset(anchoGrafico + 4.dp.toPx(), yMinEtiqueta),
+            style = estiloEtiqueta
+        )
+
         // Punto destacado en el último peso
         val ultimo = coordenadas.last()
         drawCircle(color = colorPunto, radius = 4.5.dp.toPx(), center = ultimo)
@@ -816,5 +880,32 @@ private fun formatearPesoDosDecimales(peso: Double): String {
     val entero = absoluto / 100
     val decimales = absoluto % 100
     return "$signo$entero.${decimales.toString().padStart(2, '0')}"
+}
+
+private val MESES_CORTOS = listOf(
+    "ene", "feb", "mar", "abr", "may", "jun",
+    "jul", "ago", "sep", "oct", "nov", "dic"
+)
+
+/**
+ * Etiquetas de fecha de los extremos del gráfico: la del primer y la del último pesaje del
+ * tramo. Devuelve null si no hay pesajes suficientes para dibujar el gráfico.
+ */
+private fun fechasSparkline(pesos: List<com.example.virtualpetkmp.Peso>): Pair<String, String>? {
+    if (pesos.size < 2) return null
+    val ordenados = pesos.sortedBy { it.fecha }.takeLast(14)
+    val primera = ordenados.first().fecha
+    val ultima = ordenados.last().fecha
+    return etiquetaFechaCompacta(primera, ultima) to etiquetaFechaCompacta(ultima, ultima)
+}
+
+/**
+ * Etiqueta de fecha compacta para el gráfico: "sep 26" si el otro extremo del tramo es del
+ * mismo año, y solo el año ("2026") si no lo es, para que no se repita en las dos puntas.
+ */
+private fun etiquetaFechaCompacta(fecha: kotlinx.datetime.LocalDate, otra: kotlinx.datetime.LocalDate): String {
+    val mes = MESES_CORTOS[fecha.monthNumber - 1]
+    val anioCorto = (fecha.year % 100).toString().padStart(2, '0')
+    return if (fecha.year == otra.year) "$mes $anioCorto" else "${fecha.year}"
 }
 

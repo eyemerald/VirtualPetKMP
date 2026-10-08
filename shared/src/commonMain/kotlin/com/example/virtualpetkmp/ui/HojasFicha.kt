@@ -1,6 +1,7 @@
-﻿package com.example.virtualpetkmp.ui
+package com.example.virtualpetkmp.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -290,24 +291,46 @@ fun HojaVacunasPreventivos(
             }
         }
 
-        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
-            // Un único botón: el de alta. El aviso en blanco que había debajo era un resto
-            // de la antigua navegación a la pantalla completa y hacía lo mismo que este.
-            androidx.compose.material3.Button(
-                onClick = { onAgregar(pestana == 0) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(if (pestana == 0) "Añadir vacuna" else "Añadir preventivo")
-            }
-        }
+        FilaAccionHoja(
+            etiquetaAccion = if (pestana == 0) "Añadir vacuna" else "Añadir preventivo",
+            onAccion = { onAgregar(pestana == 0) }
+        )
     }
 }
 
 /** Fecha resultante de sumar [dias] a [desde]. */
 private fun hoyMasDias(desde: LocalDate, dias: Int): LocalDate =
     LocalDate.fromEpochDays(desde.toEpochDays() + dias)
+
+/**
+ * Acción de alta de una hoja: el mismo botón "+" flotante que la lista de mascotas, abajo a
+ * la derecha.
+ *
+ * Se unificó a propósito: antes había botones grandes verdes a lo ancho en unas hojas y un
+ * "+" en otras, y la misma acción no debería verse distinta según dónde estés.
+ *
+ * @param etiquetaAccion texto solo para accesibilidad, ya que el botón no lleva texto.
+ */
+@Composable
+fun FilaAccionHoja(
+    etiquetaAccion: String,
+    onAccion: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 10.dp),
+        contentAlignment = Alignment.CenterEnd
+    ) {
+        androidx.compose.material3.FloatingActionButton(
+            onClick = onAccion,
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = etiquetaAccion)
+        }
+    }
+}
 
 /**
  * Milisegundos desde epoch de la medianoche de esa fecha, que es lo que espera el
@@ -487,36 +510,11 @@ fun HojaSaludYSeguimiento(
             }
         }
 
-        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
-            // Abajo solo alta, en las tres pestañas
-            when (pestana) {
-                0 -> androidx.compose.material3.Button(
-                    onClick = onAgregar,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Añadir tratamiento")
-                }
-
-                1 -> androidx.compose.material3.Button(
-                    onClick = onAgregarInforme,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Añadir informe")
-                }
-
-                else -> androidx.compose.material3.Button(
-                    onClick = onAgregarRevision,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Añadir visita")
-                }
-            }
+        // Abajo solo el alta, con el mismo "+" que en el resto de la app
+        when (pestana) {
+            0 -> FilaAccionHoja(etiquetaAccion = "Añadir tratamiento", onAccion = onAgregar)
+            1 -> FilaAccionHoja(etiquetaAccion = "Añadir informe", onAccion = onAgregarInforme)
+            else -> FilaAccionHoja(etiquetaAccion = "Añadir visita", onAccion = onAgregarRevision)
         }
     }
 }
