@@ -15,6 +15,8 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.MedicalInformation
 import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Note
@@ -273,15 +275,6 @@ fun FichaMascotaScreen(
             }
         )
 
-        item(key = "modificar") {
-            Button(
-                onClick = onModificar,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Modificar datos")
-            }
-        }
-
         if (mensajeExportar != null) {
             item(key = "mensaje-exportar") {
                 Text(
@@ -297,58 +290,66 @@ fun FichaMascotaScreen(
     // mascota y su peso, a la derecha el resto de tarjetas con espacio de sobra. Así la
     // tarjeta de peso y las tarjetas hub se ven a la vez y cada una con su tamaño normal.
     if (compacta) {
-        Row(
+        // El contenido ocupa el alto que deja libre el hueco del banner, que va anclado al
+        // fondo de la pantalla (no arriba), igual que en vertical.
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
                 .padding(top = ESPACIO_ICONOS_FLOTANTES)
         ) {
-            Column(
+            Row(
                 modifier = Modifier
-                    .widthIn(max = 340.dp)
-                    .weight(0.42f)
-                    .fillMaxHeight()
-                    .padding(end = 12.dp),
-                verticalArrangement = Arrangement.Center
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                CabeceraMascota(
-                    nombre = mascota.nombre,
-                    rutaFoto = rutaFoto,
-                    edad = calcularEdad(mascota.fechaNacimiento, hoy),
-                    tamanoAvatar = 84.dp,
-                    apilada = true,
-                    onCambiarFoto = { mostrarOpcionesFoto = true }
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = 340.dp)
+                        .weight(0.42f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CabeceraMascota(
+                        nombre = mascota.nombre,
+                        rutaFoto = rutaFoto,
+                        edad = calcularEdad(mascota.fechaNacimiento, hoy),
+                        tamanoAvatar = 84.dp,
+                        apilada = true,
+                        onCambiarFoto = { mostrarOpcionesFoto = true },
+                        menuAcciones = { MenuAccionesFicha(onModificar = onModificar) }
+                    )
+
+                    errorFoto?.let { ErrorFotoTexto(it) }
+                }
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(horizontal = 12.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
                 )
 
-                errorFoto?.let { ErrorFotoTexto(it) }
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    contentPadding = PaddingValues(bottom = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // La tarjeta de peso abre la columna derecha: es el dato principal.
+                    contenidoHubFicha(conPeso = true)
+                }
             }
 
-            VerticalDivider(
+            // Hueco FIJO del banner, anclado abajo y fuera del contenido que se desplaza.
+            Spacer(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(end = 12.dp),
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .height(ALTO_RESERVA_BANNER)
             )
-
-            LazyColumn(
-                modifier = Modifier
-                    .weight(0.58f)
-                    .fillMaxHeight(),
-                contentPadding = PaddingValues(bottom = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // La tarjeta de peso abre la columna derecha: es el dato principal de la ficha.
-                contenidoHubFicha(conPeso = true)
-            }
         }
-
-        // Hueco FIJO del banner de publicidad, igual que en vertical.
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .height(ALTO_RESERVA_BANNER)
-        )
         return
     }
 
@@ -366,7 +367,8 @@ fun FichaMascotaScreen(
             edad = calcularEdad(mascota.fechaNacimiento, hoy),
             tamanoAvatar = 80.dp,
             apilada = false,
-            onCambiarFoto = { mostrarOpcionesFoto = true }
+            onCambiarFoto = { mostrarOpcionesFoto = true },
+            menuAcciones = { MenuAccionesFicha(onModificar = onModificar) }
         )
 
         LazyColumn(
@@ -702,6 +704,44 @@ private fun ErrorFotoTexto(mensaje: String) {
 }
 
 /**
+ * Menú de tres puntos con las acciones de la ficha que no son datos (por ahora, modificar los
+ * datos de la mascota). Va en la fila del nombre, alineado arriba, para no gastar una fila
+ * entera de botón como antes.
+ */
+@Composable
+private fun MenuAccionesFicha(
+    onModificar: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var abierto by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier) {
+        IconButton(onClick = { abierto = true }) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "Más acciones"
+            )
+        }
+
+        DropdownMenu(
+            expanded = abierto,
+            onDismissRequest = { abierto = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Modificar datos") },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Default.Edit, contentDescription = null)
+                },
+                onClick = {
+                    abierto = false
+                    onModificar()
+                }
+            )
+        }
+    }
+}
+
+/**
  * Identidad de la mascota: avatar pulsable (abre las opciones de foto), nombre y edad.
  *
  * @param apilada true en la columna izquierda de apaisado: el avatar va encima del nombre y
@@ -715,7 +755,8 @@ private fun CabeceraMascota(
     edad: String,
     tamanoAvatar: Dp,
     apilada: Boolean,
-    onCambiarFoto: () -> Unit
+    onCambiarFoto: () -> Unit,
+    menuAcciones: @Composable () -> Unit = {}
 ) {
     if (apilada) {
         Column(
@@ -751,6 +792,8 @@ private fun CabeceraMascota(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
+
+            menuAcciones()
         }
         return
     }
@@ -790,6 +833,15 @@ private fun CabeceraMascota(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+
+        // Las acciones van arriba de la fila, a la derecha del nombre.
+        Box(
+            modifier = Modifier
+                .align(Alignment.Top)
+                .offset(y = (-8).dp)
+        ) {
+            menuAcciones()
         }
     }
 }

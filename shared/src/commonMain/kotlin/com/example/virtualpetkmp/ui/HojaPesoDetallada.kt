@@ -1,25 +1,27 @@
 package com.example.virtualpetkmp.ui
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,12 +29,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.virtualpetkmp.Peso
@@ -95,7 +100,6 @@ fun HojaPesoDetallada(
         }
     }
 
-    val porMes = remember(filtrados) { agruparPorMes(filtrados) }
     val ultimo = filtrados.lastOrNull()
 
     HojaFicha(titulo = "Peso", onCerrar = onCerrar) {
@@ -197,11 +201,11 @@ fun HojaPesoDetallada(
             }
 
             item(key = "grafico") {
-                GraficoBarrasMeses(
-                    meses = porMes,
+                GraficoLineaMeses(
+                    pesos = filtrados,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .height(210.dp)
                 )
             }
 
@@ -236,41 +240,52 @@ fun HojaPesoDetallada(
     }
 }
 
-/** Un mes del gráfico: etiqueta y peso medio de ese mes. */
-private data class MesPeso(val etiqueta: String, val kilos: Double)
+/** Un mes del gráfico: su posición temporal y el peso medio de ese mes (null si no hay). */
+private data class MesPeso(val anio: Int, val mes: Int, val media: Double?)
 
-/** Agrupa los pesajes por mes (media) para que el gráfico no se sature. */
-private fun agruparPorMes(pesos: List<Peso>): List<MesPeso> {
+private val MESES_CORTOS_GRAFICO = listOf(
+    "ene", "feb", "mar", "abr", "may", "jun",
+    "jul", "ago", "sep", "oct", "nov", "dic"
+)
+
+/** Cuántos meses hay entre dos claves (año, mes). */
+private fun mesesEntre(anioInicio: Int, mesInicio: Int, anioFin: Int, mesFin: Int): Int =
+    (anioFin - anioInicio) * 12 + (mesFin - mesInicio)
+
+/**
+ * Serie mensual del gráfico: un punto por cada mes entre el primer y el último pesaje, con la
+ * media de los pesajes de ese mes o null si ese mes no tiene ninguno. Así el eje inferior va
+ * mes a mes seguido, sin saltos, como una línea de tiempo.
+ */
+private fun serieMensual(pesos: List<Peso>): List<MesPeso> {
     if (pesos.isEmpty()) return emptyList()
-    val meses = listOf(
-        "ene", "feb", "mar", "abr", "may", "jun",
-        "jul", "ago", "sep", "oct", "nov", "dic"
-    )
-    return pesos
-        .groupBy { it.fecha.year to it.fecha.monthNumber }
-        .toSortedMap(compareBy({ it.first }, { it.second }))
-        .map { (clave, delMes) ->
-            val media = delMes.sumOf { it.peso } / delMes.size
-            MesPeso("${meses[clave.second - 1]} ${clave.first}", media)
-        }
-}
+    val medias = pesos.groupBy { it.fecha.year to it.fecha.monthNumber }
+        .mapValues { (_, delMes) -> delMes.sumOf { it.peso } / delMes.size }
+    val ordenados = pesos.sortedBy { it.fecha }
+    val primero = ordenados.first().fecha
+    val ultimo = ordenados.last().fecha
 
-/** Convierte el texto de una fecha del filtro, o null si está vacío o mal formado. */
-private fun String.toFechaONull(): LocalDate? = try {
-    if (isBlank()) null else parseFormatoEuropeo(this)
-} catch (e: Exception) {
-    null
+    val total = mesesEntre(primero.year, primero.monthNumber, ultimo.year, ultimo.monthNumber)
+    return (0..total).map { avance ->
+        val bruto = primero.monthNumber - 1 + avance
+        val anio = primero.year + bruto / 12
+        val mes = bruto % 12 + 1
+        MesPeso(anio = anio, mes = mes, media = medias[anio to mes])
+    }
 }
 
 /**
- * Gráfico de barras por meses: barras juntas, la del último mes en azul y el resto en
- * oscuro, con el mes debajo de cada barra.
+ * Gráfico de la evolución del peso, mes a mes, como una línea (igual que la tarjeta de la
+ * ficha y no como barras) con las etiquetas de mes debajo. Se puede arrastrar en horizontal
+ * para recorrer todo el histórico.
  */
 @Composable
-private fun GraficoBarrasMeses(
-    meses: List<MesPeso>,
+private fun GraficoLineaMeses(
+    pesos: List<Peso>,
     modifier: Modifier = Modifier
 ) {
+    val meses = remember(pesos) { serieMensual(pesos) }
+
     if (meses.isEmpty()) {
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
             Text(
@@ -282,51 +297,165 @@ private fun GraficoBarrasMeses(
         return
     }
 
-    val colorBarra = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
-    val colorActual = LocalExtrasColors.current.barraActual
+    val colorLinea = LocalExtrasColors.current.barraActual
+    val colorReferencia = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
     val colorTexto = MaterialTheme.colorScheme.onSurfaceVariant
-    val radio = with(androidx.compose.ui.platform.LocalDensity.current) { 3.dp.toPx() }
-    val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
-    val estiloEtiqueta = androidx.compose.ui.text.TextStyle(fontSize = 9.sp, color = colorTexto)
-    val altoEtiqueta = with(androidx.compose.ui.platform.LocalDensity.current) { 14.dp.toPx() }
+    val textMeasurer = rememberTextMeasurer()
+    val estiloEtiqueta = TextStyle(fontSize = 9.sp, color = colorTexto)
+    val densidad = LocalDensity.current
+    val altoEtiquetas = with(densidad) { 16.dp.toPx() }
+    val margenLados = with(densidad) { 10.dp.toPx() }
 
-    androidx.compose.foundation.Canvas(modifier = modifier) {
-        val minPeso = meses.minOf { it.kilos }
-        val maxPeso = meses.maxOf { it.kilos }
-        val rango = (maxPeso - minPeso).toFloat()
-        val altoBarras = (size.height - altoEtiqueta).coerceAtLeast(1f)
-        val hueco = 6.dp.toPx()
-        val anchoBarra = ((size.width - hueco * (meses.size - 1)) / meses.size).coerceAtLeast(1f)
+    // Posición de desplazamiento en píxeles: se guarda entre recomposiciones para no perderla
+    // al abrir la hoja otra vez.
+    var desplazamiento by rememberSaveable { mutableStateOf(0f) }
 
-        meses.forEachIndexed { indice, mes ->
-            val normalizado = if (rango <= 0.0001f) 1f else ((mes.kilos - minPeso) / rango).toFloat()
-            val fraccion = 0.15f + normalizado * 0.85f
-            val altoBarra = (altoBarras * fraccion).coerceAtLeast(3.dp.toPx())
-            val x = indice * (anchoBarra + hueco)
-            val esUltimo = indice == meses.lastIndex
+    BoxWithConstraints(modifier = modifier) {
+        val margenLadosDp = 10.dp
+        val anchoMaxDp = (maxWidth - margenLadosDp * 2).coerceAtLeast(1.dp)
+        val anchoPx = with(densidad) { anchoMaxDp.toPx() }
 
-            drawRoundRect(
-                color = if (esUltimo) colorActual else colorBarra,
-                topLeft = Offset(x, altoBarras - altoBarra),
-                size = Size(anchoBarra, altoBarra),
-                cornerRadius = CornerRadius(radio, radio)
-            )
+        // Si hay meses de sobra, se ven unas 6 unidades por pantalla; si son pocos, se
+        // reparten a lo ancho para no dejar huecos.
+        val pasoMinimoDp = 52.dp
+        val pasoMaximoDp = 60.dp
+        val pasoTeoricoDp = anchoMaxDp / 6
+        val pasoDp = pasoTeoricoDp.coerceIn(pasoMinimoDp, pasoMaximoDp)
+        val pasoPx = with(densidad) { pasoDp.toPx() }
+        val anchoContenidoPx = pasoPx * (meses.size - 1).coerceAtLeast(1)
+        val maxDesplazamiento = (anchoContenidoPx - anchoPx).coerceAtLeast(0f)
 
-            // Etiqueta del mes, solo si cabe
-            val medida = textMeasurer.measure(mes.etiqueta, style = estiloEtiqueta)
-            if (medida.size.width <= anchoBarra + hueco) {
+        // Al abrir, se enseña el final del histórico, que es el peso más reciente.
+        LaunchedEffect(anchoPx, maxDesplazamiento) {
+            if (desplazamiento == 0f) desplazamiento = maxDesplazamiento
+        }
+
+        // Las etiquetas se adelgazan si hay muchísimos meses, para que no se solapen.
+        val saltoEtiquetas = (meses.size / 12 + 1).coerceAtLeast(1)
+        val desplazamientoPx = desplazamiento.coerceIn(0f, maxDesplazamiento)
+
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(anchoPx, maxDesplazamiento) {
+                    detectDragGestures { cambio, arrastre ->
+                        cambio.consume()
+                        desplazamiento =
+                            (desplazamiento - arrastre.x).coerceIn(0f, maxDesplazamiento)
+                    }
+                }
+        ) {
+            val altoGrafico = (size.height - altoEtiquetas).coerceAtLeast(1f)
+            val margenInterno = margenLados.coerceAtMost(size.width / 6f)
+            val altoUtil = (altoGrafico - margenInterno * 2).coerceAtLeast(1f)
+            // Ancho del hueco visible: las etiquetas que caen fuera del recorte no se dibujan.
+            val anchoVisible = size.width
+
+            fun x(indice: Int): Float = margenInterno + indice * pasoPx - desplazamientoPx
+
+            // Solo los meses con pesaje: los huecos (meses sin datos) no se dibujan como
+            // puntos, pero la línea sí los atraviesa para que la evolución se vea entera.
+            val conDatos = meses.indices.filter { meses[it].media != null }
+            val valores = conDatos.map { meses[it].media!! }
+            val minPeso = valores.minOrNull() ?: 0.0
+            val maxPeso = valores.maxOrNull() ?: 0.0
+            val rango = (maxPeso - minPeso).toFloat()
+
+            fun y(peso: Double): Float {
+                val normalizado = if (rango <= 0.0001f) 0.5f else ((peso - minPeso) / rango).toFloat()
+                return margenInterno + altoUtil * (1f - normalizado)
+            }
+
+            val puntos = conDatos.map { Offset(x(it), y(meses[it].media!!)) }
+
+            // Referencias horizontales sutiles, como en la tarjeta de la ficha.
+            listOf(0f, 0.5f, 1f).forEach { fraccion ->
+                val lineaY = margenInterno + altoUtil * fraccion
+                drawLine(
+                    color = colorReferencia,
+                    start = Offset(0f, lineaY),
+                    end = Offset(size.width, lineaY),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+
+            // Retícula vertical muy tenue: ayuda a seguir el eje sin ensuciar el gráfico.
+            meses.forEachIndexed { indice, _ ->
+                val lineaX = x(indice)
+                if (lineaX >= 0f && lineaX <= size.width) {
+                    drawLine(
+                        color = colorReferencia,
+                        start = Offset(lineaX, margenInterno),
+                        end = Offset(lineaX, margenInterno + altoUtil),
+                        strokeWidth = 1.dp.toPx()
+                    )
+                }
+            }
+
+            if (puntos.size >= 2) {
+                val path = Path()
+                path.moveTo(puntos.first().x, puntos.first().y)
+                for (i in 0 until puntos.size - 1) {
+                    val p1 = puntos[i]
+                    val p2 = puntos[i + 1]
+                    val medio = (p1.x + p2.x) / 2f
+                    path.cubicTo(medio, p1.y, medio, p2.y, p2.x, p2.y)
+                }
+                drawPath(path = path, color = colorLinea, style = Stroke(width = 2.dp.toPx()))
+            }
+
+            // Cada pesaje de verdad lleva su marca: se ve de un vistazo cuándo se pesó.
+            puntos.dropLast(1).forEach { punto ->
+                drawCircle(color = colorLinea, radius = 2.5.dp.toPx(), center = punto)
+            }
+
+            // Etiquetas de mes debajo. El año aparece solo cuando cambia, como en una línea
+            // de tiempo: "nov dic 25 ene feb 26".
+            val datosEtiquetas = mutableListOf<Pair<String, Float>>()
+            var bordeDerecho = -Float.MAX_VALUE
+            meses.forEachIndexed { indice, mes ->
+                val primeraDelAnio = indice == 0 || meses[indice - 1].anio != mes.anio
+                if (indice % saltoEtiquetas != 0 && !primeraDelAnio) return@forEachIndexed
+                val etiqueta = if (primeraDelAnio) {
+                    "${MESES_CORTOS_GRAFICO[mes.mes - 1]} ${mes.anio % 100}"
+                } else {
+                    MESES_CORTOS_GRAFICO[mes.mes - 1]
+                }
+                val medida = textMeasurer.measure(etiqueta, style = estiloEtiqueta)
+                // Se centra en el mes, se mete dentro del gráfico y, si quedaría pegada a la
+                // etiqueta anterior, se salta: mejor un mes sin rótulo que dos montados.
+                val idealX = (x(indice) - medida.size.width / 2f)
+                    .coerceIn(0f, (anchoVisible - medida.size.width).coerceAtLeast(0f))
+                if (idealX < bordeDerecho + 6.dp.toPx()) return@forEachIndexed
+                datosEtiquetas.add(etiqueta to idealX)
+                bordeDerecho = idealX + medida.size.width
+            }
+            datosEtiquetas.forEach { (texto, posicionX) ->
                 drawText(
                     textMeasurer = textMeasurer,
-                    text = mes.etiqueta,
-                    topLeft = Offset(
-                        x + (anchoBarra - medida.size.width) / 2f,
-                        altoBarras + 2.dp.toPx()
-                    ),
+                    text = texto,
+                    topLeft = Offset(x = posicionX, y = altoGrafico + 3.dp.toPx()),
                     style = estiloEtiqueta
+                )
+            }
+
+            // Punto del último peso: el dato que más importa, destacado.
+            if (puntos.isNotEmpty()) {
+                drawCircle(
+                    color = colorLinea,
+                    radius = 4.dp.toPx(),
+                    center = puntos.last()
                 )
             }
         }
     }
+}
+
+/** Convierte el texto de una fecha del filtro, o null si está vacío o mal formado. */
+private fun String.toFechaONull(): LocalDate? = try {
+    if (isBlank()) null else parseFormatoEuropeo(this)
+} catch (e: Exception) {
+    null
 }
 
 /** Dos campos de fecha para el filtro "elegir fechas". */
