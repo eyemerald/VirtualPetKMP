@@ -9,15 +9,16 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 ## ✨ Características
 
 - 🐶 **Gestión de mascotas**: fichas con datos básicos (nombre, especie, raza, fecha de nacimiento, sexo, color, microchip).
-- 📷 **Foto de la mascota**: se puede elegir de los archivos o **hacer con la cámara** (Android); aparece en un círculo grande y centrado en su ficha, con el nombre y la edad debajo.
-- 💉 **Vacunas**: registro con próxima dosis y **notificaciones locales** 15 días antes.
-- 💊 **Preventivos**: pipetas, desparasitaciones y otros tratamientos preventivos con aviso 1 día antes.
-- ⚖️ **Pesos**: registro y evolución con **gráficos de línea suavizados**.
+- 📷 **Foto de la mascota**: se puede elegir de los archivos o **hacer con la cámara** (Android); se ve en la ficha y en la lista de mascotas.
+- 🏠 **Ficha como panel**: cabecera con la foto, el nombre y la edad, y tarjetas por bloque (peso, vacunas y preventivos, salud y seguimiento, notas) con el estado de un vistazo: en ámbar lo que vence pronto y en rojo lo vencido.
+- 💉 **Vacunas**: registro con próxima dosis, **notificaciones locales** 15 días antes y **añadir el recordatorio al calendario** del teléfono.
+- 💊 **Preventivos**: pipetas, desparasitaciones y otros tratamientos preventivos, con aviso 1 día antes y también añadibles al calendario.
+- ⚖️ **Pesos**: registro y evolución en **gráfico de barras** en la ficha, y una vista detallada por meses con filtro (todo, último año o un rango de fechas).
 - 🩺 **Revisiones veterinarias**: historial con motivo, diagnóstico, notas y veterinario.
 - 💊 **Tratamientos**: medicamentos con dosis, frecuencia y fechas.
 - 📄 **Informes**: adjuntar informes veterinarios con tipo, descripción y archivo.
 - 📝 **Notas**: apuntes rápidos de interés sobre cada mascota.
-- 🏥 **Veterinarios**: agenda con urgencias, llamada directa y navegación con Google Maps.
+- 🏥 **Veterinarios**: agenda con urgencias (botón directo de llamada), llamada normal y navegación con Google Maps.
 - 📤 **Exportar ficha a PDF**: genera un PDF completo o resumido de la ficha de la mascota.
 - 🔔 **Notificaciones locales**: para no olvidar las próximas dosis.
 - 🌓 **Tema claro / oscuro**: se adapta a la configuración del sistema.
@@ -116,9 +117,22 @@ Con **hot reload** durante el desarrollo:
 
 **Pendiente antes de la v1.0:**
 
-- [ ] Botón "Añadir al calendario" en vacunas y preventivos.
-- [ ] Backup / Exportar / Importar datos.
-- [ ] Compartir PDF directamente.
+- [ ] **Compartir el PDF de la ficha** en lugar de solo guardarlo: el botón de exportar debe
+      ofrecer enviarlo por correo, WhatsApp, guardarlo en una carpeta, etc. Enfoque acordado:
+      generar el PDF en la caché y lanzar el "compartir" del sistema (`ACTION_SEND` con
+      `application/pdf`), que ya muestra esas opciones, en vez de construir un menú propio.
+      Hace falta un `expect/actual` de compartir, como los que ya existen para llamar o abrir
+      el mapa. Desbloquea también el punto de backup.
+- [ ] **Cartilla veterinaria**: poder guardarla y consultarla dentro de la app, con fotos
+      (una foto por página, reutilizando el selector de foto actual) o en PDF/imágenes.
+      Requiere decidir antes: tabla nueva de páginas de cartilla (`mascotaId`, `ruta`,
+      `fecha`, `nota`), su migración, y cómo mostrar un PDF dentro de la app (hoy los PDF se
+      abren con una app externa).
+- [ ] **Backup y paso de datos entre PC y móvil**: en una primera fase, exportar e importar
+      la base de datos completa a un archivo (es un único fichero SQLite, así que es copiarlo;
+      con el compartir del sistema ya se puede subir a Drive o enviarlo por correo). La
+      sincronización automática entre dispositivos queda para más adelante: necesita backend
+      o cuenta de Google y resolver conflictos.
 - [ ] Publicación en Google Play Store.
 
 ---
