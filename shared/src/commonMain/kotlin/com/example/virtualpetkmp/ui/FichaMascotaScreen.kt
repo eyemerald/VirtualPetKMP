@@ -1,4 +1,4 @@
-﻿package com.example.virtualpetkmp.ui
+package com.example.virtualpetkmp.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -236,38 +236,42 @@ fun FichaMascotaScreen(
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-        // Identidad de la mascota: foto pulsable, nombre y edad. La foto sigue siendo el
-        // acceso al selector de foto; el volver y el compartir viven en la barra global.
-        Column(
+        // Identidad de la mascota en UNA sola línea: foto a la izquierda y nombre con la
+        // edad a la derecha. Así la foto puede ser más grande sin gastar más alto, que es lo
+        // que antes se comía la cabecera en columna.
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = ESPACIO_SOBRE_CABECERA, bottom = ESPACIO_BAJO_CABECERA),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalAlignment = Alignment.CenterVertically
         ) {
             AvatarMascota(
                 nombre = mascota.nombre,
                 rutaFoto = rutaFoto,
-                tamano = 100.dp,
+                tamano = 120.dp,
                 onCambiarFoto = { mostrarOpcionesFoto = true }
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
-            Text(
-                text = mascota.nombre,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = mascota.nombre,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-            Text(
-                text = calcularEdad(mascota.fechaNacimiento, hoy),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                textAlign = TextAlign.Center
-            )
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = calcularEdad(mascota.fechaNacimiento, hoy),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+            }
         }
 
         LazyColumn(
@@ -424,6 +428,7 @@ fun FichaMascotaScreen(
         is ActiveSheet.Vaccines -> HojaVacunasPreventivos(
             vacunas = vacunas,
             preventivos = preventivos,
+            nombreMascota = mascota.nombre,
             onCerrar = { activeSheet = ActiveSheet.None },
             onAgregar = { esVacuna ->
                 formularioActivo = if (esVacuna) FormularioHoja.Vacuna else FormularioHoja.Preventivo

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -49,10 +50,12 @@ import com.example.virtualpetkmp.Revision
 import com.example.virtualpetkmp.Tratamiento
 import com.example.virtualpetkmp.Vacuna
 import com.example.virtualpetkmp.util.rememberAbridorArchivo
+import com.example.virtualpetkmp.util.rememberAgregadorCalendario
 import com.example.virtualpetkmp.util.toFormatoEuropeo
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.todayIn
 
 /** Alto máximo de las hojas modales, para que no tapen toda la ficha. */
@@ -103,6 +106,7 @@ fun TarjetaContenidoHoja(
     subtitulo: String? = null,
     detalle: String? = null,
     onAbrir: (() -> Unit)? = null,
+    onCalendario: (() -> Unit)? = null,
     onEditar: (() -> Unit)? = null,
     onBorrar: (() -> Unit)? = null
 ) {
@@ -151,6 +155,15 @@ fun TarjetaContenidoHoja(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            if (onCalendario != null) {
+                IconButton(onClick = onCalendario) {
+                    Icon(
+                        imageVector = Icons.Default.Event,
+                        contentDescription = "Añadir al calendario",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             if (onEditar != null) {
                 IconButton(onClick = onEditar) {
                     Icon(
@@ -182,6 +195,7 @@ fun TarjetaContenidoHoja(
 fun HojaVacunasPreventivos(
     vacunas: List<Vacuna>,
     preventivos: List<Preventivo>,
+    nombreMascota: String,
     onCerrar: () -> Unit,
     onAgregar: (esVacuna: Boolean) -> Unit,
     onEditarVacuna: (Vacuna) -> Unit,
@@ -191,6 +205,7 @@ fun HojaVacunasPreventivos(
 ) {
     var pestana by rememberSaveable { mutableStateOf(0) }
     val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val agregarAlCalendario = rememberAgregadorCalendario()
 
     HojaFicha(titulo = "Vacunas y preventivos", onCerrar = onCerrar) {
         TabRow(selectedTabIndex = pestana) {
@@ -233,7 +248,16 @@ fun HojaVacunasPreventivos(
                             proxima -> "Vence pronto"
                             else -> "Al día"
                         },
-                        onAbrir = { onEditarVacuna(vacuna) },
+                        // El botón de calendario es el que añade el recordatorio; para
+                        // modificar los datos está el lápiz.
+                        onCalendario = {
+                            agregarAlCalendario(
+                                "Vacuna: ${vacuna.nombre}",
+                                "Recuerda poner la vacuna ${vacuna.nombre} a $nombreMascota",
+                                vacuna.fechaProximaDosis.aMedianocheMillis()
+                            )
+                        },
+                        onEditar = { onEditarVacuna(vacuna) },
                         onBorrar = vacuna.id?.let { id -> { onBorrarVacuna(id) } }
                     )
                 }
@@ -252,7 +276,14 @@ fun HojaVacunasPreventivos(
                             proximo -> "Vence pronto"
                             else -> "Al día"
                         },
-                        onAbrir = { onEditarPreventivo(preventivo) },
+                        onCalendario = {
+                            agregarAlCalendario(
+                                "Preventivo: ${preventivo.nombre}",
+                                "Recuerda aplicar ${preventivo.nombre} a $nombreMascota",
+                                preventivo.fechaProximaDosis.aMedianocheMillis()
+                            )
+                        },
+                        onEditar = { onEditarPreventivo(preventivo) },
                         onBorrar = preventivo.id?.let { id -> { onBorrarPreventivo(id) } }
                     )
                 }
@@ -277,6 +308,13 @@ fun HojaVacunasPreventivos(
 /** Fecha resultante de sumar [dias] a [desde]. */
 private fun hoyMasDias(desde: LocalDate, dias: Int): LocalDate =
     LocalDate.fromEpochDays(desde.toEpochDays() + dias)
+
+/**
+ * Milisegundos desde epoch de la medianoche de esa fecha, que es lo que espera el
+ * calendario del sistema para un evento de todo el día.
+ */
+private fun LocalDate.aMedianocheMillis(): Long =
+    this.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
 
 /**
  * Hoja de Salud y seguimiento con tres pestañas: Tratamientos (activos + historial
