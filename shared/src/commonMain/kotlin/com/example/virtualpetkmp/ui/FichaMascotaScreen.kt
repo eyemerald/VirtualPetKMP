@@ -30,10 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.virtualpetkmp.Mascota
@@ -76,6 +79,9 @@ fun FichaMascotaScreen(
     onCambiarDialogoExportar: (Boolean) -> Unit
 ) {
     val resumen by viewModel.resumen.collectAsState()
+    // En horizontal la ventana es muy baja: se encogen cabecera y gráficos para que la
+    // ficha se vea entera en lugar de cortada.
+    val compacta = alturaCompacta()
     // Listas completas para las hojas modales del dashboard
     val vacunas by viewModel.vacunas.collectAsState()
     val preventivos by viewModel.preventivos.collectAsState()
@@ -229,12 +235,13 @@ fun FichaMascotaScreen(
         )
     )
 
-    // Sin Scaffold: esta pantalla se dibuja DENTRO del Scaffold de MainScreen, que ya
-    // aplica los insets del sistema y aporta la barra superior (volver y compartir).
+    // Sin Scaffold: esta pantalla se dibuja DENTRO del Scaffold de MainScreen. Arriba deja
+    // una banda libre para los iconos flotantes de volver y compartir, que van superpuestos.
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp)
+            .padding(top = ESPACIO_ICONOS_FLOTANTES)
     ) {
         // Identidad de la mascota en UNA sola línea: foto a la izquierda y nombre con la
         // edad a la derecha. Así la foto puede ser más grande sin gastar más alto, que es lo
@@ -242,13 +249,16 @@ fun FichaMascotaScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = ESPACIO_SOBRE_CABECERA, bottom = ESPACIO_BAJO_CABECERA),
+                .padding(
+                    top = if (compacta) 4.dp else ESPACIO_SOBRE_CABECERA,
+                    bottom = if (compacta) 6.dp else ESPACIO_BAJO_CABECERA
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AvatarMascota(
                 nombre = mascota.nombre,
                 rutaFoto = rutaFoto,
-                tamano = 120.dp,
+                tamano = if (compacta) 56.dp else 80.dp,
                 onCambiarFoto = { mostrarOpcionesFoto = true }
             )
 
@@ -257,8 +267,8 @@ fun FichaMascotaScreen(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = mascota.nombre,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -269,7 +279,7 @@ fun FichaMascotaScreen(
                 Text(
                     text = calcularEdad(mascota.fechaNacimiento, hoy),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -288,6 +298,8 @@ fun FichaMascotaScreen(
                     ultimoPeso = resumen.ultimoPeso,
                     pesoAnterior = resumen.pesoAnterior,
                     pesos = resumen.pesosRecientes,
+                    altura = if (compacta) 76.dp else 130.dp,
+                    compacta = compacta,
                     onClick = { activeSheet = ActiveSheet.Weight }
                 )
             }
@@ -306,6 +318,7 @@ fun FichaMascotaScreen(
             // Tarjetas hub apiladas: abren su hoja modal
             listaTarjetasFicha(
                 items = tarjetas,
+                compacta = compacta,
                 onAbrirHoja = { clave ->
                     activeSheet = when (clave) {
                         "vacunasPreventivos" -> ActiveSheet.Vaccines
@@ -648,12 +661,14 @@ private fun TarjetaPesoHero(
     ultimoPeso: Double?,
     pesoAnterior: Double?,
     pesos: List<com.example.virtualpetkmp.Peso>,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    altura: Dp = 130.dp,
+    compacta: Boolean = false
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(130.dp),
+            .height(altura),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.tertiaryContainer
         ),
@@ -662,7 +677,7 @@ private fun TarjetaPesoHero(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(if (compacta) 10.dp else 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
@@ -675,29 +690,36 @@ private fun TarjetaPesoHero(
                     modifier = Modifier
                         .clip(RoundedCornerShape(14.dp))
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                        .padding(
+                            horizontal = if (compacta) 10.dp else 14.dp,
+                            vertical = if (compacta) 4.dp else 10.dp
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = ultimoPeso?.let { "${formatearPesoDosDecimales(it)} kg" } ?: "Sin datos",
-                        fontSize = 28.sp,
+                        fontSize = if (compacta) 20.sp else 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onTertiaryContainer,
                         maxLines = 1
                     )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(if (compacta) 2.dp else 6.dp))
 
-                Text(
-                    text = "Peso actual",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
-                )
+                // En horizontal no cabe la etiqueta bajo el número: se omite y el dato se
+                // entiende igual porque la tarjeta es la del peso.
+                if (!compacta) {
+                    Text(
+                        text = "Peso actual",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                    )
+                }
             }
 
             if (pesos.size >= 2) {
-                BarrasPeso(
+                SparklinePeso(
                     pesos = pesos,
                     modifier = Modifier
                         .weight(0.6f)
@@ -709,52 +731,77 @@ private fun TarjetaPesoHero(
 }
 
 /**
- * Vista compacta del peso en barras: una barra por pesaje, en orden cronológico y pegadas
- * unas a otras (sin separar por fechas), para ver de un vistazo si ha habido una bajada o
- * una subida importante. La barra más reciente va en azul y el resto en oscuro.
+ * Sparkline del peso: una línea suave y minimalista con las últimas pesadas, tres líneas
+ * horizontales muy tenues de referencia y un punto destacado en el último dato.
+ *
+ * La línea es de izquierda a derecha en orden cronológico, y los puntos se reparten a
+ * intervalos iguales (no por fecha), para que no queden huecos grandes si hay pesadas de
+ * años distintos. La idea es ver de un vistazo si ha habido una bajada o una subida.
  */
 @Composable
-private fun BarrasPeso(
+private fun SparklinePeso(
     pesos: List<com.example.virtualpetkmp.Peso>,
     modifier: Modifier = Modifier
 ) {
-    val recientes = remember(pesos) {
-        pesos.sortedBy { it.fecha }.takeLast(12)
+    val puntos = remember(pesos) {
+        pesos.sortedBy { it.fecha }.takeLast(14)
     }
-    val colorBarra = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.45f)
-    val colorActual = LocalExtrasColors.current.barraActual
-    val radioEsquina = with(androidx.compose.ui.platform.LocalDensity.current) { 2.dp.toPx() }
+    val colorLinea = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.55f)
+    val colorPunto = LocalExtrasColors.current.barraActual
+    val colorReferencia = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.12f)
 
     androidx.compose.foundation.Canvas(modifier = modifier) {
-        if (recientes.isEmpty()) return@Canvas
+        if (puntos.size < 2) return@Canvas
 
-        val minPeso = recientes.minOf { it.peso }
-        val maxPeso = recientes.maxOf { it.peso }
+        val minPeso = puntos.minOf { it.peso }
+        val maxPeso = puntos.maxOf { it.peso }
         val rango = (maxPeso - minPeso).toFloat()
+        val padV = 4.dp.toPx()
+        val altoUtil = (size.height - padV * 2).coerceAtLeast(1f)
+        val grosorLinea = 1.dp.toPx()
 
-        // La barra más baja nunca desaparece: mantiene un 25% de la altura útil.
-        fun fraccion(peso: Double): Float {
-            val normalizado = if (rango <= 0.0001f) 1f else ((peso - minPeso) / rango).toFloat()
-            return 0.25f + normalizado * 0.75f
-        }
-
-        val hueco = 3.dp.toPx()
-        val anchoTotal = size.width
-        val anchoBarra = ((anchoTotal - hueco * (recientes.size - 1)) / recientes.size)
-            .coerceAtLeast(1f)
-        val altoUtil = size.height
-
-        recientes.forEachIndexed { indice, registro ->
-            val altoBarra = (altoUtil * fraccion(registro.peso)).coerceAtLeast(2.dp.toPx())
-            val x = indice * (anchoBarra + hueco)
-            val esUltima = indice == recientes.lastIndex
-            drawRoundRect(
-                color = if (esUltima) colorActual else colorBarra,
-                topLeft = Offset(x, altoUtil - altoBarra),
-                size = androidx.compose.ui.geometry.Size(anchoBarra, altoBarra),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radioEsquina, radioEsquina)
+        // Tres referencias horizontales muy sutiles, para dar sensación de escala.
+        listOf(0f, 0.5f, 1f).forEach { fraccionY ->
+            val y = padV + altoUtil * fraccionY
+            drawLine(
+                color = colorReferencia,
+                start = Offset(0f, y),
+                end = Offset(size.width, y),
+                strokeWidth = grosorLinea
             )
         }
+
+        fun x(indice: Int): Float =
+            (indice.toFloat() / (puntos.size - 1)) * size.width
+
+        fun y(peso: Double): Float {
+            val normalizado = if (rango <= 0.0001f) 0.5f else ((peso - minPeso) / rango).toFloat()
+            // Se invierte porque en pantalla la Y crece hacia abajo.
+            return padV + altoUtil * (1f - normalizado)
+        }
+
+        val coordenadas = puntos.indices.map { Offset(x(it), y(puntos[it].peso)) }
+
+        // Curva suave entre los puntos, con los controles acotados al alto del gráfico.
+        val path = Path()
+        path.moveTo(coordenadas[0].x, coordenadas[0].y)
+        val factor = 0.18f
+        for (i in 0 until coordenadas.size - 1) {
+            val p0 = if (i == 0) coordenadas[i] else coordenadas[i - 1]
+            val p1 = coordenadas[i]
+            val p2 = coordenadas[i + 1]
+            val p3 = if (i + 2 < coordenadas.size) coordenadas[i + 2] else coordenadas[i + 1]
+            val c1x = p1.x + (p2.x - p0.x) * factor
+            val c1y = (p1.y + (p2.y - p0.y) * factor).coerceIn(padV, padV + altoUtil)
+            val c2x = p2.x - (p3.x - p1.x) * factor
+            val c2y = (p2.y - (p3.y - p1.y) * factor).coerceIn(padV, padV + altoUtil)
+            path.cubicTo(c1x, c1y, c2x, c2y, p2.x, p2.y)
+        }
+        drawPath(path = path, color = colorLinea, style = Stroke(width = 2.dp.toPx()))
+
+        // Punto destacado en el último peso
+        val ultimo = coordenadas.last()
+        drawCircle(color = colorPunto, radius = 4.5.dp.toPx(), center = ultimo)
     }
 }
 

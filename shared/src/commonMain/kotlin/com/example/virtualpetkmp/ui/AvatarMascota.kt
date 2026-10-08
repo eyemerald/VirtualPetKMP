@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material3.Icon
@@ -35,17 +36,18 @@ import com.example.virtualpetkmp.util.cargarImagenDesdeRuta
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** Tamaño por defecto del avatar en la ficha de la mascota. */
-val TAMANO_AVATAR_FICHA: Dp = 100.dp
+/** Tamaño por defecto del avatar (ficha y formulario). */
+val TAMANO_AVATAR_FICHA: Dp = 80.dp
 
 /**
- * Círculo con la foto de la mascota. Si no hay foto (o no se puede leer) muestra un
- * marcador con la inicial de su nombre, para que el hueco nunca quede vacío.
+ * Foto de la mascota en un cuadrado de esquinas redondeadas (tipo "squircle"). Si no hay
+ * foto (o no se puede leer) muestra un marcador con la inicial de su nombre, para que el
+ * hueco nunca quede vacío.
  *
- * El círculo no lleva ningún icono ni adorno encima: cuando [onCambiarFoto] no es null,
- * todo el círculo es pulsable para abrir las opciones de foto.
+ * No lleva ningún icono ni adorno encima: cuando [onCambiarFoto] no es null, todo el
+ * cuadrado es pulsable para abrir las opciones de foto.
  *
- * @param onCambiarFoto si no es null, el círculo completo abre el selector de foto.
+ * @param onCambiarFoto si no es null, el cuadrado completo abre el selector de foto.
  */
 @Composable
 fun AvatarMascota(
@@ -72,16 +74,17 @@ fun AvatarMascota(
         puedeCambiar -> "Foto de $nombre. Pulsa para cambiarla"
         else -> "Foto de $nombre"
     }
+    val forma = RoundedCornerShape(percent = 28)
 
     Box(
         modifier = modifier
             .size(tamano)
-            .clip(CircleShape)
+            .clip(forma)
             .background(MaterialTheme.colorScheme.primaryContainer)
             .border(
-                width = 3.dp,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
-                shape = CircleShape
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                shape = forma
             )
             .let { base ->
                 if (onCambiarFoto != null) {

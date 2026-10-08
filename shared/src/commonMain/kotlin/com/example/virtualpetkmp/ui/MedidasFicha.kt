@@ -1,5 +1,8 @@
 package com.example.virtualpetkmp.ui
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 
 /**
@@ -27,3 +30,27 @@ val ESPACIO_SOBRE_CABECERA = 8.dp
 
 /** Aire entre la cabecera de la ficha (foto/nombre/edad) y el contenido que se desplaza. */
 val ESPACIO_BAJO_CABECERA = 12.dp
+
+/**
+ * Sitio que ocupan los iconos flotantes por encima del contenido: su alto (44 dp) más un
+ * poco de aire, para que la cabecera de la ficha empiece por debajo y no queden pisados.
+ */
+val ESPACIO_ICONOS_FLOTANTES = 52.dp
+
+/**
+ * Altura por debajo de la cual se considera pantalla "baja" (un móvil en horizontal ronda
+ * los 390 dp de alto). En ese caso la ficha reduce cabecera y gráficos para que todo quepa.
+ */
+private val ALTURA_COMPACTA = 480.dp
+
+/**
+ * `true` cuando la ventana es baja, es decir, el móvil está en horizontal (o la pantalla es
+ * muy pequeña). Se usa para encoger la cabecera y la tarjeta de peso, y que la ficha se vea
+ * entera en lugar de cortada.
+ */
+@Composable
+fun alturaCompacta(): Boolean {
+    val altoPx = LocalWindowInfo.current.containerSize.height
+    val altoDp = with(LocalDensity.current) { altoPx.toDp() }
+    return altoDp < ALTURA_COMPACTA
+}

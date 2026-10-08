@@ -1,4 +1,4 @@
-﻿package com.example.virtualpetkmp
+package com.example.virtualpetkmp
 
 import androidx.compose.runtime.*
 import androidx.compose.runtime.LaunchedEffect
@@ -99,13 +99,10 @@ fun App(databaseFactory: DatabaseFactory) {
         }
     }
 
-    // Título de la barra superior: la ficha ya muestra la foto con el nombre, así que ahí
-    // va sin título.
-    val tituloBarra = when {
-        currentScreen == "ficha" -> ""
-        currentScreen == "form" -> if (selectedMascotaId == null) "Nueva mascota" else "Editar mascota"
-        else -> "Mis Mascotas"
-    }
+    // Iconos flotantes: solo en el detalle de una mascota. En la lista y en el formulario
+    // no hacen falta (el formulario tiene su propio botón de guardar), y con la pestaña de
+    // Veterinarios se ocultan solos porque MainScreen mira la pestaña activa.
+    val enDetalleMascota = currentScreen == "ficha" && mascotaActual != null
 
     val volverAtras: (() -> Unit)? = when {
         currentScreen == "list" -> null
@@ -120,9 +117,9 @@ fun App(databaseFactory: DatabaseFactory) {
 
     VirtualPetTheme {
         MainScreen(
-            titulo = tituloBarra,
+            mostrarAcciones = enDetalleMascota,
             onVolver = volverAtras,
-            onCompartir = if (currentScreen == "ficha" && mascotaActual != null) {
+            onCompartir = if (enDetalleMascota) {
                 { dialogoExportarFicha = true }
             } else {
                 null

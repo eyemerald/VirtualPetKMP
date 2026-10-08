@@ -132,7 +132,8 @@ fun TarjetaLargaFicha(
     colorFondo: Color,
     colorIcono: Color,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    compacta: Boolean = false
 ) {
     val colorNeutro = MaterialTheme.colorScheme.onSurface
     val colorSuave = MaterialTheme.colorScheme.onSurfaceVariant
@@ -146,12 +147,12 @@ fun TarjetaLargaFicha(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = if (compacta) 6.dp else 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(if (compacta) 32.dp else 40.dp)
                     .clip(CircleShape)
                     .background(colorIcono.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
@@ -259,7 +260,8 @@ private fun severidadDeBadge(estado: EstadoBadge): Int = when (estado) {
  */
 fun LazyListScope.listaTarjetasFicha(
     items: List<ItemFicha>,
-    onAbrirHoja: (String) -> Unit
+    onAbrirHoja: (String) -> Unit,
+    compacta: Boolean = false
 ) {
     items.forEach { item ->
         item(key = "tarjeta-${item.hoja ?: item.titulo}") {
@@ -272,6 +274,7 @@ fun LazyListScope.listaTarjetasFicha(
                 contadores = item.contadores,
                 colorFondo = item.colorFondo,
                 colorIcono = item.colorIcono,
+                compacta = compacta,
                 onClick = {
                     val hoja = item.hoja
                     if (hoja != null) onAbrirHoja(hoja)

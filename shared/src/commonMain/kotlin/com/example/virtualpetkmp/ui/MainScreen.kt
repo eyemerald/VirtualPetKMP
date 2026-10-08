@@ -1,21 +1,25 @@
 package com.example.virtualpetkmp.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -28,8 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
 import virtualpetkmp.shared.generated.resources.Res
@@ -39,63 +43,43 @@ import virtualpetkmp.shared.generated.resources.logo
 private const val OPACIDAD_MARCA_DE_AGUA = 0.05f
 
 /**
- * Contenedor raíz de la app: TopAppBar compacta contextual, pestañas globales
- * (Mascotas / Veterinarios) y el contenido de la pestaña activa.
+ * Contenedor raíz de la app: pestañas globales (Mascotas / Veterinarios) y el contenido de
+ * la pestaña activa.
  *
- * @param titulo texto de la TopAppBar; el llamador decide si es la marca o el nombre de
- *   la mascota según la pantalla activa.
- * @param onVolver si no es null, se muestra la flecha de volver a la izquierda.
- * @param onCompartir si no es null, se muestra la acción de compartir a la derecha.
- * @param acciones extras opcionales que se añaden antes del botón de compartir.
+ * No hay barra superior: las acciones de la ficha van como iconos flotantes superpuestos
+ * sobre el contenido, y solo se muestran cuando tienen sentido (ver [mostrarAcciones]).
+ *
+ * @param mostrarAcciones true solo en el detalle de una mascota con la pestaña Mascotas
+ *   activa. Con la pestaña de Veterinarios se ocultan y la lista ocupa toda la pantalla.
+ * @param onVolver acción del icono flotante de volver.
+ * @param onCompartir acción del icono flotante de compartir.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     contenidoMascotas: @Composable () -> Unit,
     contenidoVeterinarios: @Composable () -> Unit,
-    titulo: String = "VirtualPet",
+    mostrarAcciones: Boolean = false,
     onVolver: (() -> Unit)? = null,
-    onCompartir: (() -> Unit)? = null,
-    acciones: @Composable () -> Unit = {}
+    onCompartir: (() -> Unit)? = null
 ) {
     var tabActual by rememberSaveable { mutableStateOf(0) }
+    val accionesVisibles = mostrarAcciones && tabActual == 0
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = titulo,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                navigationIcon = {
-                    if (onVolver != null) {
-                        IconButton(onClick = onVolver) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                        }
-                    }
-                },
-                actions = {
-                    acciones()
-                    if (onCompartir != null) {
-                        IconButton(onClick = onCompartir) {
-                            Icon(Icons.Default.Share, contentDescription = "Compartir")
-                        }
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
+    Scaffold { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Pestañas globales, pegadas a la barra superior
-                TabRow(selectedTabIndex = tabActual) {
+                // Las pestañas son lo primero, respetando el safe area de arriba para no
+                // chocar con el reloj ni la cámara.
+                TabRow(
+                    selectedTabIndex = tabActual,
+                    modifier = Modifier.windowInsetsPadding(
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+                    )
+                ) {
                     Tab(
                         selected = tabActual == 0,
                         onClick = { tabActual = 0 },
@@ -128,8 +112,52 @@ fun MainScreen(
                         0 -> contenidoMascotas()
                         1 -> contenidoVeterinarios()
                     }
+
+                    // Iconos flotantes de la ficha, superpuestos sobre el contenido y por
+                    // debajo de las pestañas (que son la navegación global).
+                    if (accionesVisibles) {
+                        if (onVolver != null) {
+                            IconoFlotante(
+                                icono = Icons.AutoMirrored.Filled.ArrowBack,
+                                descripcion = "Volver",
+                                onClick = onVolver,
+                                modifier = Modifier.align(Alignment.TopStart)
+                            )
+                        }
+                        if (onCompartir != null) {
+                            IconoFlotante(
+                                icono = Icons.Default.Share,
+                                descripcion = "Compartir",
+                                onClick = onCompartir,
+                                modifier = Modifier.align(Alignment.TopEnd)
+                            )
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+/**
+ * Botón redondo superpuesto, con fondo semitransparente para que se lea sobre el contenido
+ * que quede debajo.
+ */
+@Composable
+private fun IconoFlotante(
+    icono: androidx.compose.ui.graphics.vector.ImageVector,
+    descripcion: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.75f))
+    ) {
+        Icon(imageVector = icono, contentDescription = descripcion)
     }
 }
