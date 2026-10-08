@@ -51,6 +51,7 @@ import com.example.virtualpetkmp.util.rememberSelectorDestino
 import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.viewmodel.FichaMascotaViewModel
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
+import com.example.virtualpetkmp.viewmodel.ResumenFicha
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
@@ -235,6 +236,122 @@ fun FichaMascotaScreen(
         )
     )
 
+    // Contenido que se desplaza: la tarjeta de peso y las tarjetas hub. Es el mismo tanto en
+    // la lista única de vertical como en la columna derecha de apaisado.
+    //
+    // @param conPeso la tarjeta de peso se omite en la columna izquierda de apaisado, donde
+    //   ya tiene su propio sitio fijo: así no aparece dos veces en la misma pantalla.
+    fun LazyListScope.contenidoHubFicha(conPeso: Boolean = true) {
+        if (conPeso) {
+            item(key = "peso") {
+                TarjetaPesoFicha(
+                    resumen = resumen,
+                    compacta = compacta,
+                    altura = if (compacta) 88.dp else 130.dp,
+                    onClick = { activeSheet = ActiveSheet.Weight }
+                )
+            }
+        }
+
+        if (errorFoto != null) {
+            item(key = "error-foto") {
+                ErrorFotoTexto(errorFoto!!)
+            }
+        }
+
+        // Tarjetas hub apiladas: abren su hoja modal
+        listaTarjetasFicha(
+            items = tarjetas,
+            compacta = compacta,
+            onAbrirHoja = { clave ->
+                activeSheet = when (clave) {
+                    "vacunasPreventivos" -> ActiveSheet.Vaccines
+                    "saludYSeguimiento" -> ActiveSheet.HealthAndTracking
+                    "notas" -> ActiveSheet.Notes
+                    else -> ActiveSheet.None
+                }
+            }
+        )
+
+        item(key = "modificar") {
+            Button(
+                onClick = onModificar,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Modificar datos")
+            }
+        }
+
+        if (mensajeExportar != null) {
+            item(key = "mensaje-exportar") {
+                Text(
+                    text = mensajeExportar!!,
+                    color = if (mensajeExportar!!.contains("Error", ignoreCase = true) || mensajeExportar!!.contains("No se pudo", ignoreCase = true)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+    }
+
+    // En apaisado la ficha se parte en dos columnas: a la izquierda la identidad de la
+    // mascota y su peso, a la derecha el resto de tarjetas con espacio de sobra. Así la
+    // tarjeta de peso y las tarjetas hub se ven a la vez y cada una con su tamaño normal.
+    if (compacta) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .padding(top = ESPACIO_ICONOS_FLOTANTES)
+        ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 340.dp)
+                    .weight(0.42f)
+                    .fillMaxHeight()
+                    .padding(end = 12.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
+                CabeceraMascota(
+                    nombre = mascota.nombre,
+                    rutaFoto = rutaFoto,
+                    edad = calcularEdad(mascota.fechaNacimiento, hoy),
+                    tamanoAvatar = 84.dp,
+                    apilada = true,
+                    onCambiarFoto = { mostrarOpcionesFoto = true }
+                )
+
+                errorFoto?.let { ErrorFotoTexto(it) }
+            }
+
+            VerticalDivider(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(end = 12.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+            )
+
+            LazyColumn(
+                modifier = Modifier
+                    .weight(0.58f)
+                    .fillMaxHeight(),
+                contentPadding = PaddingValues(bottom = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // La tarjeta de peso abre la columna derecha: es el dato principal de la ficha.
+                contenidoHubFicha(conPeso = true)
+            }
+        }
+
+        // Hueco FIJO del banner de publicidad, igual que en vertical.
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .height(ALTO_RESERVA_BANNER)
+        )
+        return
+    }
+
     // Sin Scaffold: esta pantalla se dibuja DENTRO del Scaffold de MainScreen. Arriba deja
     // una banda libre para los iconos flotantes de volver y compartir, que van superpuestos.
     Column(
@@ -243,46 +360,14 @@ fun FichaMascotaScreen(
             .padding(horizontal = 16.dp)
             .padding(top = ESPACIO_ICONOS_FLOTANTES)
     ) {
-        // Identidad de la mascota en UNA sola línea: foto a la izquierda y nombre con la
-        // edad a la derecha. Así la foto puede ser más grande sin gastar más alto, que es lo
-        // que antes se comía la cabecera en columna.
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    top = if (compacta) 4.dp else ESPACIO_SOBRE_CABECERA,
-                    bottom = if (compacta) 6.dp else ESPACIO_BAJO_CABECERA
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AvatarMascota(
-                nombre = mascota.nombre,
-                rutaFoto = rutaFoto,
-                tamano = if (compacta) 56.dp else 80.dp,
-                onCambiarFoto = { mostrarOpcionesFoto = true }
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = mascota.nombre,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Text(
-                    text = calcularEdad(mascota.fechaNacimiento, hoy),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        CabeceraMascota(
+            nombre = mascota.nombre,
+            rutaFoto = rutaFoto,
+            edad = calcularEdad(mascota.fechaNacimiento, hoy),
+            tamanoAvatar = 80.dp,
+            apilada = false,
+            onCambiarFoto = { mostrarOpcionesFoto = true }
+        )
 
         LazyColumn(
             modifier = Modifier
@@ -292,61 +377,7 @@ fun FichaMascotaScreen(
             contentPadding = PaddingValues(bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // La tarjeta de peso es el primer elemento que se desplaza
-            item(key = "peso") {
-                TarjetaPesoHero(
-                    ultimoPeso = resumen.ultimoPeso,
-                    pesoAnterior = resumen.pesoAnterior,
-                    pesos = resumen.pesosRecientes,
-                    altura = if (compacta) 88.dp else 130.dp,
-                    compacta = compacta,
-                    onClick = { activeSheet = ActiveSheet.Weight }
-                )
-            }
-
-            if (errorFoto != null) {
-                item(key = "error-foto") {
-                    Text(
-                        text = errorFoto!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
-            // Tarjetas hub apiladas: abren su hoja modal
-            listaTarjetasFicha(
-                items = tarjetas,
-                compacta = compacta,
-                onAbrirHoja = { clave ->
-                    activeSheet = when (clave) {
-                        "vacunasPreventivos" -> ActiveSheet.Vaccines
-                        "saludYSeguimiento" -> ActiveSheet.HealthAndTracking
-                        "notas" -> ActiveSheet.Notes
-                        else -> ActiveSheet.None
-                    }
-                }
-            )
-
-            item(key = "modificar") {
-                Button(
-                    onClick = onModificar,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Modificar datos")
-                }
-            }
-
-            if (mensajeExportar != null) {
-                item(key = "mensaje-exportar") {
-                    Text(
-                        text = mensajeExportar!!,
-                        color = if (mensajeExportar!!.contains("Error", ignoreCase = true) || mensajeExportar!!.contains("No se pudo", ignoreCase = true)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
+            contenidoHubFicha()
         }
 
         // Hueco FIJO del banner de publicidad: al ser hermano posterior del LazyColumn
@@ -654,6 +685,131 @@ private fun normalizarRutaDestinoPdf(rutaArchivo: String, nombreMascota: String)
         val pathConExtension = if (ruta.lowercase().endsWith(".pdf")) ruta else "$ruta.pdf"
         pathConExtension
     }
+}
+
+/**
+ * Mensaje de error al cargar la foto de la mascota, para no repetirlo en las dos
+ * distribuciones de la ficha.
+ */
+@Composable
+private fun ErrorFotoTexto(mensaje: String) {
+    Text(
+        text = mensaje,
+        color = MaterialTheme.colorScheme.error,
+        style = MaterialTheme.typography.bodySmall,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+/**
+ * Identidad de la mascota: avatar pulsable (abre las opciones de foto), nombre y edad.
+ *
+ * @param apilada true en la columna izquierda de apaisado: el avatar va encima del nombre y
+ *   todo queda centrado, para aprovechar el ancho estrecho de esa columna. En vertical va en
+ *   una sola línea, foto a la izquierda y nombre a la derecha, que es lo que menos alto gasta.
+ */
+@Composable
+private fun CabeceraMascota(
+    nombre: String,
+    rutaFoto: String?,
+    edad: String,
+    tamanoAvatar: Dp,
+    apilada: Boolean,
+    onCambiarFoto: () -> Unit
+) {
+    if (apilada) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AvatarMascota(
+                nombre = nombre,
+                rutaFoto = rutaFoto,
+                tamano = tamanoAvatar,
+                onCambiarFoto = onCambiarFoto
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = nombre,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = edad,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+        return
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                top = ESPACIO_SOBRE_CABECERA,
+                bottom = ESPACIO_BAJO_CABECERA
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AvatarMascota(
+            nombre = nombre,
+            rutaFoto = rutaFoto,
+            tamano = tamanoAvatar,
+            onCambiarFoto = onCambiarFoto
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = nombre,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = edad,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/** Tarjeta de peso de la ficha, con los datos del resumen ya extraídos. */
+@Composable
+private fun TarjetaPesoFicha(
+    resumen: ResumenFicha,
+    compacta: Boolean,
+    altura: Dp,
+    onClick: () -> Unit
+) {
+    TarjetaPesoHero(
+        ultimoPeso = resumen.ultimoPeso,
+        pesoAnterior = resumen.pesoAnterior,
+        pesos = resumen.pesosRecientes,
+        altura = altura,
+        compacta = compacta,
+        onClick = onClick
+    )
 }
 
 @Composable
