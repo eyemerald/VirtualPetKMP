@@ -66,3 +66,24 @@ val OnProximaContenedor = Color(0xFF2E1A00)       // texto más oscuro
 
 val ProximaContenedorOscuro = Color(0xFF7A5A1A)   // más visible
 val OnProximaContenedorOscuro = Color(0xFFFFE0B2) // texto naranja claro
+
+// Colores suaves para dar identidad a cada tarjeta de la ficha. Son tonos apagados,
+// no vivos, para que la pantalla no parezca un semáforo.
+val TarjetaVerde = Color(0xFFD6E6D8)          // recordatorio del verde del logo
+val IconoTarjetaVerde = Color(0xFF3F6B4A)
+val TarjetaNaranja = Color(0xFFF6DFC6)        // cálido, para salud
+val IconoTarjetaNaranja = Color(0xFF8F5A22)
+val TarjetaAzul = Color(0xFFD8E2F3)           // frío, para notas
+val IconoTarjetaAzul = Color(0xFF35528A)
+
+val TarjetaVerdeOscuro = Color(0xFF2E4034)
+val IconoTarjetaVerdeOscuro = Color(0xFFA5D3AA)
+val TarjetaNaranjaOscuro = Color(0xFF44362A)
+val IconoTarjetaNaranjaOscuro = Color(0xFFE3C29B)
+val TarjetaAzulOscuro = Color(0xFF2C3648)
+val IconoTarjetaAzulOscuro = Color(0xFFAEC2E8)
+
+// Azul de la última barra del gráfico de peso: destaca el dato más reciente sin
+// recurrir al verde ni al rojo, que en esta pantalla ya significan estado.
+val AzulBarraActual = Color(0xFF3F5C93)
+val AzulBarraActualOscuro = Color(0xFFAEC2E8)

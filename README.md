@@ -9,6 +9,7 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 ## ✨ Características
 
 - 🐶 **Gestión de mascotas**: fichas con datos básicos (nombre, especie, raza, fecha de nacimiento, sexo, color, microchip).
+- 📷 **Foto de la mascota**: se puede elegir de los archivos o **hacer con la cámara** (Android); aparece en un círculo grande y centrado en su ficha, con el nombre y la edad debajo.
 - 💉 **Vacunas**: registro con próxima dosis y **notificaciones locales** 15 días antes.
 - 💊 **Preventivos**: pipetas, desparasitaciones y otros tratamientos preventivos con aviso 1 día antes.
 - ⚖️ **Pesos**: registro y evolución con **gráficos de línea suavizados**.
@@ -117,7 +118,6 @@ Con **hot reload** durante el desarrollo:
 
 - [ ] Botón "Añadir al calendario" en vacunas y preventivos.
 - [ ] Backup / Exportar / Importar datos.
-- [ ] Logo e identidad visual.
 - [ ] Compartir PDF directamente.
 - [ ] Publicación en Google Play Store.
 

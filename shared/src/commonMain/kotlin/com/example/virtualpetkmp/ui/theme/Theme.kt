@@ -65,13 +65,29 @@ private val EsquemaOscuro = darkColorScheme(
 @Immutable
 data class ExtrasColors(
     val proximaContenedor: Color,
-    val onProximaContenedor: Color
+    val onProximaContenedor: Color,
+    /** Fondo e icono de cada tarjeta de la ficha, para darles identidad por color. */
+    val tarjetaVerde: Color,
+    val iconoTarjetaVerde: Color,
+    val tarjetaNaranja: Color,
+    val iconoTarjetaNaranja: Color,
+    val tarjetaAzul: Color,
+    val iconoTarjetaAzul: Color,
+    /** Azul de la última barra del gráfico de peso. */
+    val barraActual: Color
 )
 
 val LocalExtrasColors = staticCompositionLocalOf {
     ExtrasColors(
         proximaContenedor = ProximaContenedor,
-        onProximaContenedor = OnProximaContenedor
+        onProximaContenedor = OnProximaContenedor,
+        tarjetaVerde = TarjetaVerde,
+        iconoTarjetaVerde = IconoTarjetaVerde,
+        tarjetaNaranja = TarjetaNaranja,
+        iconoTarjetaNaranja = IconoTarjetaNaranja,
+        tarjetaAzul = TarjetaAzul,
+        iconoTarjetaAzul = IconoTarjetaAzul,
+        barraActual = AzulBarraActual
     )
 }
 
@@ -83,12 +99,26 @@ fun VirtualPetTheme(content: @Composable () -> Unit) {
     val extrasColors = if (esOscuro) {
         ExtrasColors(
             proximaContenedor = ProximaContenedorOscuro,
-            onProximaContenedor = OnProximaContenedorOscuro
+            onProximaContenedor = OnProximaContenedorOscuro,
+            tarjetaVerde = TarjetaVerdeOscuro,
+            iconoTarjetaVerde = IconoTarjetaVerdeOscuro,
+            tarjetaNaranja = TarjetaNaranjaOscuro,
+            iconoTarjetaNaranja = IconoTarjetaNaranjaOscuro,
+            tarjetaAzul = TarjetaAzulOscuro,
+            iconoTarjetaAzul = IconoTarjetaAzulOscuro,
+            barraActual = AzulBarraActualOscuro
         )
     } else {
         ExtrasColors(
             proximaContenedor = ProximaContenedor,
-            onProximaContenedor = OnProximaContenedor
+            onProximaContenedor = OnProximaContenedor,
+            tarjetaVerde = TarjetaVerde,
+            iconoTarjetaVerde = IconoTarjetaVerde,
+            tarjetaNaranja = TarjetaNaranja,
+            iconoTarjetaNaranja = IconoTarjetaNaranja,
+            tarjetaAzul = TarjetaAzul,
+            iconoTarjetaAzul = IconoTarjetaAzul,
+            barraActual = AzulBarraActual
         )
     }
 

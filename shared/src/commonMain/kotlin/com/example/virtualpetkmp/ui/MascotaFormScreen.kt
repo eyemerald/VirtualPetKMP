@@ -1,19 +1,25 @@
 package com.example.virtualpetkmp.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.util.ESPECIES
 import com.example.virtualpetkmp.util.RAZAS_POR_ESPECIE
 import com.example.virtualpetkmp.util.parseFormatoEuropeo
+import com.example.virtualpetkmp.util.rememberFotoMascota
 import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
 import kotlinx.datetime.Clock
@@ -45,6 +51,23 @@ fun MascotaFormScreen(
     var color by rememberSaveable { mutableStateOf("") }
     var microchip by rememberSaveable { mutableStateOf("") }
 
+    // Foto de la mascota: ruta local de la copia guardada por la app.
+    var rutaFoto by rememberSaveable { mutableStateOf<String?>(null) }
+    var mostrarOpcionesFoto by rememberSaveable { mutableStateOf(false) }
+    var errorFoto by remember { mutableStateOf<String?>(null) }
+
+    val accionesFoto = rememberFotoMascota(
+        onFotoSeleccionada = { foto ->
+            errorFoto = null
+            rutaFoto = foto.ruta
+            mostrarOpcionesFoto = false
+        },
+        onError = { mensaje ->
+            errorFoto = mensaje
+            mostrarOpcionesFoto = false
+        }
+    )
+
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val mascotas by viewModel.mascotas.collectAsState()
@@ -63,6 +86,7 @@ fun MascotaFormScreen(
                 sexo = mascota.sexo
                 color = mascota.color
                 microchip = mascota.microchip ?: ""
+                rutaFoto = mascota.foto
 
                 if (mascota.especie in ESPECIES && mascota.especie != "Otro") {
                     especieSeleccionada = mascota.especie
@@ -122,6 +146,33 @@ fun MascotaFormScreen(
                 singleLine = true,
                 isError = nombre.isBlank()
             )
+
+            // Foto de la mascota: se puede elegir del almacenamiento o hacer con la cámara
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                AvatarMascota(
+                    nombre = nombre,
+                    rutaFoto = rutaFoto,
+                    tamano = 120.dp,
+                    onCambiarFoto = { mostrarOpcionesFoto = true }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = if (rutaFoto.isNullOrBlank()) "Añadir foto (opcional)" else "Cambiar foto",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+                if (errorFoto != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = errorFoto!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
 
             // Especie
             var expandedEspecie by remember { mutableStateOf(false) }
@@ -297,7 +348,8 @@ fun MascotaFormScreen(
                         fechaNacimiento = fecha,
                         sexo = sexo,
                         color = color,
-                        microchip = microchip.ifBlank { null }
+                        microchip = microchip.ifBlank { null },
+                        foto = rutaFoto
                     )
 
                     viewModel.saveMascota(mascota) {
@@ -317,5 +369,71 @@ fun MascotaFormScreen(
                 }
             }
         }
+    }
+
+    if (mostrarOpcionesFoto) {
+        ModalBottomSheet(
+            onDismissRequest = { mostrarOpcionesFoto = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp)
+            ) {
+                Text(
+                    text = "Foto de la mascota",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                )
+
+                if (accionesFoto.soportaCamara) {
+                    OpcionFotoFormulario(
+                        icono = Icons.Default.PhotoCamera,
+                        texto = "Hacer una foto",
+                        onClick = { accionesFoto.hacerFoto?.invoke() }
+                    )
+                }
+
+                OpcionFotoFormulario(
+                    icono = Icons.Default.PhotoLibrary,
+                    texto = "Elegir de mis archivos",
+                    onClick = accionesFoto.elegirDeArchivos
+                )
+
+                if (!rutaFoto.isNullOrBlank()) {
+                    OpcionFotoFormulario(
+                        icono = Icons.Default.Delete,
+                        texto = "Quitar la foto",
+                        color = MaterialTheme.colorScheme.error,
+                        onClick = {
+                            mostrarOpcionesFoto = false
+                            errorFoto = null
+                            rutaFoto = null
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OpcionFotoFormulario(
+    icono: androidx.compose.ui.graphics.vector.ImageVector,
+    texto: String,
+    color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(imageVector = icono, contentDescription = null, tint = color)
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(text = texto, style = MaterialTheme.typography.bodyLarge, color = color)
     }
 }

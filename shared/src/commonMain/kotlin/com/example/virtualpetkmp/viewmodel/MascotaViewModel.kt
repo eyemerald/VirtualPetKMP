@@ -65,8 +65,28 @@ class MascotaViewModel(private val repository: MascotaRepository) {
         }
     }
 
-    fun deleteMascota(id: Long, onSuccess: () -> Unit) {
+    /**
+     * Cambia solo la foto de una mascota ya guardada y recarga la lista para que el
+     * cambio se refleje en todas las pantallas que la observan.
+     */
+    fun updateFoto(id: Long, rutaFoto: String?) {
         scope.launch {
+            _errorMessage.value = null
+            try {
+                val result = repository.updateFoto(id, rutaFoto)
+                if (result.isFailure) {
+                    _errorMessage.value = result.exceptionOrNull()?.message
+                        ?: "No se pudo guardar la foto"
+                } else {
+                    loadMascotas()
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "No se pudo guardar la foto: ${e.message}"
+            }
+        }
+    }
+
+    fun deleteMascota(id: Long, onSuccess: () -> Unit) {        scope.launch {
             _isLoading.value = true
             _errorMessage.value = null
             try {

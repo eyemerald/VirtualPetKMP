@@ -48,6 +48,11 @@ kotlin {
             implementation("app.cash.sqldelight:sqlite-driver:2.0.0")
             implementation(libs.sqldelight.coroutines.extensions)
         }
+        jvmTest.dependencies {
+            // Los tests de carga de imágenes usan el decodificador de Skia (skiko), que en
+            // JVM necesita los binarios nativos que aporta la distribución de escritorio.
+            implementation(compose.desktop.currentOs)
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }

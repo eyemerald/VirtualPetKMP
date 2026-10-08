@@ -31,15 +31,27 @@ fun MascotaListScreen(
     var showDeleteDialog by rememberSaveable { mutableStateOf<Long?>(null) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Mis Mascotas") }
-            )
-        },
+        // Sin TopAppBar: el título se dibuja dentro de la lista, pegado a las pestañas.
+        // El Scaffold se mantiene por el botón flotante y por el hueco del banner.
+        //
+        // contentWindowInsets = 0 a propósito: esta pantalla se dibuja DENTRO del Scaffold
+        // de MainScreen, que ya aplica los insets del sistema. Si el Scaffold de aquí
+        // volviera a aplicarlos, se sumarían y aparecería un hueco muerto arriba.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             FloatingActionButton(onClick = onAddMascota) {
                 Icon(Icons.Default.Add, contentDescription = "Agregar mascota")
             }
+        },
+        // Hueco FIJO del banner de publicidad: el Scaffold lo coloca fuera del área de
+        // contenido, así que queda anclado al fondo y la lista se desplaza por encima.
+        // El inset de la barra de navegación lo añade el propio Scaffold.
+        bottomBar = {
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(ALTO_RESERVA_BANNER)
+            )
         }
     ) { paddingValues ->
         Box(
@@ -97,7 +109,14 @@ fun MascotaListScreen(
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
+                        // Sin título dentro: ya lo pone la barra superior global, así que la
+                        // lista empieza directamente con las tarjetas. El hueco del banner va
+                        // aparte (bottomBar), para que no se desplace con el scroll.
+                        contentPadding = PaddingValues(
+                            start = 16.dp,
+                            top = 8.dp,
+                            end = 16.dp
+                        ),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(mascotas, key = { it.id ?: 0 }) { mascota ->
@@ -160,6 +179,16 @@ fun MascotaCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Foto de la mascota (o su inicial si aún no tiene): el mismo avatar que en la
+            // ficha, en pequeño.
+            AvatarMascota(
+                nombre = mascota.nombre,
+                rutaFoto = mascota.foto,
+                tamano = 56.dp
+            )
+
+            Spacer(modifier = Modifier.width(14.dp))
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = mascota.nombre,

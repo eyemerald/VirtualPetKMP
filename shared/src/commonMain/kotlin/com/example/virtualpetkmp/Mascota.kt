@@ -10,5 +10,7 @@ data class Mascota(
     val fechaNacimiento: LocalDate,
     val sexo: String,
     val color: String,
-    val microchip: String?
+    val microchip: String?,
+    /** Ruta absoluta del archivo de imagen de la mascota. null = sin foto. */
+    val foto: String? = null
 )

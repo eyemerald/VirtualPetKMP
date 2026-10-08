@@ -6,7 +6,8 @@ CREATE TABLE mascotas (
     fechaNacimiento TEXT NOT NULL,
     sexo TEXT NOT NULL,
     color TEXT NOT NULL,
-    microchip TEXT
+    microchip TEXT,
+    foto TEXT
 );
 
 selectAll:
@@ -19,13 +20,16 @@ checkNombreUnico:
 SELECT id FROM mascotas WHERE LOWER(nombre) = LOWER(?);
 
 insert:
-INSERT INTO mascotas(nombre, especie, raza, fechaNacimiento, sexo, color, microchip)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT INTO mascotas(nombre, especie, raza, fechaNacimiento, sexo, color, microchip, foto)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE mascotas
-SET nombre = ?, especie = ?, raza = ?, fechaNacimiento = ?, sexo = ?, color = ?, microchip = ?
+SET nombre = ?, especie = ?, raza = ?, fechaNacimiento = ?, sexo = ?, color = ?, microchip = ?, foto = ?
 WHERE id = ?;
+
+updateFoto:
+UPDATE mascotas SET foto = ? WHERE id = ?;
 
 delete:
 DELETE FROM mascotas WHERE id = ?;

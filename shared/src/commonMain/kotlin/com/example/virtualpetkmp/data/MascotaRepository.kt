@@ -38,7 +38,8 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
                 fechaNacimiento = mascota.fechaNacimiento.toString(),
                 sexo = mascota.sexo,
                 color = mascota.color,
-                microchip = mascota.microchip
+                microchip = mascota.microchip,
+                foto = mascota.foto
             )
 
             // Obtener el ID insertado usando last_insert_rowid()
@@ -74,6 +75,7 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
                 sexo = mascota.sexo,
                 color = mascota.color,
                 microchip = mascota.microchip,
+                foto = mascota.foto,
                 id = mascota.id
             )
 
@@ -91,6 +93,19 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
             Result.failure(e)
         }
     }
+
+    /**
+     * Actualiza solo la foto de una mascota. Se usa desde la ficha para no tener que
+     * reenviar (ni volver a validar) el resto de sus datos.
+     */
+    suspend fun updateFoto(id: Long, foto: String?): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            database.mascotasQueries.updateFoto(foto = foto, id = id)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
 
 private fun com.example.virtualpetkmp.db.Mascotas.toMascota(): Mascota {
@@ -102,6 +117,7 @@ private fun com.example.virtualpetkmp.db.Mascotas.toMascota(): Mascota {
         fechaNacimiento = LocalDate.parse(fechaNacimiento),
         sexo = sexo,
         color = color,
-        microchip = microchip
+        microchip = microchip,
+        foto = foto
     )
 }

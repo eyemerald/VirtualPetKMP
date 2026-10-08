@@ -1,19 +1,28 @@
 package com.example.virtualpetkmp.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Icon
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -22,12 +31,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -36,6 +45,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Veterinario
@@ -62,15 +72,27 @@ fun VeterinariosListScreen(
     val veterinariosNormales = veterinarios.filter { !it.esUrgencias }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Veterinarios") }
-            )
-        },
+        // Sin TopAppBar: el título se dibuja dentro de la lista, pegado a las pestañas.
+        // El Scaffold se mantiene por el botón flotante y por el hueco del banner.
+        //
+        // contentWindowInsets = 0 a propósito: esta pantalla se dibuja DENTRO del Scaffold
+        // de MainScreen, que ya aplica los insets del sistema. Si el Scaffold de aquí
+        // volviera a aplicarlos, se sumarían y aparecería un hueco muerto arriba.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             FloatingActionButton(onClick = onAddVeterinario) {
                 Icon(Icons.Default.Add, contentDescription = "Agregar veterinario")
             }
+        },
+        // Hueco FIJO del banner de publicidad: el Scaffold lo coloca fuera del área de
+        // contenido, así que queda anclado al fondo y la lista se desplaza por encima.
+        // El inset de la barra de navegación lo añade el propio Scaffold.
+        bottomBar = {
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(ALTO_RESERVA_BANNER)
+            )
         }
     ) { paddingValues ->
         Box(
@@ -135,7 +157,14 @@ fun VeterinariosListScreen(
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
+                        // Sin título dentro: ya lo pone la barra superior global, así que la
+                        // lista empieza directamente con el contenido. El hueco del banner va
+                        // aparte (bottomBar), para que no se desplace con el scroll.
+                        contentPadding = PaddingValues(
+                            start = 16.dp,
+                            top = 8.dp,
+                            end = 16.dp
+                        ),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         item {
@@ -157,55 +186,12 @@ fun VeterinariosListScreen(
                                 )
                             }
                             items(veterinariosUrgencias, key = { it.id ?: 0 }) { veterinario ->
-                                Card(
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.errorContainer
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Column(modifier = Modifier.padding(16.dp)) {
-                                        Text(
-                                            text = veterinario.nombreClinica,
-                                            style = MaterialTheme.typography.headlineSmall,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(
-                                            text = veterinario.telefono,
-                                            style = MaterialTheme.typography.bodyLarge
-                                        )
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = veterinario.direccion,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                        Button(
-                                            onClick = { llamar(veterinario.telefono) },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                                containerColor = MaterialTheme.colorScheme.error
-                                            )
-                                        ) {
-                                            Text("LLAMAR URGENCIAS")
-                                        }
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            TextButton(
-                                                onClick = { abrirMapa(veterinario.direccion) }
-                                            ) {
-                                                Text("Cómo llegar")
-                                            }
-                                            TextButton(
-                                                onClick = { veterinario.id?.let { onVeterinarioClick(it) } }
-                                            ) {
-                                                Text("Editar")
-                                            }
-                                        }
-                                    }
-                                }
+                                VeterinarioUrgenciaCard(
+                                    veterinario = veterinario,
+                                    onLlamar = { llamar(veterinario.telefono) },
+                                    onAbrirMapa = { abrirMapa(veterinario.direccion) },
+                                    onEditar = { veterinario.id?.let { onVeterinarioClick(it) } }
+                                )
                             }
                         }
 
@@ -256,5 +242,105 @@ fun VeterinariosListScreen(
                 }
             }
         )
+    }
+}
+
+/**
+ * Tarjeta de un veterinario de urgencias 24h: mismo tamaño que las demás, con los datos a
+ * la izquierda y un **botón circular rojo de llamada** a la derecha. Antes era una tarjeta
+ * roja entera con un botón "LLAMAR URGENCIAS" a ancho completo que ocupaba media pantalla y
+ * dejaba sin ver al resto de veterinarios.
+ *
+ * El rojo se reserva para el botón de llamar, que es la acción de urgencia: el nombre de la
+ * clínica sigue en su color para no perder legibilidad.
+ */
+@Composable
+fun VeterinarioUrgenciaCard(
+    veterinario: Veterinario,
+    onLlamar: () -> Unit,
+    onAbrirMapa: () -> Unit,
+    onEditar: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = veterinario.nombreClinica,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                veterinario.nombreVeterinario?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Phone,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        modifier = Modifier.width(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = veterinario.telefono,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Place,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        modifier = Modifier.width(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = veterinario.direccion,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    IconButton(onClick = onAbrirMapa) {
+                        Icon(Icons.Default.Place, contentDescription = "Mapa")
+                    }
+                    IconButton(onClick = onEditar) {
+                        Icon(Icons.Default.Edit, contentDescription = "Editar")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Botón de llamada: círculo rojo relleno con el teléfono en blanco
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.error)
+                    .clickable(onClick = onLlamar),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Phone,
+                    contentDescription = "Llamar a urgencias",
+                    tint = MaterialTheme.colorScheme.onError,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+        }
     }
 }
