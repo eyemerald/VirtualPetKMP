@@ -61,6 +61,7 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
 import virtualpetkmp.shared.generated.resources.accion_aceptar
+import virtualpetkmp.shared.generated.resources.accion_cancelar
 import virtualpetkmp.shared.generated.resources.a11y_mas_acciones
 import virtualpetkmp.shared.generated.resources.exportar_elegir_version
 import virtualpetkmp.shared.generated.resources.exportar_en_curso
@@ -74,6 +75,7 @@ import virtualpetkmp.shared.generated.resources.exportar_titulo
 import virtualpetkmp.shared.generated.resources.exportar_version_completa
 import virtualpetkmp.shared.generated.resources.exportar_version_resumida
 import virtualpetkmp.shared.generated.resources.ficha_activos
+import virtualpetkmp.shared.generated.resources.ficha_modificar_datos
 import virtualpetkmp.shared.generated.resources.ficha_peso_actual
 import virtualpetkmp.shared.generated.resources.ficha_proximas
 import virtualpetkmp.shared.generated.resources.ficha_sin_datos
@@ -528,7 +530,7 @@ fun FichaMascotaScreen(
             },
             dismissButton = {
                 TextButton(onClick = { if (!exportando) onCambiarDialogoExportar(false) }) {
-                    Text("Cancelar")
+                    Text(stringResource(Res.string.accion_cancelar))
                 }
             }
         )
@@ -848,7 +850,7 @@ private fun MenuAccionesFicha(
             onDismissRequest = { abierto = false }
         ) {
             DropdownMenuItem(
-                text = { Text("Modificar datos") },
+                text = { Text(stringResource(Res.string.ficha_modificar_datos)) },
                 leadingIcon = {
                     Icon(imageVector = Icons.Default.Edit, contentDescription = null)
                 },

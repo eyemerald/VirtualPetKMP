@@ -38,6 +38,12 @@ import com.example.virtualpetkmp.viewmodel.VeterinarioViewModel
  */
 @Composable
 fun App(databaseFactory: DatabaseFactory) {
+    // La configuración regional se decide UNA vez aquí y se publica al resto de la interfaz:
+    // unidades, orden de fecha y separador decimal salen siempre de este valor, así que no
+    // puede haber dos pantallas que opinen distinto. Se calcula antes que nada porque también
+    // la necesitan las notificaciones de arranque y el ViewModel de la ficha.
+    val localizacion = localizacionDelSistema()
+
     val database = remember { databaseFactory.createDatabase() }
     val repository = remember { MascotaRepository(database) }
     val notaRepository = remember { NotaRepository(database) }
@@ -60,13 +66,13 @@ fun App(databaseFactory: DatabaseFactory) {
             vacunaRepository.getAllVacunas().forEach { vacuna ->
                 vacuna.id?.let { id ->
                     ReprogramadorNotificaciones.cancelar(programador, id)
-                    ReprogramadorNotificaciones.programarVacuna(programador, vacuna)
+                    ReprogramadorNotificaciones.programarVacuna(programador, vacuna, localizacion)
                 }
             }
             preventivoRepository.getAllPreventivos().forEach { preventivo ->
                 preventivo.id?.let { id ->
                     ReprogramadorNotificaciones.cancelarPreventivo(programador, id)
-                    ReprogramadorNotificaciones.programarPreventivo(programador, preventivo)
+                    ReprogramadorNotificaciones.programarPreventivo(programador, preventivo, localizacion)
                 }
             }
         } catch (e: Exception) {
@@ -96,7 +102,8 @@ fun App(databaseFactory: DatabaseFactory) {
                 informeRepository = informeRepository,
                 notaRepository = notaRepository,
                 preventivoRepository = preventivoRepository,
-                programador = programador
+                programador = programador,
+                localizacion = localizacion
             )
         }
     }
@@ -120,8 +127,6 @@ fun App(databaseFactory: DatabaseFactory) {
     // La configuración regional se decide UNA vez aquí y se publica al resto de la interfaz:
     // unidades, orden de fecha y separador decimal salen siempre de este valor, así que no
     // puede haber dos pantallas que opinen distinto.
-    val localizacion = localizacionDelSistema()
-
     VirtualPetTheme {
         ConLocalizacion(localizacion) {
             MainScreen(

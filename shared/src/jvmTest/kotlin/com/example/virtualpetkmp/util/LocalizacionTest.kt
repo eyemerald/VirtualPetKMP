@@ -107,8 +107,14 @@ class LocalizacionTest {
     }
 
     @Test
-    fun `la pista de formato de fecha acompana al orden`() {
+    fun `la pista de formato de fecha acompana al orden y al idioma`() {
+        // El orden cambia con la región y las letras con el idioma: un alemán escribe el año
+        // como "JJJJ", no como "AAAA", y el inglés no usa "AAAA" en ninguna parte.
         assertEquals("DD/MM/AAAA", Localizacion.desdeRegion("es-ES").pistaFormatoFecha)
-        assertEquals("MM/DD/AAAA", Localizacion.desdeRegion("en-US").pistaFormatoFecha)
+        assertEquals("DD/MM/AAAA", Localizacion.desdeRegion("pt-BR").pistaFormatoFecha)
+        assertEquals("MM/DD/YYYY", Localizacion.desdeRegion("en-US").pistaFormatoFecha)
+        assertEquals("JJ/MM/AAAA", Localizacion.desdeRegion("fr-FR").pistaFormatoFecha)
+        assertEquals("TT/MM/JJJJ", Localizacion.desdeRegion("de-DE").pistaFormatoFecha)
+        assertEquals("GG/MM/AAAA", Localizacion.desdeRegion("it-IT").pistaFormatoFecha)
     }
 }

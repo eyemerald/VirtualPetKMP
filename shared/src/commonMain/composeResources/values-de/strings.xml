@@ -319,6 +319,11 @@
     <string name="informe_guardar_cambios">Änderungen speichern</string>
 
     <!-- Fehlermeldungen der Datenschicht (löst das ViewModel auf) -->
+    <string name="aviso_vacuna_titulo">Impfung fällig</string>
+    <string name="aviso_vacuna_mensaje">Dein Tier braucht die Impfung %1$s am %2$s</string>
+    <string name="aviso_preventivo_titulo">Prophylaxe fällig</string>
+    <string name="aviso_preventivo_mensaje">Dein Tier braucht die Prophylaxe %1$s am %2$s</string>
+
     <string name="error_cargar_mascotas">Fehler beim Laden der Tiere: %1$s</string>
     <string name="error_cargar_veterinarios">Fehler beim Laden der Tierärzte: %1$s</string>
     <string name="error_borrar_mascota">Fehler beim Löschen des Tieres: %1$s</string>

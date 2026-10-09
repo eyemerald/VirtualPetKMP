@@ -40,6 +40,7 @@ import kotlinx.datetime.todayIn
 import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
 import virtualpetkmp.shared.generated.resources.accion_cancelar
+import virtualpetkmp.shared.generated.resources.accion_eliminar
 import virtualpetkmp.shared.generated.resources.accion_guardar
 import virtualpetkmp.shared.generated.resources.form_anadir_pesaje
 import virtualpetkmp.shared.generated.resources.form_anadir_preventivo
@@ -712,7 +713,7 @@ fun FormularioPeso(
                             contentColor = androidx.compose.material3.MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Text("Eliminar")
+                        Text(stringResource(Res.string.accion_eliminar))
                     }
                 }
                 TextButton(onClick = onCancelar) { Text(stringResource(Res.string.accion_cancelar)) }
@@ -732,11 +733,11 @@ fun FormularioPeso(
                         onBorrar()
                     }
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(Res.string.accion_eliminar))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { confirmandoBorrado = false }) { Text("Cancelar") }
+                TextButton(onClick = { confirmandoBorrado = false }) { Text(stringResource(Res.string.accion_cancelar)) }
             }
         )
     }

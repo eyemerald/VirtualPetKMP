@@ -318,6 +318,13 @@
     <string name="informe_guardar_cambios">Save changes</string>
 
     <!-- Mensajes de error de la capa de datos (los resuelve el ViewModel) -->
+    <!-- System notifications. The text is built with getString outside composition, because
+         the notification scheduler is what triggers it. -->
+    <string name="aviso_vacuna_titulo">Vaccine due</string>
+    <string name="aviso_vacuna_mensaje">Your pet is due for the %1$s vaccine on %2$s</string>
+    <string name="aviso_preventivo_titulo">Preventive due</string>
+    <string name="aviso_preventivo_mensaje">Your pet is due for the %1$s preventive treatment on %2$s</string>
+
     <string name="error_cargar_mascotas">Error loading pets: %1$s</string>
     <string name="error_cargar_veterinarios">Error loading vets: %1$s</string>
     <string name="error_borrar_mascota">Error deleting pet: %1$s</string>

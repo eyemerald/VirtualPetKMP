@@ -14,6 +14,7 @@ import com.example.virtualpetkmp.data.PreventivoRepository
 import com.example.virtualpetkmp.data.RevisionRepository
 import com.example.virtualpetkmp.data.TratamientoRepository
 import com.example.virtualpetkmp.data.VacunaRepository
+import com.example.virtualpetkmp.util.Localizacion
 import com.example.virtualpetkmp.util.ProgramadorNotificaciones
 import com.example.virtualpetkmp.util.ReprogramadorNotificaciones
 import kotlinx.coroutines.CoroutineScope
@@ -108,7 +109,12 @@ class FichaMascotaViewModel(
     private val notaRepository: NotaRepository,
     private val preventivoRepository: PreventivoRepository,
     /** Programador de avisos: la ficha es ahora quien da de alta vacunas y preventivos. */
-    private val programador: ProgramadorNotificaciones? = null
+    private val programador: ProgramadorNotificaciones? = null,
+    /**
+     * Configuración regional activa. La necesita el texto de las **notificaciones**, que se
+     * monta fuera de la composición y tiene que escribir la fecha como la espera el usuario.
+     */
+    private val localizacion: Localizacion = Localizacion.desdeRegion("es-ES")
 ) {
     private val scope = CoroutineScope(Dispatchers.Main + Job())
 
@@ -208,13 +214,13 @@ class FichaMascotaViewModel(
                 vacunas.forEach { vacuna ->
                     vacuna.id?.let { id ->
                         ReprogramadorNotificaciones.cancelar(prog, id)
-                        ReprogramadorNotificaciones.programarVacuna(prog, vacuna)
+                        ReprogramadorNotificaciones.programarVacuna(prog, vacuna, localizacion)
                     }
                 }
                 preventivos.forEach { preventivo ->
                     preventivo.id?.let { id ->
                         ReprogramadorNotificaciones.cancelarPreventivo(prog, id)
-                        ReprogramadorNotificaciones.programarPreventivo(prog, preventivo)
+                        ReprogramadorNotificaciones.programarPreventivo(prog, preventivo, localizacion)
                     }
                 }
             }
@@ -290,7 +296,8 @@ class FichaMascotaViewModel(
                             fechaProximaDosis = fechaProximaDosis,
                             veterinario = veterinario,
                             lote = lote
-                        )
+                        ),
+                        localizacion
                     )
                 }
             }
@@ -329,7 +336,8 @@ class FichaMascotaViewModel(
                             fechaProximaDosis = fechaProximaDosis,
                             veterinario = null,
                             lote = null
-                        )
+                        ),
+                        localizacion
                     )
                 }
             }
@@ -416,7 +424,8 @@ class FichaMascotaViewModel(
                         fechaProximaDosis = fechaProximaDosis,
                         veterinario = veterinario,
                         lote = lote
-                    )
+                    ),
+                    localizacion
                 )
             }
             cargarResumen()
@@ -455,7 +464,8 @@ class FichaMascotaViewModel(
                         fechaProximaDosis = fechaProximaDosis,
                         veterinario = null,
                         lote = null
-                    )
+                    ),
+                    localizacion
                 )
             }
             cargarResumen()

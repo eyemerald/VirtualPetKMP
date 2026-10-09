@@ -9,6 +9,12 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toInstant
+import org.jetbrains.compose.resources.getString
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.aviso_preventivo_mensaje
+import virtualpetkmp.shared.generated.resources.aviso_preventivo_titulo
+import virtualpetkmp.shared.generated.resources.aviso_vacuna_mensaje
+import virtualpetkmp.shared.generated.resources.aviso_vacuna_titulo
 
 /**
  * Traduce las dosis pendientes de vacunas y preventivos a notificaciones locales.
@@ -20,6 +26,10 @@ import kotlinx.datetime.toInstant
  * Lo llama sobre todo `FichaMascotaViewModel.cargarResumen()`: al abrir la ficha de una
  * mascota se cancelan y se vuelven a programar sus avisos, y ese es el mecanismo que mantiene
  * las notificaciones al día sin un servicio en segundo plano.
+ *
+ * **El texto de la notificación está traducido**: es lo primero que ve el usuario y sale fuera
+ * de la app, así que se lee con `getString` (la variante `suspend`, porque aquí no hay contexto
+ * composable) y la fecha se formatea con la configuración regional que se le pasa.
  */
 object ReprogramadorNotificaciones {
 
@@ -42,28 +52,49 @@ object ReprogramadorNotificaciones {
      */
     private const val DESPLAZAMIENTO_PREVENTIVO = 1_000_000_000L
 
-    fun programarVacuna(programador: ProgramadorNotificaciones, vacuna: Vacuna) {
+    /**
+     * Programa el aviso de la próxima dosis de una vacuna.
+     *
+     * @param localizacion configuración regional activa, para escribir la fecha como la espera
+     *   el usuario. Por defecto, español de España, que es lo que usan los tests.
+     */
+    suspend fun programarVacuna(
+        programador: ProgramadorNotificaciones,
+        vacuna: Vacuna,
+        localizacion: Localizacion = Localizacion.desdeRegion("es-ES")
+    ) {
         programar(
             programador = programador,
             id = vacuna.id ?: return,
-            nombre = vacuna.nombre,
             fechaProximaDosis = vacuna.fechaProximaDosis,
             diasAviso = DIAS_AVISO_VACUNA,
-            titulo = "Vacuna pendiente",
-            prefijoMensaje = "A tu mascota le toca la vacuna"
+            titulo = getString(Res.string.aviso_vacuna_titulo),
+            mensaje = getString(
+                Res.string.aviso_vacuna_mensaje,
+                vacuna.nombre,
+                localizacion.formatearFecha(vacuna.fechaProximaDosis)
+            )
         )
     }
 
-    fun programarPreventivo(programador: ProgramadorNotificaciones, preventivo: Preventivo) {
+    /** Programa el aviso de la próxima dosis de un preventivo. */
+    suspend fun programarPreventivo(
+        programador: ProgramadorNotificaciones,
+        preventivo: Preventivo,
+        localizacion: Localizacion = Localizacion.desdeRegion("es-ES")
+    ) {
         val id = preventivo.id ?: return
         programar(
             programador = programador,
             id = id + DESPLAZAMIENTO_PREVENTIVO,
-            nombre = preventivo.nombre,
             fechaProximaDosis = preventivo.fechaProximaDosis,
             diasAviso = DIAS_AVISO_PREVENTIVO,
-            titulo = "Preventivo pendiente",
-            prefijoMensaje = "A tu mascota le toca el preventivo"
+            titulo = getString(Res.string.aviso_preventivo_titulo),
+            mensaje = getString(
+                Res.string.aviso_preventivo_mensaje,
+                preventivo.nombre,
+                localizacion.formatearFecha(preventivo.fechaProximaDosis)
+            )
         )
     }
 
@@ -80,11 +111,10 @@ object ReprogramadorNotificaciones {
     private fun programar(
         programador: ProgramadorNotificaciones,
         id: Long,
-        nombre: String,
         fechaProximaDosis: LocalDate,
         diasAviso: Int,
         titulo: String,
-        prefijoMensaje: String
+        mensaje: String
     ) {
         try {
             val fechaAviso = fechaProximaDosis.minus(DatePeriod(days = diasAviso))
@@ -101,7 +131,7 @@ object ReprogramadorNotificaciones {
                 programador.programar(
                     id = id,
                     titulo = titulo,
-                    mensaje = "$prefijoMensaje \"$nombre\" el ${fechaProximaDosis.dayOfMonth}/${fechaProximaDosis.monthNumber}/${fechaProximaDosis.year}",
+                    mensaje = mensaje,
                     fechaDisparoMillis = millis
                 )
             }

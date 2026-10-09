@@ -148,14 +148,33 @@ data class Localizacion(
     }
 
     /**
-     * Formato de fecha que se le pide al usuario: "DD/MM/AAAA" o "MM/DD/AAAA".
-     * Se usa en las etiquetas de los campos para que sepa qué se espera.
+     * Formato de fecha que se le pide al usuario, con las letras de su idioma: "DD/MM/AAAA" en
+     * español, "MM/DD/YYYY" en inglés, "TT/MM/JJJJ" en alemán, "JJ/MM/AAAA" en francés,
+     * "GG/MM/AAAA" en italiano.
+     *
+     * Se usa en las etiquetas de los campos para que sepa qué se espera, así que las letras
+     * también van traducidas: un alemán no escribe el año con "AAAA".
      */
     val pistaFormatoFecha: String
-        get() = when (ordenFechaMostrada) {
-            OrdenFecha.DIA_MES_ANIO -> "DD/MM/AAAA"
-            OrdenFecha.MES_DIA_ANIO -> "MM/DD/AAAA"
+        get() {
+            val letras = letrasDeFecha()
+            return when (ordenFechaMostrada) {
+                OrdenFecha.DIA_MES_ANIO -> "${letras.dia}/${letras.mes}/${letras.anio}"
+                OrdenFecha.MES_DIA_ANIO -> "${letras.mes}/${letras.dia}/${letras.anio}"
+            }
         }
+
+    /** Iniciales de día, mes y año en el idioma activo. */
+    private fun letrasDeFecha(): LetrasFecha = when (idioma) {
+        Idioma.ESPANOL, Idioma.PORTUGUES -> LetrasFecha("DD", "MM", "AAAA")
+        Idioma.INGLES -> LetrasFecha("DD", "MM", "YYYY")
+        Idioma.FRANCES -> LetrasFecha("JJ", "MM", "AAAA")
+        Idioma.ALEMAN -> LetrasFecha("TT", "MM", "JJJJ")
+        Idioma.ITALIANO -> LetrasFecha("GG", "MM", "AAAA")
+    }
+
+    /** Iniciales de una fecha en un idioma ("DD/MM/AAAA", "MM/DD/YYYY", "TT/MM/JJJJ"...). */
+    private data class LetrasFecha(val dia: String, val mes: String, val anio: String)
 
     companion object {
         /**

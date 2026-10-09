@@ -314,6 +314,13 @@
     <string name="informe_guardar_cambios">Guardar cambios</string>
 
     <!-- Mensajes de error de la capa de datos (los resuelve el ViewModel) -->
+    <!-- Avisos del sistema (notificaciones). El texto se monta con getString fuera de la
+         composición, porque los programa el planificador de notificaciones. -->
+    <string name="aviso_vacuna_titulo">Vacuna pendiente</string>
+    <string name="aviso_vacuna_mensaje">A tu mascota le toca la vacuna %1$s el %2$s</string>
+    <string name="aviso_preventivo_titulo">Preventivo pendiente</string>
+    <string name="aviso_preventivo_mensaje">A tu mascota le toca el preventivo %1$s el %2$s</string>
+
     <string name="error_cargar_mascotas">Error al cargar mascotas: %1$s</string>
     <string name="error_cargar_veterinarios">Error al cargar veterinarios: %1$s</string>
     <string name="error_borrar_mascota">Error al borrar mascota: %1$s</string>

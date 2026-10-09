@@ -2,6 +2,7 @@ package com.example.virtualpetkmp.util
 
 import com.example.virtualpetkmp.Preventivo
 import com.example.virtualpetkmp.Vacuna
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -19,6 +20,9 @@ import kotlin.test.assertTrue
  * numeran sus filas desde 1**, así que si compartieran el id de notificación, el aviso de una
  * vacuna y el de un preventivo de la misma mascota se pisarían y uno de los dos se perdería
  * sin que nadie se enterara. Este test existe justo por eso.
+ *
+ * El texto de la notificación también se comprueba: es lo primero que ve el usuario, sale fuera
+ * de la app y hasta hace poco estaba escrito a mano en español.
  */
 class ReprogramadorNotificacionesTest {
 
@@ -26,9 +30,11 @@ class ReprogramadorNotificacionesTest {
     private class ProgramadorFalso : ProgramadorNotificaciones {
         val programadas = mutableMapOf<Long, Long>()
         val canceladas = mutableListOf<Long>()
+        val textos = mutableMapOf<Long, Pair<String, String>>()
 
         override fun programar(id: Long, titulo: String, mensaje: String, fechaDisparoMillis: Long) {
             programadas[id] = fechaDisparoMillis
+            textos[id] = titulo to mensaje
         }
 
         override fun cancelar(id: Long) {
@@ -56,7 +62,7 @@ class ReprogramadorNotificacionesTest {
     )
 
     @Test
-    fun `una vacuna y un preventivo con el mismo id de fila no comparten notificacion`() {
+    fun `una vacuna y un preventivo con el mismo id de fila no comparten notificacion`() = runBlocking {
         val programador = ProgramadorFalso()
 
         // Mismo id de fila en las dos tablas: es el caso normal, ambas empiezan en 1.
@@ -71,7 +77,7 @@ class ReprogramadorNotificacionesTest {
     }
 
     @Test
-    fun `cancelar un preventivo usa el mismo id con el que se programo`() {
+    fun `cancelar un preventivo usa el mismo id con el que se programo`() = runBlocking {
         val programador = ProgramadorFalso()
 
         ReprogramadorNotificaciones.programarPreventivo(programador, preventivo(id = 7L, venceEnDias = 60))
@@ -83,7 +89,7 @@ class ReprogramadorNotificacionesTest {
     }
 
     @Test
-    fun `la vacuna avisa 15 dias antes y el preventivo 1 dia antes`() {
+    fun `la vacuna avisa 15 dias antes y el preventivo 1 dia antes`() = runBlocking {
         val programador = ProgramadorFalso()
 
         // Vencen dentro de 60 días, así que ambos avisos caen en el futuro y se programan.
@@ -104,12 +110,61 @@ class ReprogramadorNotificacionesTest {
     }
 
     @Test
-    fun `una dosis cuyo aviso ya ha pasado no programa nada`() {
+    fun `una dosis cuyo aviso ya ha pasado no programa nada`() = runBlocking {
         val programador = ProgramadorFalso()
 
-        // Venció hace 30 días: el aviso habría caído en el pasado.
+        // Venció hace 30 días: el aviso habría caído en la mitad del pasado.
         ReprogramadorNotificaciones.programarVacuna(programador, vacuna(id = 1L, venceEnDias = -30))
 
         assertTrue(programador.programadas.isEmpty())
+    }
+
+    @Test
+    fun `el texto de la notificacion sale traducido y con el formato de fecha de la region`() = runBlocking {
+        val idiomaOriginal = java.util.Locale.getDefault()
+        try {
+            val programador = ProgramadorFalso()
+
+            // El TEXTO sigue el idioma del sistema (que es lo que resuelve Compose Resources)...
+            java.util.Locale.setDefault(java.util.Locale.GERMANY)
+            ReprogramadorNotificaciones.programarVacuna(
+                programador,
+                vacuna(id = 1L, venceEnDias = 60),
+                Localizacion.desdeRegion("es-ES")
+            )
+            val (tituloAleman, mensajeAleman) = programador.textos.getValue(1L)
+
+            java.util.Locale.setDefault(java.util.Locale.forLanguageTag("es-ES"))
+            val programadorEs = ProgramadorFalso()
+            ReprogramadorNotificaciones.programarVacuna(
+                programadorEs,
+                vacuna(id = 1L, venceEnDias = 60),
+                Localizacion.desdeRegion("es-ES")
+            )
+            val (tituloEspanol, _) = programadorEs.textos.getValue(1L)
+
+            assertTrue(tituloAleman.isNotBlank() && tituloEspanol.isNotBlank())
+            assertTrue(
+                tituloAleman != tituloEspanol,
+                "el aviso no se tradujo: alemán [$tituloAleman], español [$tituloEspanol]"
+            )
+            assertTrue(mensajeAleman.contains("Rabia"), "falta el nombre: [$mensajeAleman]")
+
+            // ...y la FECHA sigue la configuración regional que se le pasa, no el idioma del
+            // texto: en la app las dos salen del mismo sitio, pero aquí se verifica por separado.
+            // La dosis vence el 2026-12-08: día/mes en español y mes/día en inglés.
+            val programadorUs = ProgramadorFalso()
+            ReprogramadorNotificaciones.programarVacuna(
+                programadorUs,
+                vacuna(id = 1L, venceEnDias = 60),
+                Localizacion.desdeRegion("en-US")
+            )
+            val mensajeUs = programadorUs.textos.getValue(1L).second
+
+            assertTrue(mensajeUs.contains("12/08/2026"), "en inglés la fecha va mes/día: [$mensajeUs]")
+            assertTrue(!mensajeUs.contains("08/12/2026"), "en inglés no debe salir día/mes: [$mensajeUs]")
+        } finally {
+            java.util.Locale.setDefault(idiomaOriginal)
+        }
     }
 }

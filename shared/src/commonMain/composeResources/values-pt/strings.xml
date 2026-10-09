@@ -318,6 +318,11 @@
     <string name="informe_guardar_cambios">Guardar alterações</string>
 
     <!-- Mensagens de erro da camada de dados (resolve-as o ViewModel) -->
+    <string name="aviso_vacuna_titulo">Vacina a vencer</string>
+    <string name="aviso_vacuna_mensaje">O teu animal tem a vacina %1$s em %2$s</string>
+    <string name="aviso_preventivo_titulo">Preventivo a vencer</string>
+    <string name="aviso_preventivo_mensaje">O teu animal tem o preventivo %1$s em %2$s</string>
+
     <string name="error_cargar_mascotas">Erro ao carregar animais: %1$s</string>
     <string name="error_cargar_veterinarios">Erro ao carregar veterinários: %1$s</string>
     <string name="error_borrar_mascota">Erro ao eliminar animal: %1$s</string>

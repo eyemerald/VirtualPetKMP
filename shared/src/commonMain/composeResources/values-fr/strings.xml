@@ -319,6 +319,11 @@
     <string name="informe_guardar_cambios">Enregistrer les modifications</string>
 
     <!-- Messages d'erreur de la couche de données (résolus par le ViewModel) -->
+    <string name="aviso_vacuna_titulo">Vaccin à faire</string>
+    <string name="aviso_vacuna_mensaje">Votre animal doit recevoir le vaccin %1$s le %2$s</string>
+    <string name="aviso_preventivo_titulo">Antiparasitaire à faire</string>
+    <string name="aviso_preventivo_mensaje">Votre animal doit recevoir le traitement préventif %1$s le %2$s</string>
+
     <string name="error_cargar_mascotas">Erreur lors du chargement des animaux : %1$s</string>
     <string name="error_cargar_veterinarios">Erreur lors du chargement des vétérinaires : %1$s</string>
     <string name="error_borrar_mascota">Erreur lors de la suppression de l\'animal : %1$s</string>
