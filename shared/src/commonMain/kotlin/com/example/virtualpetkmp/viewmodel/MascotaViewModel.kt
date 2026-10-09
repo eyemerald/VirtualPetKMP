@@ -2,6 +2,7 @@ package com.example.virtualpetkmp.viewmodel
 
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.data.MascotaRepository
+import com.example.virtualpetkmp.data.PesoRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -10,11 +11,21 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class MascotaViewModel(private val repository: MascotaRepository) {
+class MascotaViewModel(
+    private val repository: MascotaRepository,
+    private val pesoRepository: PesoRepository? = null
+) {
     private val scope = CoroutineScope(Dispatchers.Main + Job())
 
     private val _mascotas = MutableStateFlow<List<Mascota>>(emptyList())
     val mascotas: StateFlow<List<Mascota>> = _mascotas.asStateFlow()
+
+    /**
+     * Último peso de cada mascota (por id), para el indicador ▲/▼ frente al peso ideal.
+     * Vacío si no hay repositorio de pesos o si ninguna tiene pesajes.
+     */
+    private val _ultimoPesoPorMascota = MutableStateFlow<Map<Long, Double>>(emptyMap())
+    val ultimoPesoPorMascota: StateFlow<Map<Long, Double>> = _ultimoPesoPorMascota.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -32,6 +43,13 @@ class MascotaViewModel(private val repository: MascotaRepository) {
             _errorMessage.value = null
             try {
                 _mascotas.value = repository.getAllMascotas()
+                // Los pesos se leen aparte: si fallara esta consulta, la lista de mascotas
+                // sigue mostrándose (solo se perdería el indicador de peso).
+                _ultimoPesoPorMascota.value = try {
+                    pesoRepository?.getUltimoPesoDeCadaMascota().orEmpty()
+                } catch (e: Exception) {
+                    emptyMap()
+                }
             } catch (e: Exception) {
                 _errorMessage.value = "Error al cargar mascotas: ${e.message}"
             } finally {

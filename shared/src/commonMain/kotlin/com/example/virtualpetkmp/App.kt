@@ -46,7 +46,7 @@ fun App(databaseFactory: DatabaseFactory) {
     val informeRepository = remember { InformeRepository(database) }
     val veterinarioRepository = remember { VeterinarioRepository(database) }
     val preventivoRepository = remember { PreventivoRepository(database) }
-    val viewModel = remember { MascotaViewModel(repository) }
+    val viewModel = remember { MascotaViewModel(repository, pesoRepository) }
     val veterinarioViewModel = remember { VeterinarioViewModel(veterinarioRepository) }
     val programador = rememberProgramadorNotificaciones()
 

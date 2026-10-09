@@ -10,6 +10,12 @@ CREATE TABLE pesos (
 selectByMascotaId:
 SELECT * FROM pesos WHERE mascotaId = ? ORDER BY fecha ASC;
 
+-- Último peso de cada mascota, para el indicador de la lista (▲/▼ frente al peso ideal).
+ultimoPesoDeCadaMascota:
+SELECT mascotaId, peso, MAX(fecha) AS fecha
+FROM pesos
+GROUP BY mascotaId;
+
 insert:
 INSERT INTO pesos(mascotaId, fecha, peso, notas) VALUES (?, ?, ?, ?);
 

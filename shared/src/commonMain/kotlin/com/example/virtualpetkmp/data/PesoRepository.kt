@@ -22,8 +22,17 @@ class PesoRepository(private val database: VirtualPetDatabase) {
             }
     }
 
-    suspend fun insertPeso(mascotaId: Long, fecha: LocalDate, peso: Double, notas: String?): Result<Unit> =
-        withContext(Dispatchers.IO) {
+    /**
+     * Último peso registrado de cada mascota, indexado por su id. Se usa en la lista para
+     * comparar con el peso ideal sin abrir la ficha de cada una.
+     */
+    suspend fun getUltimoPesoDeCadaMascota(): Map<Long, Double> = withContext(Dispatchers.IO) {
+        database.pesosQueries.ultimoPesoDeCadaMascota()
+            .executeAsList()
+            .associate { fila -> fila.mascotaId to fila.peso }
+    }
+
+    suspend fun insertPeso(mascotaId: Long, fecha: LocalDate, peso: Double, notas: String?): Result<Unit> =        withContext(Dispatchers.IO) {
             try {
                 database.pesosQueries.insert(
                     mascotaId = mascotaId,
