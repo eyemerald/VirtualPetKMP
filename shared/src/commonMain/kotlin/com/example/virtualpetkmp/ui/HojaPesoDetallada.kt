@@ -2,7 +2,6 @@ package com.example.virtualpetkmp.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -37,7 +36,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,7 +48,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -552,61 +549,25 @@ private fun GraficoLineaMeses(
     val estiloEtiqueta = TextStyle(fontSize = 9.sp, color = colorTexto)
     val densidad = LocalDensity.current
     val altoEtiquetas = with(densidad) { 16.dp.toPx() }
-    val margenLados = with(densidad) { 10.dp.toPx() }
-
-    // Posición de desplazamiento en píxeles: se guarda entre recomposiciones para no perderla
-    // al abrir la hoja otra vez.
-    var desplazamiento by rememberSaveable { mutableStateOf(0f) }
 
     BoxWithConstraints(modifier = modifier) {
-        val margenLadosDp = 10.dp
-        val anchoMaxDp = (maxWidth - margenLadosDp * 2).coerceAtLeast(1.dp)
-        val anchoPx = with(densidad) { anchoMaxDp.toPx() }
-
-        // Si hay meses de sobra, se ven unas 6 unidades por pantalla; si son pocos, se
-        // reparten a lo ancho para no dejar huecos.
-        val pasoMinimoDp = 52.dp
-        val pasoMaximoDp = 60.dp
-        val pasoTeoricoDp = anchoMaxDp / 6
-        val pasoDp = pasoTeoricoDp.coerceIn(pasoMinimoDp, pasoMaximoDp)
-        val pasoPx = with(densidad) { pasoDp.toPx() }
-        val anchoContenidoPx = pasoPx * (meses.size - 1).coerceAtLeast(1)
-
-        // Tope a cada lado, igual que en el gráfico de la ficha: el recorrido del arrastre se
-        // recorta para que el primer y el último punto nunca lleguen al borde de la hoja, ni
-        // siquiera al llevar el gráfico de punta a punta.
+        // Todo el histórico se ajusta al ancho disponible: no hay desplazamiento, así que la
+        // línea nunca puede quedar cortada contra los bordes. Con muchos meses los puntos
+        // quedan más juntos, y por eso las etiquetas se van saltando para no solaparse.
         val topeLadosPx = with(densidad) { 14.dp.toPx() }
-        val maxDesplazamiento =
-            (anchoContenidoPx - anchoPx + topeLadosPx).coerceAtLeast(0f)
-        val desplazamientoMinimo = (topeLadosPx * 2 - anchoPx).coerceAtMost(0f)
-
-        // Al abrir, se enseña el final del histórico, que es el peso más reciente.
-        LaunchedEffect(anchoPx, maxDesplazamiento) {
-            if (desplazamiento == 0f) desplazamiento = maxDesplazamiento
-        }
-
-        // Las etiquetas se adelgazan si hay muchísimos meses, para que no se solapen.
-        val saltoEtiquetas = (meses.size / 12 + 1).coerceAtLeast(1)
-        val desplazamientoPx = desplazamiento.coerceIn(desplazamientoMinimo, maxDesplazamiento)
+        val saltoEtiquetas = (meses.size / 8 + 1).coerceAtLeast(1)
 
         Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(anchoPx, maxDesplazamiento, desplazamientoMinimo) {
-                    detectDragGestures { cambio, arrastre ->
-                        cambio.consume()
-                        desplazamiento = (desplazamiento - arrastre.x)
-                            .coerceIn(desplazamientoMinimo, maxDesplazamiento)
-                    }
-                }
+            modifier = Modifier.fillMaxSize()
         ) {
             val altoGrafico = (size.height - altoEtiquetas).coerceAtLeast(1f)
-            val margenInterno = margenLados.coerceAtMost(size.width / 6f)
+            val margenInterno = topeLadosPx.coerceAtMost(size.width / 6f)
             val altoUtil = (altoGrafico - margenInterno * 2).coerceAtLeast(1f)
-            // Ancho del hueco visible: las etiquetas que caen fuera del recorte no se dibujan.
             val anchoVisible = size.width
+            val anchoUtil = (size.width - margenInterno * 2).coerceAtLeast(1f)
 
-            fun x(indice: Int): Float = margenInterno + indice * pasoPx - desplazamientoPx
+            fun x(indice: Int): Float =
+                margenInterno + (indice.toFloat() / (meses.size - 1).coerceAtLeast(1)) * anchoUtil
 
             // Solo los meses con pesaje: los huecos (meses sin datos) no se dibujan como
             // puntos, pero la línea sí los atraviesa para que la evolución se vea entera.
@@ -633,8 +594,8 @@ private fun GraficoLineaMeses(
                 val lineaY = margenInterno + altoUtil * fraccion
                 drawLine(
                     color = colorReferencia,
-                    start = Offset(0f, lineaY),
-                    end = Offset(size.width, lineaY),
+                    start = Offset(margenInterno, lineaY),
+                    end = Offset(size.width - margenInterno, lineaY),
                     strokeWidth = 1.dp.toPx()
                 )
             }
@@ -655,7 +616,7 @@ private fun GraficoLineaMeses(
                 drawLine(
                     color = colorIdeal,
                     start = Offset(medidaIdeal.size.width + 8.dp.toPx(), yIdeal),
-                    end = Offset(size.width, yIdeal),
+                    end = Offset(size.width - margenInterno, yIdeal),
                     strokeWidth = 1.5.dp.toPx(),
                     pathEffect = PathEffect.dashPathEffect(
                         floatArrayOf(6.dp.toPx(), 5.dp.toPx())
@@ -712,10 +673,10 @@ private fun GraficoLineaMeses(
                     MESES_CORTOS_GRAFICO[mes.mes - 1]
                 }
                 val medida = textMeasurer.measure(etiqueta, style = estiloEtiqueta)
-                // Se centra en el mes, se mete dentro del gráfico y, si quedaría pegada a la
+                // Se centra en el mes, se mete dentro del margen y, si quedaría pegada a la
                 // etiqueta anterior, se salta: mejor un mes sin rótulo que dos montados.
                 val idealX = (x(indice) - medida.size.width / 2f)
-                    .coerceIn(0f, (anchoVisible - medida.size.width).coerceAtLeast(0f))
+                    .coerceIn(margenInterno, (anchoVisible - margenInterno - medida.size.width).coerceAtLeast(margenInterno))
                 if (idealX < bordeDerecho + 6.dp.toPx()) return@forEachIndexed
                 datosEtiquetas.add(etiqueta to idealX)
                 bordeDerecho = idealX + medida.size.width

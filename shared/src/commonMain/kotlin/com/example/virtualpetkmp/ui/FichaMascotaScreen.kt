@@ -1036,6 +1036,11 @@ private fun SparklinePeso(
         // punto queda con aire a su izquierda y el último con la banda a su derecha.
         val inicioGrafico = topeIzquierdoPx.coerceAtMost(size.width / 4f)
         val anchoGrafico = (size.width - bandaDerechaPx - inicioGrafico).coerceAtLeast(1f)
+        // Se dibujan como mucho 14 pesadas, y siempre caben: si algún día hubiera más datos
+        // que ancho, se recortan por el principio en vez de salirse del lienzo.
+        val anchoVisible = (size.width - bandaDerechaPx).coerceAtLeast(1f)
+        val anchoContenido = (puntos.size - 1) * (anchoGrafico / 6f)
+        val recorteIzquierdo = (anchoContenido - anchoVisible).coerceAtLeast(0f)
         val altoUtil = (size.height - padV * 2).coerceAtLeast(1f)
         val grosorLinea = 1.dp.toPx()
 
@@ -1052,7 +1057,7 @@ private fun SparklinePeso(
         }
 
         fun x(indice: Int): Float =
-            inicioGrafico + (indice.toFloat() / (puntos.size - 1)) * anchoGrafico
+            inicioGrafico + (indice.toFloat() / (puntos.size - 1)) * anchoGrafico - recorteIzquierdo
 
         fun y(peso: Double): Float {
             val normalizado = if (rango <= 0.0001f) 0.5f else ((peso - minPeso) / rango).toFloat()
