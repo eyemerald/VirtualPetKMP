@@ -22,15 +22,84 @@
     <string name="accion_anadir">Añadir</string>
     <string name="accion_cerrar">Cerrar</string>
     <string name="accion_reintentar">Reintentar</string>
+    <string name="accion_aceptar">Aceptar</string>
 
     <!-- Accesibilidad (lectores de pantalla) -->
     <string name="a11y_agregar_mascota">Agregar mascota</string>
     <string name="a11y_acciones_de">Acciones de %1$s</string>
     <string name="a11y_volver">Volver</string>
     <string name="a11y_compartir">Compartir</string>
+    <string name="a11y_mas_acciones">Más acciones</string>
+    <string name="a11y_historial_mostrar">Mostrar histórico</string>
+    <string name="a11y_historial_ocultar">Ocultar histórico</string>
 
     <!-- Diálogo de borrado de mascota -->
     <string name="borrar_mascota_titulo">Eliminar mascota</string>
     <string name="borrar_mascota_mensaje">¿Seguro que quieres eliminar a %1$s? Esta acción no se puede deshacer.</string>
     <string name="borrar_mascota_mensaje_sin_nombre">¿Seguro que quieres eliminar esta mascota? Esta acción no se puede deshacer.</string>
+
+    <!-- Ficha: tarjeta de peso -->
+    <string name="ficha_peso_actual">Peso actual</string>
+    <string name="ficha_sin_datos">Sin datos</string>
+
+    <!-- Ficha: tarjetas de bloque -->
+    <string name="ficha_tarjeta_vacunas">Vacunas y preventivos</string>
+    <string name="ficha_tarjeta_salud">Salud y seguimiento</string>
+    <string name="ficha_tarjeta_notas">A tener en cuenta</string>
+    <string name="ficha_tarjeta_notas_detalle">Información importante de la mascota</string>
+
+    <!-- Estados de las dosis, usados en las pastillas de la ficha.
+         OJO: sin "%d" dentro. `pluralStringResource` elige la forma por la cantidad pero NO
+         sustituye argumentos (comprobado), así que el número se compone aparte en el código. -->
+    <plurals name="ficha_vencidas">
+        <item quantity="one">vencida</item>
+        <item quantity="other">vencidas</item>
+    </plurals>
+    <plurals name="ficha_proximas">
+        <item quantity="one">próxima</item>
+        <item quantity="other">próximas</item>
+    </plurals>
+    <plurals name="ficha_activos">
+        <item quantity="one">activo</item>
+        <item quantity="other">activos</item>
+    </plurals>
+
+    <!-- Ficha: opciones de foto -->
+    <string name="foto_titulo">Foto de %1$s</string>
+    <string name="foto_hacer">Hacer una foto</string>
+    <string name="foto_elegir">Elegir de mis archivos</string>
+    <string name="foto_quitar">Quitar la foto</string>
+
+    <!-- Ficha: menú de acciones -->
+    <string name="ficha_modificar_datos">Modificar datos</string>
+
+    <!-- Diálogo de exportar a PDF -->
+    <string name="exportar_titulo">Exportar ficha PDF</string>
+    <string name="exportar_elegir_version">Selecciona la versión que quieres exportar:</string>
+    <string name="exportar_version_resumida">Resumida</string>
+    <string name="exportar_version_completa">Completa</string>
+    <string name="exportar_en_curso">Exportando…</string>
+    <string name="exportar_ok_abierto">PDF generado y abierto correctamente.</string>
+    <string name="exportar_ok_guardado">PDF generado y guardado en: %1$s</string>
+    <string name="exportar_error_guardar">No se pudo guardar el PDF en la ruta seleccionada.</string>
+    <string name="exportar_error_generar">Error al generar el PDF: %1$s</string>
+    <string name="exportar_error_desconocido">desconocido</string>
+    <string name="exportar_error_no_es_pdf">El contenido generado no parece un PDF válido (%1$s). No se guardó.</string>
+
+    <!--
+      Meses abreviados para el eje del gráfico. Van en recursos y no en una lista del código
+      porque cada idioma abrevia a su manera: "mar" no es marzo en alemán ("Mär").
+    -->
+    <string name="mes_corto_1">ene</string>
+    <string name="mes_corto_2">feb</string>
+    <string name="mes_corto_3">mar</string>
+    <string name="mes_corto_4">abr</string>
+    <string name="mes_corto_5">may</string>
+    <string name="mes_corto_6">jun</string>
+    <string name="mes_corto_7">jul</string>
+    <string name="mes_corto_8">ago</string>
+    <string name="mes_corto_9">sep</string>
+    <string name="mes_corto_10">oct</string>
+    <string name="mes_corto_11">nov</string>
+    <string name="mes_corto_12">dic</string>
 </resources>

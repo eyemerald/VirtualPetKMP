@@ -109,6 +109,45 @@ data class Localizacion(
     }
 
     /**
+     * Edad en texto sin recursos, para los sitios donde no hay contexto composable (por
+     * ejemplo, generar el PDF desde una corrutina). Aquí el plural es simplemente "-s" cuando
+     * hay más de uno, que cubre los seis idiomas soportados por igual: en los seis el plural
+     * se forma añadiendo una ese o no cambia ("anni", "Jahre", "anos").
+     *
+     * Si algún día se añade un idioma con plurales complejos (ruso, polaco, árabe), habrá que
+     * sustituir esto por los plurales de los recursos y pasar el texto ya montado.
+     */
+    fun formatearEdad(anios: Int, meses: Int): String {
+        val etiquetaAnios = when (idioma) {
+            Idioma.ESPANOL -> if (anios == 1) "1 año" else "$anios años"
+            Idioma.INGLES -> if (anios == 1) "1 year" else "$anios years"
+            Idioma.PORTUGUES -> if (anios == 1) "1 ano" else "$anios anos"
+            Idioma.FRANCES -> if (anios == 1) "1 an" else "$anios ans"
+            Idioma.ALEMAN -> if (anios == 1) "1 Jahr" else "$anios Jahre"
+            Idioma.ITALIANO -> if (anios == 1) "1 anno" else "$anios anni"
+        }
+        if (meses == 0) return etiquetaAnios
+
+        val etiquetaMeses = when (idioma) {
+            Idioma.ESPANOL -> if (meses == 1) "1 mes" else "$meses meses"
+            Idioma.INGLES -> if (meses == 1) "1 month" else "$meses months"
+            Idioma.PORTUGUES -> if (meses == 1) "1 mês" else "$meses meses"
+            Idioma.FRANCES -> if (meses == 1) "1 mois" else "$meses mois"
+            Idioma.ALEMAN -> if (meses == 1) "1 Monat" else "$meses Monate"
+            Idioma.ITALIANO -> if (meses == 1) "1 mese" else "$meses mesi"
+        }
+        val conector = when (idioma) {
+            Idioma.ESPANOL -> " y "
+            Idioma.INGLES -> " and "
+            Idioma.PORTUGUES -> " e "
+            Idioma.FRANCES -> " et "
+            Idioma.ALEMAN -> " und "
+            Idioma.ITALIANO -> " e "
+        }
+        return "$etiquetaAnios$conector$etiquetaMeses"
+    }
+
+    /**
      * Formato de fecha que se le pide al usuario: "DD/MM/AAAA" o "MM/DD/AAAA".
      * Se usa en las etiquetas de los campos para que sepa qué se espera.
      */

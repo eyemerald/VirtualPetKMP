@@ -24,6 +24,13 @@ import virtualpetkmp.shared.generated.resources.Res
 
 class ExportadorPdf {
 
+    /**
+     * Genera el PDF de la ficha.
+     *
+     * @param localizacion configuraciÃ³n regional activa. Se pasa desde la interfaz porque esta
+     *   funciÃ³n corre en una corrutina, donde no se pueden leer recursos: aquÃ­ no hay contexto
+     *   composable. Con ella se deciden el formato de fecha y la unidad de peso.
+     */
     @OptIn(ExperimentalResourceApi::class)
     suspend fun exportarFichaMascota(
         mascota: Mascota,
@@ -33,10 +40,12 @@ class ExportadorPdf {
         pesos: List<Peso>,
         informes: List<Informe>,
         notas: List<Nota>,
-        version: VersionPdf = VersionPdf.COMPLETA
+        version: VersionPdf = VersionPdf.COMPLETA,
+        localizacion: Localizacion = Localizacion.desdeRegion("es-ES")
     ): ByteArray {
         val hoy = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val edad = calcularEdad(mascota.fechaNacimiento, hoy)
+        val edadMeses = calcularEdadMeses(mascota.fechaNacimiento, hoy)
+        val edad = localizacion.formatearEdad(edadMeses.anios, edadMeses.meses)
         val ultimoPeso = pesos.maxByOrNull { it.fecha }?.peso
         val tratamientosActivos = tratamientos.filter { it.fechaFin == null || it.fechaFin > hoy }
         fun classpathRead(name: String): ByteArray {
@@ -97,7 +106,7 @@ class ExportadorPdf {
                 keyValue("Raza", mascota.raza)
                 keyValue("Sexo", mascota.sexo)
                 keyValue("Edad", edad)
-                keyValue("Fecha nacimiento", mascota.fechaNacimiento.toFormatoEuropeo())
+                keyValue("Fecha nacimiento", mascota.fechaNacimiento.let { localizacion.formatearFecha(it) })
                 if (mascota.microchip != null) {
                     keyValue("Microchip", mascota.microchip)
                 }
@@ -109,21 +118,21 @@ class ExportadorPdf {
             spacer(12.dp)
 
             if (version == VersionPdf.RESUMIDA) {
-                text("Vacunas próximas", TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold))
+                text("Vacunas prÃ³ximas", TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold))
                 val proximasVacunas = vacunas.filter { it.fechaProximaDosis > hoy }
                     .sortedBy { it.fechaProximaDosis }
                     .take(3)
                 if (proximasVacunas.isEmpty()) {
-                    text("No hay vacunas próximas programadas")
+                    text("No hay vacunas prÃ³ximas programadas")
                 } else {
                     table(
                         columns = listOf(
                             PdfColumn(2f, "Vacuna"),
-                            PdfColumn(1f, "Próxima dosis", TextAlign.End)
+                            PdfColumn(1f, "PrÃ³xima dosis", TextAlign.End)
                         )
                     ) {
                         proximasVacunas.forEach { vacuna ->
-                            row(vacuna.nombre, vacuna.fechaProximaDosis.toFormatoEuropeo())
+                            row(vacuna.nombre, vacuna.fechaProximaDosis.let { localizacion.formatearFecha(it) })
                         }
                     }
                 }
@@ -151,9 +160,9 @@ class ExportadorPdf {
 
                 text("Resumen general", TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold))
                 if (ultimoPeso != null) {
-                    keyValue("Último peso", "${ultimoPeso} kg")
+                    keyValue("Ãšltimo peso", "${ultimoPeso} kg")
                 }
-                keyValue("Fecha del reporte", hoy.toFormatoEuropeo())
+                keyValue("Fecha del reporte", hoy.let { localizacion.formatearFecha(it) })
 
                 if (notas.isNotEmpty()) {
                     spacer(12.dp)
@@ -173,14 +182,14 @@ class ExportadorPdf {
                         columns = listOf(
                             PdfColumn(2f, "Vacuna"),
                             PdfColumn(1f, "Aplicada", TextAlign.End),
-                            PdfColumn(1f, "Próxima", TextAlign.End)
+                            PdfColumn(1f, "PrÃ³xima", TextAlign.End)
                         )
                     ) {
                         vacunas.sortedBy { it.fechaAplicacion }.forEach { vacuna ->
                             row(
                                 vacuna.nombre,
-                                vacuna.fechaAplicacion.toFormatoEuropeo(),
-                                vacuna.fechaProximaDosis.toFormatoEuropeo()
+                                vacuna.fechaAplicacion.let { localizacion.formatearFecha(it) },
+                                vacuna.fechaProximaDosis.let { localizacion.formatearFecha(it) }
                             )
                         }
                     }
@@ -193,12 +202,12 @@ class ExportadorPdf {
                         columns = listOf(
                             PdfColumn(1f, "Fecha"),
                             PdfColumn(2f, "Motivo"),
-                            PdfColumn(2f, "Diagnóstico")
+                            PdfColumn(2f, "DiagnÃ³stico")
                         )
                     ) {
                         revisiones.sortedByDescending { it.fecha }.forEach { revision ->
                             row(
-                                revision.fecha.toFormatoEuropeo(),
+                                revision.fecha.let { localizacion.formatearFecha(it) },
                                 revision.motivo,
                                 revision.diagnostico ?: "-"
                             )
@@ -220,8 +229,8 @@ class ExportadorPdf {
                         tratamientosActivos.sortedBy { it.fechaInicio }.forEach { tratamiento ->
                             row(
                                 tratamiento.nombreMedicamento,
-                                tratamiento.fechaInicio.toFormatoEuropeo(),
-                                tratamiento.fechaFin?.toFormatoEuropeo() ?: "-",
+                                tratamiento.fechaInicio.let { localizacion.formatearFecha(it) },
+                                tratamiento.fechaFin?.let { localizacion.formatearFecha(it) } ?: "-",
                                 tratamiento.frecuencia ?: "-"
                             )
                         }
@@ -236,12 +245,12 @@ class ExportadorPdf {
                             columns = listOf(
                                 PdfColumn(1f, "Fecha"),
                                 PdfColumn(2f, "Tipo"),
-                                PdfColumn(2f, "Descripción")
+                                PdfColumn(2f, "DescripciÃ³n")
                             )
                         ) {
                             informes.sortedByDescending { it.fecha }.forEach { informe ->
                                 row(
-                                    informe.fecha.toFormatoEuropeo(),
+                                    informe.fecha.let { localizacion.formatearFecha(it) },
                                     informe.tipo,
                                     informe.descripcion ?: "-"
                                 )
@@ -263,7 +272,7 @@ class ExportadorPdf {
                 }
             }
 
-            text("Generado el ${hoy.toFormatoEuropeo()}", TextStyle(fontSize = 8.sp, color = Color(0xFF6C757D)))
+            text("Generado el ${hoy.let { localizacion.formatearFecha(it) }}", TextStyle(fontSize = 8.sp, color = Color(0xFF6C757D)))
         }
         
         // Render and log sizes to help Android debugging

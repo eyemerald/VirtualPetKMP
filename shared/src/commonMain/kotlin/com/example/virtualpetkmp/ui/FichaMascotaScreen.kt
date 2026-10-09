@@ -45,9 +45,11 @@ import androidx.compose.ui.unit.sp
 import com.example.virtualpetkmp.Mascota
 import kotlinx.coroutines.launch
 import com.example.virtualpetkmp.util.ExportadorPdf
+import com.example.virtualpetkmp.util.UnidadPeso
 import com.example.virtualpetkmp.util.VersionPdf
 import com.example.virtualpetkmp.util.calcularEdad
 import com.example.virtualpetkmp.util.guardarArchivo
+import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.util.rememberAbridorArchivo
 import com.example.virtualpetkmp.util.rememberFotoMascota
 import com.example.virtualpetkmp.util.rememberSelectorDestino
@@ -55,11 +57,53 @@ import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.viewmodel.FichaMascotaViewModel
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
 import com.example.virtualpetkmp.viewmodel.ResumenFicha
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.accion_aceptar
+import virtualpetkmp.shared.generated.resources.exportar_elegir_version
+import virtualpetkmp.shared.generated.resources.exportar_en_curso
+import virtualpetkmp.shared.generated.resources.exportar_error_desconocido
+import virtualpetkmp.shared.generated.resources.exportar_error_generar
+import virtualpetkmp.shared.generated.resources.exportar_error_guardar
+import virtualpetkmp.shared.generated.resources.exportar_error_no_es_pdf
+import virtualpetkmp.shared.generated.resources.exportar_ok_abierto
+import virtualpetkmp.shared.generated.resources.exportar_ok_guardado
+import virtualpetkmp.shared.generated.resources.exportar_titulo
+import virtualpetkmp.shared.generated.resources.exportar_version_completa
+import virtualpetkmp.shared.generated.resources.exportar_version_resumida
+import virtualpetkmp.shared.generated.resources.ficha_activos
+import virtualpetkmp.shared.generated.resources.ficha_peso_actual
+import virtualpetkmp.shared.generated.resources.ficha_proximas
+import virtualpetkmp.shared.generated.resources.ficha_sin_datos
+import virtualpetkmp.shared.generated.resources.ficha_tarjeta_notas
+import virtualpetkmp.shared.generated.resources.ficha_tarjeta_notas_detalle
+import virtualpetkmp.shared.generated.resources.ficha_tarjeta_salud
+import virtualpetkmp.shared.generated.resources.ficha_tarjeta_vacunas
+import virtualpetkmp.shared.generated.resources.ficha_vencidas
+import virtualpetkmp.shared.generated.resources.foto_elegir
+import virtualpetkmp.shared.generated.resources.foto_hacer
+import virtualpetkmp.shared.generated.resources.foto_quitar
+import virtualpetkmp.shared.generated.resources.foto_titulo
+import virtualpetkmp.shared.generated.resources.mes_corto_1
+import virtualpetkmp.shared.generated.resources.mes_corto_10
+import virtualpetkmp.shared.generated.resources.mes_corto_11
+import virtualpetkmp.shared.generated.resources.mes_corto_12
+import virtualpetkmp.shared.generated.resources.mes_corto_2
+import virtualpetkmp.shared.generated.resources.mes_corto_3
+import virtualpetkmp.shared.generated.resources.mes_corto_4
+import virtualpetkmp.shared.generated.resources.mes_corto_5
+import virtualpetkmp.shared.generated.resources.mes_corto_6
+import virtualpetkmp.shared.generated.resources.mes_corto_7
+import virtualpetkmp.shared.generated.resources.mes_corto_8
+import virtualpetkmp.shared.generated.resources.mes_corto_9
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 
-/** Hoja modal activa del dashboard. None = no hay ninguna abierta. */
+/**
+ * Hoja modal activa del dashboard. None = no hay ninguna abierta.
+ */
 sealed class ActiveSheet {
     data object None : ActiveSheet()
     data object Vaccines : ActiveSheet()
@@ -68,9 +112,37 @@ sealed class ActiveSheet {
     data object Weight : ActiveSheet()
 }
 
-/** "1 nota" / "2 notas": elige singular o plural según la cantidad. */
-private fun plural(cantidad: Int, singular: String, plural: String): String =
-    "$cantidad ${if (cantidad == 1) singular else plural}"
+/**
+ * Resultado de exportar la ficha a PDF.
+ *
+ * Se guarda como tipo y no como texto ya montado a propósito: el mensaje se compone al
+ * mostrarlo, para que salga en el idioma correcto. Si se guardara el texto, quedaría con el
+ * idioma que tuviera la app al exportar, y además no se puede leer un recurso desde dentro de
+ * una corrutina.
+ */
+private sealed class MensajeExportar {
+    data object OkAbierto : MensajeExportar()
+    data class OkGuardado(val ruta: String) : MensajeExportar()
+    data class ErrorNoEsPdf(val detalle: String) : MensajeExportar()
+    data object ErrorGuardar : MensajeExportar()
+    data class ErrorGenerar(val detalle: String) : MensajeExportar()
+}
+
+/** Texto del resultado de exportar, ya en el idioma de la app. */
+@Composable
+private fun textoMensajeExportar(mensaje: MensajeExportar): String = when (mensaje) {
+    is MensajeExportar.OkAbierto -> stringResource(Res.string.exportar_ok_abierto)
+    is MensajeExportar.OkGuardado -> stringResource(Res.string.exportar_ok_guardado, mensaje.ruta)
+    is MensajeExportar.ErrorNoEsPdf -> stringResource(Res.string.exportar_error_no_es_pdf, mensaje.detalle)
+    is MensajeExportar.ErrorGuardar -> stringResource(Res.string.exportar_error_guardar)
+    is MensajeExportar.ErrorGenerar -> stringResource(Res.string.exportar_error_generar, mensaje.detalle)
+}
+
+/** Los que son un fallo se pintan en rojo; el resto, en el color de acento. */
+private fun MensajeExportar.esError(): Boolean = when (this) {
+    is MensajeExportar.OkAbierto, is MensajeExportar.OkGuardado -> false
+    else -> true
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,6 +155,12 @@ fun FichaMascotaScreen(
     onCambiarDialogoExportar: (Boolean) -> Unit
 ) {
     val resumen by viewModel.resumen.collectAsState()
+    // Se lee aquí, en contexto composable, para poder usarlo dentro de la corrutina de
+    // exportación, donde no hay acceso a los recursos.
+    val detalleDesconocido = stringResource(Res.string.exportar_error_desconocido)
+    // La configuración regional de la app: de aquí salen la unidad de peso, el orden de fecha
+    // y el separador decimal.
+    val formatoActual = localizacion
     // En horizontal la ventana es muy baja: se encogen cabecera y gráficos para que la
     // ficha se vea entera en lugar de cortada.
     val compacta = alturaCompacta()
@@ -107,7 +185,7 @@ fun FichaMascotaScreen(
     // El diálogo de exportar lo controla la barra superior global (MainScreen), así que su
     // estado llega desde fuera; el resto de estados de la exportación son efímeros.
     var exportando by remember { mutableStateOf(false) }
-    var mensajeExportar by remember { mutableStateOf<String?>(null) }
+    var mensajeExportar by remember { mutableStateOf<MensajeExportar?>(null) }
     var versionSeleccionada by rememberSaveable { mutableStateOf(VersionPdf.COMPLETA) }
 
     // Foto mostrada en el círculo. Se mantiene en estado local para que el cambio se vea
@@ -153,12 +231,15 @@ fun FichaMascotaScreen(
                     pesos = datosPdf.pesos,
                     informes = datosPdf.informes,
                     notas = datosPdf.notas,
-                    version = versionSeleccionada
+                    version = versionSeleccionada,
+                    // La configuración regional se lee fuera de la corrutina: aquí dentro no
+                    // hay contexto composable y los recursos no están disponibles.
+                    localizacion = formatoActual
                 )
 
                 val isPdf = pdf.size >= 4 && pdf[0] == 0x25.toByte() && pdf[1] == 0x50.toByte() && pdf[2] == 0x44.toByte() && pdf[3] == 0x46.toByte()
                 if (!isPdf) {
-                    mensajeExportar = "El contenido generado no parece un PDF válido (size=${pdf.size}). No se guardó."
+                    mensajeExportar = MensajeExportar.ErrorNoEsPdf("size=${pdf.size}")
                     exportando = false
                     onCambiarDialogoExportar(false)
                     return@launch
@@ -169,15 +250,17 @@ fun FichaMascotaScreen(
                 if (guardado) {
                     val abierto = abrirArchivo(rutaValida)
                     mensajeExportar = if (abierto) {
-                        "PDF generado y abierto correctamente."
+                        MensajeExportar.OkAbierto
                     } else {
-                        "PDF generado y guardado en: $rutaValida"
+                        MensajeExportar.OkGuardado(rutaValida)
                     }
                 } else {
-                    mensajeExportar = "No se pudo guardar el PDF en la ruta seleccionada."
+                    mensajeExportar = MensajeExportar.ErrorGuardar
                 }
             } catch (e: Exception) {
-                mensajeExportar = "Error al generar el PDF: ${e.message ?: "desconocido"}"
+                // El texto por defecto se resuelve fuera de la corrutina: `stringResource` es
+                // una función composable y aquí no hay contexto de composición.
+                mensajeExportar = MensajeExportar.ErrorGenerar(e.message ?: detalleDesconocido)
             } finally {
                 exportando = false
                 onCambiarDialogoExportar(false)
@@ -195,23 +278,35 @@ fun FichaMascotaScreen(
     val tarjetas = listOf(
         ItemFicha(
             icono = Icons.Default.MedicalServices,
-            titulo = "Vacunas y preventivos",
+            titulo = stringResource(Res.string.ficha_tarjeta_vacunas),
             colorFondo = colores.tarjetaVerde,
             colorIcono = colores.iconoTarjetaVerde,
             // Solo el aviso: cuántas están vencidas. El resto del detalle está dentro.
+            // La cantidad se compone aparte porque `pluralStringResource` elige la forma pero
+            // no sustituye argumentos.
             badges = buildList {
                 if (vencidas > 0) {
-                    add(BadgeEstado(plural(vencidas, "vencida", "vencidas"), EstadoBadge.AVISO))
+                    add(
+                        BadgeEstado(
+                            "$vencidas " + pluralStringResource(Res.plurals.ficha_vencidas, vencidas),
+                            EstadoBadge.AVISO
+                        )
+                    )
                 }
                 if (proximas > 0) {
-                    add(BadgeEstado(plural(proximas, "próxima", "próximas"), EstadoBadge.PROXIMO))
+                    add(
+                        BadgeEstado(
+                            "$proximas " + pluralStringResource(Res.plurals.ficha_proximas, proximas),
+                            EstadoBadge.PROXIMO
+                        )
+                    )
                 }
             },
             hoja = "vacunasPreventivos"
         ),
         ItemFicha(
             icono = Icons.Default.MedicalInformation,
-            titulo = "Salud y seguimiento",
+            titulo = stringResource(Res.string.ficha_tarjeta_salud),
             colorFondo = colores.tarjetaNaranja,
             colorIcono = colores.iconoTarjetaNaranja,
             // Con saber cuántos tratamientos hay activos basta; los informes y las
@@ -219,7 +314,10 @@ fun FichaMascotaScreen(
             badges = if (resumen.tratamientosActivos > 0) {
                 listOf(
                     BadgeEstado(
-                        plural(resumen.tratamientosActivos, "activo", "activos"),
+                        "${resumen.tratamientosActivos} " + pluralStringResource(
+                            Res.plurals.ficha_activos,
+                            resumen.tratamientosActivos
+                        ),
                         EstadoBadge.CORRECTO
                     )
                 )
@@ -230,11 +328,11 @@ fun FichaMascotaScreen(
         ),
         ItemFicha(
             icono = Icons.Default.Note,
-            titulo = "A tener en cuenta",
+            titulo = stringResource(Res.string.ficha_tarjeta_notas),
             colorFondo = colores.tarjetaAzul,
             colorIcono = colores.iconoTarjetaAzul,
             // Sin recuento: aquí interesa saber que dentro hay apuntes importantes.
-            detalle = "Información importante de la mascota",
+            detalle = stringResource(Res.string.ficha_tarjeta_notas_detalle),
             hoja = "notas"
         )
     )
@@ -276,11 +374,15 @@ fun FichaMascotaScreen(
             }
         )
 
-        if (mensajeExportar != null) {
+        mensajeExportar?.let { mensaje ->
             item(key = "mensaje-exportar") {
                 Text(
-                    text = mensajeExportar!!,
-                    color = if (mensajeExportar!!.contains("Error", ignoreCase = true) || mensajeExportar!!.contains("No se pudo", ignoreCase = true)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    text = textoMensajeExportar(mensaje),
+                    color = if (mensaje.esError()) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    },
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -396,25 +498,31 @@ fun FichaMascotaScreen(
     if (mostrarDialogoExportar) {
         AlertDialog(
             onDismissRequest = { if (!exportando) onCambiarDialogoExportar(false) },
-            title = { Text("Exportar ficha PDF") },
+            title = { Text(stringResource(Res.string.exportar_titulo)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Selecciona la versión que quieres exportar:")
+                    Text(stringResource(Res.string.exportar_elegir_version))
                     FilterChip(
                         selected = versionSeleccionada == VersionPdf.RESUMIDA,
                         onClick = { versionSeleccionada = VersionPdf.RESUMIDA },
-                        label = { Text("Resumida") }
+                        label = { Text(stringResource(Res.string.exportar_version_resumida)) }
                     )
                     FilterChip(
                         selected = versionSeleccionada == VersionPdf.COMPLETA,
                         onClick = { versionSeleccionada = VersionPdf.COMPLETA },
-                        label = { Text("Completa") }
+                        label = { Text(stringResource(Res.string.exportar_version_completa)) }
                     )
                 }
             },
             confirmButton = {
                 TextButton(onClick = { seleccionarDestino() }, enabled = !exportando) {
-                    Text(if (exportando) "Exportando..." else "Aceptar")
+                    Text(
+                        if (exportando) {
+                            stringResource(Res.string.exportar_en_curso)
+                        } else {
+                            stringResource(Res.string.accion_aceptar)
+                        }
+                    )
                 }
             },
             dismissButton = {
@@ -431,7 +539,7 @@ fun FichaMascotaScreen(
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         ) {            Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
                 Text(
-                    text = "Foto de ${mascota.nombre}",
+                    text = stringResource(Res.string.foto_titulo, mascota.nombre),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                 )
@@ -439,21 +547,21 @@ fun FichaMascotaScreen(
                 if (accionesFoto.soportaCamara) {
                     OpcionFoto(
                         icono = Icons.Default.PhotoCamera,
-                        texto = "Hacer una foto",
+                        texto = stringResource(Res.string.foto_hacer),
                         onClick = { accionesFoto.hacerFoto?.invoke() }
                     )
                 }
 
                 OpcionFoto(
                     icono = Icons.Default.PhotoLibrary,
-                    texto = "Elegir de mis archivos",
+                    texto = stringResource(Res.string.foto_elegir),
                     onClick = accionesFoto.elegirDeArchivos
                 )
 
                 if (!rutaFoto.isNullOrBlank()) {
                     OpcionFoto(
                         icono = Icons.Default.Delete,
-                        texto = "Quitar la foto",
+                        texto = stringResource(Res.string.foto_quitar),
                         color = MaterialTheme.colorScheme.error,
                         onClick = {
                             mostrarOpcionesFoto = false
@@ -885,6 +993,9 @@ private fun TarjetaPesoHero(
     compacta: Boolean = false
 ) {
     val extras = LocalExtrasColors.current
+    // La misma configuración regional que el resto de la app: de aquí salen la unidad (kg o
+    // lb) y el separador decimal.
+    val formato = localizacion
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -924,7 +1035,9 @@ private fun TarjetaPesoHero(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = ultimoPeso?.let { "${formatearPesoDosDecimales(it)} kg" } ?: "Sin datos",
+                        text = ultimoPeso?.let {
+                            formato.formatearPeso(it, conUnidad = true)
+                        } ?: stringResource(Res.string.ficha_sin_datos),
                         fontSize = if (compacta) 20.sp else 28.sp,
                         fontWeight = FontWeight.Bold,
                         // Azul de acento para el dato del peso, que es el color que ya
@@ -940,7 +1053,7 @@ private fun TarjetaPesoHero(
                 // entiende igual porque la tarjeta es la del peso.
                 if (!compacta) {
                     Text(
-                        text = "Peso actual",
+                        text = stringResource(Res.string.ficha_peso_actual),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -961,8 +1074,10 @@ private fun TarjetaPesoHero(
                     )
                     // Las fechas van fuera del lienzo: así el gráfico nunca les roba sitio
                     // ni se recortan cuando la tarjeta es baja (apaisado).
-                    val etiquetas = fechasSparkline(pesos)
-                    if (etiquetas != null) {
+                    if (pesos.size >= 2) {
+                        val ordenados = pesos.sortedBy { it.fecha }.takeLast(14)
+                        val primera = ordenados.first().fecha
+                        val ultima = ordenados.last().fecha
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -970,12 +1085,12 @@ private fun TarjetaPesoHero(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = etiquetas.first,
+                                text = etiquetaFechaCompacta(primera, ultima),
                                 fontSize = 9.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = etiquetas.second,
+                                text = etiquetaFechaCompacta(ultima, ultima),
                                 fontSize = 9.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1007,6 +1122,9 @@ private fun SparklinePeso(
     val puntos = remember(pesos) {
         pesos.sortedBy { it.fecha }.takeLast(14)
     }
+    // El gráfico se dibuja en la unidad del usuario (kg o lb), no en kilos: si no, los
+    // números de la derecha no cuadrarían con la línea.
+    val formato = localizacion
     // La línea del gráfico es el acento azul de esta pantalla; las referencias y el texto,
     // neutros, para que solo el dato medido tenga color.
     val colorLinea = LocalExtrasColors.current.barraActual.copy(alpha = 0.75f)
@@ -1028,8 +1146,13 @@ private fun SparklinePeso(
     androidx.compose.foundation.Canvas(modifier = modifier) {
         if (puntos.size < 2) return@Canvas
 
-        val minPeso = puntos.minOf { it.peso }
-        val maxPeso = puntos.maxOf { it.peso }
+        // El eje Y se calcula en la UNIDAD QUE VE EL USUARIO, no en kilos: si el gráfico se
+        // escalara en kilos pero los números de la derecha fueran libras, las etiquetas no
+        // corresponderían con la línea. Convertimos primero y trabajamos con eso.
+        val unidad = formato.unidadPeso
+        val valoresMostrados = puntos.map { UnidadPeso.desdeKilos(it.peso, unidad) }
+        val minPeso = valoresMostrados.min()
+        val maxPeso = valoresMostrados.max()
         val rango = (maxPeso - minPeso).toFloat()
         val padV = 4.dp.toPx()
         // El eje X va del tope izquierdo al arranque de la banda de etiquetas: el primer
@@ -1065,11 +1188,11 @@ private fun SparklinePeso(
             return padV + altoUtil * (1f - normalizado)
         }
 
-        val coordenadas = puntos.indices.map { Offset(x(it), y(puntos[it].peso)) }
+        val coordenadas = puntos.indices.map { Offset(x(it), y(valoresMostrados[it])) }
 
         // Índices del peso máximo y mínimo: sus etiquetas se alinean con su punto real.
-        val indiceMax = puntos.indices.maxBy { puntos[it].peso }
-        val indiceMin = puntos.indices.minBy { puntos[it].peso }
+        val indiceMax = valoresMostrados.indices.maxBy { valoresMostrados[it] }
+        val indiceMin = valoresMostrados.indices.minBy { valoresMostrados[it] }
 
         // Curva suave entre los puntos, con los controles acotados al alto del gráfico.
         val path = Path()
@@ -1089,16 +1212,21 @@ private fun SparklinePeso(
         drawPath(path = path, color = colorLinea, style = Stroke(width = 2.dp.toPx()))
 
         // Pesos máximo y mínimo en la banda de la derecha, a la altura de su propio punto
-        // pero sin pisarlo: van a partir del final del eje más un huequito.
-        val etiquetaMax = formatearPesoDosDecimales(maxPeso)
-        val etiquetaMin = formatearPesoDosDecimales(minPeso)
+        // pero sin pisarlo: van a partir del final del eje más un huequito. En la unidad del
+        // usuario y con su separador decimal.
+        val etiquetaMax = formato.formatearConDecimales(maxPeso, 2)
+        val etiquetaMin = formato.formatearConDecimales(minPeso, 2)
         val medidaMax = textMeasurer.measure(etiquetaMax, style = estiloEtiqueta)
         val medidaMin = textMeasurer.measure(etiquetaMin, style = estiloEtiqueta)
         val xEtiquetas = inicioGrafico + anchoGrafico + separacionEtiquetaPx
-        val yMaxEtiqueta = (coordenadas[indiceMax].y - medidaMax.size.height / 2f)
-            .coerceIn(0f, (size.height - medidaMax.size.height).coerceAtLeast(0f))
-        val yMinEtiqueta = (coordenadas[indiceMin].y - medidaMin.size.height / 2f)
-            .coerceIn(0f, (size.height - medidaMin.size.height).coerceAtLeast(0f))
+        // El alto del texto se lee de la medida; ojo con llamar `size` a nada de aquí dentro,
+        // porque taparía el `size` del lienzo.
+        val altoMaxEtiqueta = medidaMax.size.height
+        val altoMinEtiqueta = medidaMin.size.height
+        val yMaxEtiqueta = (coordenadas[indiceMax].y - altoMaxEtiqueta / 2f)
+            .coerceIn(0f, (size.height - altoMaxEtiqueta).coerceAtLeast(0f))
+        val yMinEtiqueta = (coordenadas[indiceMin].y - altoMinEtiqueta / 2f)
+            .coerceIn(0f, (size.height - altoMinEtiqueta).coerceAtLeast(0f))
         drawText(
             textMeasurer = textMeasurer,
             text = etiquetaMax,
@@ -1119,42 +1247,40 @@ private fun SparklinePeso(
 }
 
 /**
- * Formatea un peso con dos decimales (1.7 -> "1.70"). Se hace a mano para no depender
- * de `String.format`, que no existe en commonMain de Kotlin Multiplatform.
+ * Abreviatura del mes en el idioma de la app. Se resuelve con recursos y no con una lista
+ * escrita a mano, porque "sep" no vale para un usuario alemán ("Sep." sí, pero "Mär" para
+ * marzo no se parece en nada a "mar").
  */
-private fun formatearPesoDosDecimales(peso: Double): String {
-    val centesimas = kotlin.math.round(peso * 100).toLong()
-    val signo = if (centesimas < 0) "-" else ""
-    val absoluto = kotlin.math.abs(centesimas)
-    val entero = absoluto / 100
-    val decimales = absoluto % 100
-    return "$signo$entero.${decimales.toString().padStart(2, '0')}"
-}
-
-private val MESES_CORTOS = listOf(
-    "ene", "feb", "mar", "abr", "may", "jun",
-    "jul", "ago", "sep", "oct", "nov", "dic"
-)
-
-/**
- * Etiquetas de fecha de los extremos del gráfico: la del primer y la del último pesaje del
- * tramo. Devuelve null si no hay pesajes suficientes para dibujar el gráfico.
- */
-private fun fechasSparkline(pesos: List<com.example.virtualpetkmp.Peso>): Pair<String, String>? {
-    if (pesos.size < 2) return null
-    val ordenados = pesos.sortedBy { it.fecha }.takeLast(14)
-    val primera = ordenados.first().fecha
-    val ultima = ordenados.last().fecha
-    return etiquetaFechaCompacta(primera, ultima) to etiquetaFechaCompacta(ultima, ultima)
+@Composable
+private fun mesCorto(mes: Int): String = when (mes) {
+    1 -> stringResource(Res.string.mes_corto_1)
+    2 -> stringResource(Res.string.mes_corto_2)
+    3 -> stringResource(Res.string.mes_corto_3)
+    4 -> stringResource(Res.string.mes_corto_4)
+    5 -> stringResource(Res.string.mes_corto_5)
+    6 -> stringResource(Res.string.mes_corto_6)
+    7 -> stringResource(Res.string.mes_corto_7)
+    8 -> stringResource(Res.string.mes_corto_8)
+    9 -> stringResource(Res.string.mes_corto_9)
+    10 -> stringResource(Res.string.mes_corto_10)
+    11 -> stringResource(Res.string.mes_corto_11)
+    else -> stringResource(Res.string.mes_corto_12)
 }
 
 /**
  * Etiqueta de fecha compacta para el gráfico: "sep 26" si el otro extremo del tramo es del
  * mismo año, y solo el año ("2026") si no lo es, para que no se repita en las dos puntas.
  */
-private fun etiquetaFechaCompacta(fecha: kotlinx.datetime.LocalDate, otra: kotlinx.datetime.LocalDate): String {
-    val mes = MESES_CORTOS[fecha.monthNumber - 1]
+@Composable
+private fun etiquetaFechaCompacta(
+    fecha: kotlinx.datetime.LocalDate,
+    otra: kotlinx.datetime.LocalDate
+): String {
     val anioCorto = (fecha.year % 100).toString().padStart(2, '0')
-    return if (fecha.year == otra.year) "$mes $anioCorto" else "${fecha.year}"
+    return if (fecha.year == otra.year) {
+        "${mesCorto(fecha.monthNumber)} $anioCorto"
+    } else {
+        "${fecha.year}"
+    }
 }
 

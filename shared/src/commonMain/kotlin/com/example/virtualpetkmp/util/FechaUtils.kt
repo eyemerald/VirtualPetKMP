@@ -1,5 +1,6 @@
 package com.example.virtualpetkmp.util
 
+import androidx.compose.runtime.Composable
 import kotlinx.datetime.LocalDate
 
 /**
@@ -64,10 +65,17 @@ fun localDateDeDiasEpoch(diasEpoch: Long): LocalDate {
     return LocalDate(anio.toInt(), mes.toInt(), dia.toInt())
 }
 
+/** Años y meses cumplidos de una mascota. */
+data class EdadMascota(val anios: Int, val meses: Int)
+
 /**
  * Calcula la edad en años y meses a partir de la fecha de nacimiento.
+ *
+ * Devuelve **números, no texto**: el texto se compone con recursos y plurales en
+ * `textoEdad()`, porque cada idioma tiene sus propias formas ("1 año" / "2 años") y no vale
+ * concatenar a mano.
  */
-fun calcularEdad(fechaNacimiento: LocalDate, hoy: LocalDate): String {
+fun calcularEdadMeses(fechaNacimiento: LocalDate, hoy: LocalDate): EdadMascota {
     var anios = hoy.year - fechaNacimiento.year
     var meses = hoy.monthNumber - fechaNacimiento.monthNumber
     val dias = hoy.dayOfMonth - fechaNacimiento.dayOfMonth
@@ -84,5 +92,26 @@ fun calcularEdad(fechaNacimiento: LocalDate, hoy: LocalDate): String {
         meses = 0
     }
 
-    return "$anios años y $meses meses"
+    return EdadMascota(anios, meses)
 }
+
+/**
+ * Edad en texto, en el idioma activo: "2 años y 6 meses", "2 years and 6 months".
+ *
+ * El texto lo compone [Localizacion.formatearEdad], que ya conoce los plurales y el conector
+ * de cada idioma. Se hace así porque `pluralStringResource` elige la forma según la cantidad
+ * pero **no sustituye argumentos**, así que no sirve para frases con el número dentro.
+ */
+@Composable
+fun textoEdad(edad: EdadMascota): String =
+    localizacion.formatearEdad(edad.anios, edad.meses)
+
+/**
+ * Atajo para los sitios que solo quieren el texto ya montado.
+ *
+ * Está marcado como `@Composable` a propósito: la edad se muestra, así que necesita el idioma
+ * activo, y así no se puede llamar por error desde lógica de negocio.
+ */
+@Composable
+fun calcularEdad(fechaNacimiento: LocalDate, hoy: LocalDate): String =
+    textoEdad(calcularEdadMeses(fechaNacimiento, hoy))
