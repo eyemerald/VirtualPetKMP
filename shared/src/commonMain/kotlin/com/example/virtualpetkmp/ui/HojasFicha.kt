@@ -50,6 +50,7 @@ import com.example.virtualpetkmp.Preventivo
 import com.example.virtualpetkmp.Revision
 import com.example.virtualpetkmp.Tratamiento
 import com.example.virtualpetkmp.Vacuna
+import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import com.example.virtualpetkmp.util.rememberAbridorArchivo
 import com.example.virtualpetkmp.util.rememberAgregadorCalendario
 import com.example.virtualpetkmp.util.toFormatoEuropeo
@@ -123,7 +124,7 @@ fun TarjetaContenidoHoja(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = LocalExtrasColors.current.tarjetaFondo),
         onClick = onAbrir ?: {}
     ) {
         Row(

@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Veterinario
+import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import com.example.virtualpetkmp.util.rememberAbridorMapa
 import com.example.virtualpetkmp.util.rememberLlamador
 import com.example.virtualpetkmp.viewmodel.VeterinarioViewModel
@@ -263,6 +264,9 @@ fun VeterinarioUrgenciaCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = LocalExtrasColors.current.tarjetaFondo
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(

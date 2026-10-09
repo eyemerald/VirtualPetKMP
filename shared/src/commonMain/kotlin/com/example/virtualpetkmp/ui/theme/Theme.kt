@@ -76,7 +76,12 @@ data class ExtrasColors(
     /** Azul de la última barra del gráfico de peso. */
     val barraActual: Color,
     /** Gris azulado de la línea discontinua del peso ideal en el gráfico. */
-    val lineaIdeal: Color
+    val lineaIdeal: Color,
+    /** Fondo y filo de la tarjeta de peso (dato destacado), en tono neutro claro. */
+    val tarjetaPesoFondo: Color,
+    val tarjetaPesoBorde: Color,
+    /** Fondo de cualquier tarjeta de la app: claro y neutro, nunca pastel saturado. */
+    val tarjetaFondo: Color
 )
 
 val LocalExtrasColors = staticCompositionLocalOf {
@@ -90,7 +95,10 @@ val LocalExtrasColors = staticCompositionLocalOf {
         tarjetaAzul = TarjetaAzul,
         iconoTarjetaAzul = IconoTarjetaAzul,
         barraActual = AzulBarraActual,
-        lineaIdeal = LineaIdeal
+        lineaIdeal = LineaIdeal,
+        tarjetaPesoFondo = TarjetaPesoFondo,
+        tarjetaPesoBorde = TarjetaPesoBorde,
+        tarjetaFondo = SuperficieTarjetaClara
     )
 }
 
@@ -110,7 +118,10 @@ fun VirtualPetTheme(content: @Composable () -> Unit) {
             tarjetaAzul = TarjetaAzulOscuro,
             iconoTarjetaAzul = IconoTarjetaAzulOscuro,
             barraActual = AzulBarraActualOscuro,
-            lineaIdeal = LineaIdealOscuro
+            lineaIdeal = LineaIdealOscuro,
+            tarjetaPesoFondo = TarjetaPesoFondoOscuro,
+            tarjetaPesoBorde = TarjetaPesoBordeOscuro,
+            tarjetaFondo = SuperficieTarjetaOscura
         )
     } else {
         ExtrasColors(
@@ -123,7 +134,10 @@ fun VirtualPetTheme(content: @Composable () -> Unit) {
             tarjetaAzul = TarjetaAzul,
             iconoTarjetaAzul = IconoTarjetaAzul,
             barraActual = AzulBarraActual,
-            lineaIdeal = LineaIdeal
+            lineaIdeal = LineaIdeal,
+            tarjetaPesoFondo = TarjetaPesoFondo,
+            tarjetaPesoBorde = TarjetaPesoBorde,
+            tarjetaFondo = SuperficieTarjetaClara
         )
     }
 

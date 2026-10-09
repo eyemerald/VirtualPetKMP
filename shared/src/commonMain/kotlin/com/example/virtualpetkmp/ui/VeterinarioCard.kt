@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Veterinario
+import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 
 @Composable
 fun VeterinarioCard(
@@ -36,6 +37,9 @@ fun VeterinarioCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = LocalExtrasColors.current.tarjetaFondo
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

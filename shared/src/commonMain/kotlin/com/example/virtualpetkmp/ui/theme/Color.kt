@@ -31,6 +31,12 @@ val SuperficieVarianteClaro = Color(0xFFE7E9E3)
 val OnSuperficieVarianteClaro = Color(0xFF424940)
 val ContornoClaro = Color(0xFF72796F)
 
+// Fondo de las tarjetas de toda la app (lista de mascotas, veterinarios, hojas modales).
+// Blanco puro sobre el fondo hueso de la app: contraste suficiente sin bloques de color, y
+// el texto oscuro de encima se lee sin esfuerzo.
+val SuperficieTarjetaClara = Color(0xFFFFFFFF)
+val SuperficieTarjetaOscura = Color(0xFF23261F)
+
 // Modo oscuro
 val VerdePrimarioOscuro = Color(0xFFA5D3AA)
 val OnVerdePrimarioOscuro = Color(0xFF10381D)
@@ -67,21 +73,41 @@ val OnProximaContenedor = Color(0xFF2E1A00)       // texto más oscuro
 val ProximaContenedorOscuro = Color(0xFF7A5A1A)   // más visible
 val OnProximaContenedorOscuro = Color(0xFFFFE0B2) // texto naranja claro
 
-// Colores suaves para dar identidad a cada tarjeta de la ficha. Son tonos apagados,
-// no vivos, para que la pantalla no parezca un semáforo.
-val TarjetaVerde = Color(0xFFD6E6D8)          // recordatorio del verde del logo
-val IconoTarjetaVerde = Color(0xFF3F6B4A)
-val TarjetaNaranja = Color(0xFFF6DFC6)        // cálido, para salud
-val IconoTarjetaNaranja = Color(0xFF8F5A22)
-val TarjetaAzul = Color(0xFFD8E2F3)           // frío, para notas
-val IconoTarjetaAzul = Color(0xFF35528A)
+// Colores suaves para dar identidad a cada tarjeta de la ficha.
+//
+// El FONDO de las tarjetas grandes es deliberadamente neutro (blanco/gris ultra claro) en vez
+// de pastel: en pantallas de móvil los bloques de color saturado cansan y ensucian la
+// lectura. El color se reserva a los iconos y a los detalles, que es donde aporta.
+val TarjetaNeutra = Color(0xFFF8F9FA)        // gris ultra claro, casi blanco
+val TarjetaVerde = TarjetaNeutra
+val TarjetaNaranja = TarjetaNeutra
+val TarjetaAzul = TarjetaNeutra
 
-val TarjetaVerdeOscuro = Color(0xFF2E4034)
+// Verde: icono de vacunas y preventivos (y acciones, vía primary del tema).
+val IconoTarjetaVerde = Color(0xFF2F6B3F)
+
+// Ámbar/marrón cálido: icono de salud y seguimiento.
+val IconoTarjetaNaranja = Color(0xFF8F5A22)
+
+// Lila: icono de "A tener en cuenta".
+val IconoTarjetaAzul = Color(0xFF6B4E9E)
+
+// Mismo criterio en tema oscuro: tarjetas apenas un punto por encima del fondo.
+val TarjetaNeutraOscura = Color(0xFF23261F)
+val TarjetaVerdeOscuro = TarjetaNeutraOscura
+val TarjetaNaranjaOscuro = TarjetaNeutraOscura
+val TarjetaAzulOscuro = TarjetaNeutraOscura
+
 val IconoTarjetaVerdeOscuro = Color(0xFFA5D3AA)
-val TarjetaNaranjaOscuro = Color(0xFF44362A)
 val IconoTarjetaNaranjaOscuro = Color(0xFFE3C29B)
-val TarjetaAzulOscuro = Color(0xFF2C3648)
-val IconoTarjetaAzulOscuro = Color(0xFFAEC2E8)
+val IconoTarjetaAzulOscuro = Color(0xFFC4B0E8)
+
+// Fondo de la tarjeta de peso (el "dato destacado" de la ficha). Neutro claro con un filo
+// sutil, en lugar del bloque de color que tenía antes.
+val TarjetaPesoFondo = Color(0xFFF8F9FA)
+val TarjetaPesoBorde = Color(0xFFDDE1E4)
+val TarjetaPesoFondoOscuro = Color(0xFF23261F)
+val TarjetaPesoBordeOscuro = Color(0xFF3A3F35)
 
 // Azul de la última barra del gráfico de peso: destaca el dato más reciente sin
 // recurrir al verde ni al rojo, que en esta pantalla ya significan estado.

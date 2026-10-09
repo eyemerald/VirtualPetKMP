@@ -1,6 +1,7 @@
 package com.example.virtualpetkmp.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -140,7 +141,15 @@ fun TarjetaLargaFicha(
     val colorAviso = MaterialTheme.colorScheme.error
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            // Filo muy sutil: con el fondo casi blanco, sin él las tarjetas se
+            // desdibujarían sobre el fondo de la pantalla.
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+                shape = CardDefaults.shape
+            ),
         colors = CardDefaults.cardColors(containerColor = colorFondo),
         onClick = onClick
     ) {

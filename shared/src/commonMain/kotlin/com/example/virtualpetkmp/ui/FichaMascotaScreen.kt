@@ -1,6 +1,7 @@
 package com.example.virtualpetkmp.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -883,12 +884,20 @@ private fun TarjetaPesoHero(
     altura: Dp = 130.dp,
     compacta: Boolean = false
 ) {
+    val extras = LocalExtrasColors.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(altura),
+            .height(altura)
+            // Filo sutil en lugar de bloque de color: la tarjeta se lee como el dato
+            // destacado por su tamaño y su borde, no por un fondo pastel.
+            .border(
+                width = 1.dp,
+                color = extras.tarjetaPesoBorde,
+                shape = CardDefaults.shape
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+            containerColor = extras.tarjetaPesoFondo
         ),
         onClick = onClick
     ) {
@@ -907,7 +916,7 @@ private fun TarjetaPesoHero(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(14.dp))
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))
+                        .background(extras.barraActual.copy(alpha = 0.12f))
                         .padding(
                             horizontal = if (compacta) 10.dp else 14.dp,
                             vertical = if (compacta) 4.dp else 10.dp
@@ -918,7 +927,9 @@ private fun TarjetaPesoHero(
                         text = ultimoPeso?.let { "${formatearPesoDosDecimales(it)} kg" } ?: "Sin datos",
                         fontSize = if (compacta) 20.sp else 28.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        // Azul de acento para el dato del peso, que es el color que ya
+                        // identifica esta pantalla.
+                        color = extras.barraActual,
                         maxLines = 1
                     )
                 }
@@ -931,7 +942,7 @@ private fun TarjetaPesoHero(
                     Text(
                         text = "Peso actual",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -961,12 +972,12 @@ private fun TarjetaPesoHero(
                             Text(
                                 text = etiquetas.first,
                                 fontSize = 9.sp,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.75f)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
                                 text = etiquetas.second,
                                 fontSize = 9.sp,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.75f)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -996,10 +1007,12 @@ private fun SparklinePeso(
     val puntos = remember(pesos) {
         pesos.sortedBy { it.fecha }.takeLast(14)
     }
-    val colorLinea = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.55f)
+    // La línea del gráfico es el acento azul de esta pantalla; las referencias y el texto,
+    // neutros, para que solo el dato medido tenga color.
+    val colorLinea = LocalExtrasColors.current.barraActual.copy(alpha = 0.75f)
     val colorPunto = LocalExtrasColors.current.barraActual
-    val colorReferencia = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.12f)
-    val colorTexto = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.75f)
+    val colorReferencia = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+    val colorTexto = MaterialTheme.colorScheme.onSurfaceVariant
 
     val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
     val estiloEtiqueta = androidx.compose.ui.text.TextStyle(fontSize = 9.sp, color = colorTexto)
