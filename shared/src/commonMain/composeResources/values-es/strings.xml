@@ -102,4 +102,39 @@
     <string name="mes_corto_10">oct</string>
     <string name="mes_corto_11">nov</string>
     <string name="mes_corto_12">dic</string>
+
+    <!-- Hoja de peso -->
+    <string name="hoja_peso_titulo">Peso</string>
+    <string name="peso_filtro_todo">Todo</string>
+    <string name="peso_filtro_anio">Año</string>
+    <string name="peso_filtro_fechas">Elegir fechas</string>
+    <string name="peso_ideal">Peso ideal</string>
+    <string name="peso_ideal_kg">Peso ideal (%1$s)</string>
+    <string name="peso_ideal_fijar">Fijar peso ideal</string>
+    <string name="peso_ideal_cambiar">Cambiar peso ideal</string>
+    <string name="peso_ideal_quitar">Quitar peso ideal</string>
+    <string name="peso_ideal_ayuda">Se dibujará como referencia en el gráfico. Déjalo vacío para quitarlo.</string>
+    <string name="peso_ideal_ejemplo">Ej: 12,4</string>
+    <string name="peso_ideal_indicacion">Indica el peso en kilos (por ejemplo 12,4)</string>
+    <string name="peso_resumen_sin_datos">Sin datos</string>
+    <string name="peso_resumen_ideal"> · Ideal: %1$s</string>
+    <string name="peso_sin_pesajes_en_rango">No hay pesajes en este rango</string>
+    <string name="peso_historico">Histórico</string>
+    <string name="peso_historico_vacio">Aún no hay pesajes registrados</string>
+    <string name="peso_grafico_vacio">Sin datos para el filtro elegido</string>
+    <string name="peso_etiqueta_ideal">ideal %1$s</string>
+    <string name="peso_anadir">Añadir pesaje</string>
+    <string name="peso_mas_opciones">Más opciones de peso</string>
+    <string name="peso_todavia_no_hay">Todavía no hay pesajes</string>
+    <string name="peso_formato_fechas">Usa el formato DD/MM/AAAA en las fechas</string>
+    <string name="peso_desde">Desde (%1$s)</string>
+    <string name="peso_hasta">Hasta (%1$s)</string>
+    <plurals name="peso_en_grafico">
+        <item quantity="one">pesaje en el gráfico</item>
+        <item quantity="other">pesajes en el gráfico</item>
+    </plurals>
+    <plurals name="peso_contador">
+        <item quantity="one">pesaje</item>
+        <item quantity="other">pesajes</item>
+    </plurals>
 </resources>

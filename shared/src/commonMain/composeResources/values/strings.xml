@@ -106,4 +106,39 @@
     <string name="mes_corto_10">Oct</string>
     <string name="mes_corto_11">Nov</string>
     <string name="mes_corto_12">Dec</string>
+
+    <!-- Hoja de peso -->
+    <string name="hoja_peso_titulo">Weight</string>
+    <string name="peso_filtro_todo">All</string>
+    <string name="peso_filtro_anio">Year</string>
+    <string name="peso_filtro_fechas">Pick dates</string>
+    <string name="peso_ideal">Ideal weight</string>
+    <string name="peso_ideal_kg">Ideal weight (%1$s)</string>
+    <string name="peso_ideal_fijar">Set ideal weight</string>
+    <string name="peso_ideal_cambiar">Change ideal weight</string>
+    <string name="peso_ideal_quitar">Remove ideal weight</string>
+    <string name="peso_ideal_ayuda">It will be drawn as a reference line on the chart. Leave it empty to remove it.</string>
+    <string name="peso_ideal_ejemplo">E.g. 12.4</string>
+    <string name="peso_ideal_indicacion">Enter the weight in kilos (for example 12.4)</string>
+    <string name="peso_resumen_sin_datos">No data</string>
+    <string name="peso_resumen_ideal"> · Ideal: %1$s</string>
+    <string name="peso_sin_pesajes_en_rango">No weigh-ins in this range</string>
+    <string name="peso_historico">History</string>
+    <string name="peso_historico_vacio">No weigh-ins recorded yet</string>
+    <string name="peso_grafico_vacio">No data for the selected filter</string>
+    <string name="peso_etiqueta_ideal">ideal %1$s</string>
+    <string name="peso_anadir">Add weigh-in</string>
+    <string name="peso_mas_opciones">More weight options</string>
+    <string name="peso_todavia_no_hay">No weigh-ins yet</string>
+    <string name="peso_formato_fechas">Use the DD/MM/YYYY format for dates</string>
+    <string name="peso_desde">From (%1$s)</string>
+    <string name="peso_hasta">To (%1$s)</string>
+    <plurals name="peso_en_grafico">
+        <item quantity="one">weigh-in on the chart</item>
+        <item quantity="other">weigh-ins on the chart</item>
+    </plurals>
+    <plurals name="peso_contador">
+        <item quantity="one">weigh-in</item>
+        <item quantity="other">weigh-ins</item>
+    </plurals>
 </resources>

@@ -56,21 +56,71 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.virtualpetkmp.Peso
-import com.example.virtualpetkmp.util.formatearKilos
+import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
+import com.example.virtualpetkmp.util.UnidadPeso
+import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.util.parseFormatoEuropeo
 import com.example.virtualpetkmp.util.parseKilos
-import com.example.virtualpetkmp.util.toFormatoEuropeo
-import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.a11y_historial_mostrar
+import virtualpetkmp.shared.generated.resources.a11y_historial_ocultar
+import virtualpetkmp.shared.generated.resources.accion_cancelar
+import virtualpetkmp.shared.generated.resources.accion_guardar
+import virtualpetkmp.shared.generated.resources.hoja_peso_titulo
+import virtualpetkmp.shared.generated.resources.mes_corto_1
+import virtualpetkmp.shared.generated.resources.mes_corto_10
+import virtualpetkmp.shared.generated.resources.mes_corto_11
+import virtualpetkmp.shared.generated.resources.mes_corto_12
+import virtualpetkmp.shared.generated.resources.mes_corto_2
+import virtualpetkmp.shared.generated.resources.mes_corto_3
+import virtualpetkmp.shared.generated.resources.mes_corto_4
+import virtualpetkmp.shared.generated.resources.mes_corto_5
+import virtualpetkmp.shared.generated.resources.mes_corto_6
+import virtualpetkmp.shared.generated.resources.mes_corto_7
+import virtualpetkmp.shared.generated.resources.mes_corto_8
+import virtualpetkmp.shared.generated.resources.mes_corto_9
+import virtualpetkmp.shared.generated.resources.peso_anadir
+import virtualpetkmp.shared.generated.resources.peso_contador
+import virtualpetkmp.shared.generated.resources.peso_desde
+import virtualpetkmp.shared.generated.resources.peso_en_grafico
+import virtualpetkmp.shared.generated.resources.peso_etiqueta_ideal
+import virtualpetkmp.shared.generated.resources.peso_filtro_anio
+import virtualpetkmp.shared.generated.resources.peso_filtro_fechas
+import virtualpetkmp.shared.generated.resources.peso_filtro_todo
+import virtualpetkmp.shared.generated.resources.peso_formato_fechas
+import virtualpetkmp.shared.generated.resources.peso_grafico_vacio
+import virtualpetkmp.shared.generated.resources.peso_hasta
+import virtualpetkmp.shared.generated.resources.peso_historico
+import virtualpetkmp.shared.generated.resources.peso_historico_vacio
+import virtualpetkmp.shared.generated.resources.peso_ideal
+import virtualpetkmp.shared.generated.resources.peso_ideal_ayuda
+import virtualpetkmp.shared.generated.resources.peso_ideal_cambiar
+import virtualpetkmp.shared.generated.resources.peso_ideal_ejemplo
+import virtualpetkmp.shared.generated.resources.peso_ideal_fijar
+import virtualpetkmp.shared.generated.resources.peso_ideal_indicacion
+import virtualpetkmp.shared.generated.resources.peso_ideal_kg
+import virtualpetkmp.shared.generated.resources.peso_ideal_quitar
+import virtualpetkmp.shared.generated.resources.peso_resumen_ideal
+import virtualpetkmp.shared.generated.resources.peso_resumen_sin_datos
+import virtualpetkmp.shared.generated.resources.peso_sin_pesajes_en_rango
+import virtualpetkmp.shared.generated.resources.peso_todavia_no_hay
 
-/** Qué rango de pesajes se está mostrando en el gráfico. */
-private enum class FiltroPeso(val etiqueta: String) {
-    TODO("Todo"),
-    ANIO("Año"),
-    FECHAS("Elegir fechas")
+/**
+ * Qué rango de pesajes se está mostrando en el gráfico.
+ *
+ * Guarda el recurso de su etiqueta y no el texto: así el chip se traduce solo al pintarlo.
+ */
+private enum class FiltroPeso(val etiqueta: StringResource) {
+    TODO(Res.string.peso_filtro_todo),
+    ANIO(Res.string.peso_filtro_anio),
+    FECHAS(Res.string.peso_filtro_fechas)
 }
 
 /**
@@ -90,6 +140,8 @@ fun HojaPesoDetallada(
     onCambiarPesoIdeal: (Double?) -> Unit = {}
 ) {
     val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    // Unidades, orden de fecha y separador decimal salen de aquí.
+    val formato = localizacion
     var filtro by rememberSaveable { mutableStateOf(FiltroPeso.TODO) }
     var desdeTexto by rememberSaveable { mutableStateOf("") }
     var hastaTexto by rememberSaveable { mutableStateOf("") }
@@ -126,7 +178,7 @@ fun HojaPesoDetallada(
     val ultimo = filtrados.lastOrNull()
 
     HojaFicha(
-        titulo = "Peso",
+        titulo = stringResource(Res.string.hoja_peso_titulo),
         onCerrar = onCerrar,
         acciones = {
             Box {
@@ -143,7 +195,13 @@ fun HojaPesoDetallada(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                if (pesoIdeal == null) "Fijar peso ideal" else "Cambiar peso ideal"
+                                stringResource(
+                                    if (pesoIdeal == null) {
+                                        Res.string.peso_ideal_fijar
+                                    } else {
+                                        Res.string.peso_ideal_cambiar
+                                    }
+                                )
                             )
                         },
                         leadingIcon = {
@@ -159,7 +217,7 @@ fun HojaPesoDetallada(
                     )
                     if (pesoIdeal != null) {
                         DropdownMenuItem(
-                            text = { Text("Quitar peso ideal") },
+                            text = { Text(stringResource(Res.string.peso_ideal_quitar)) },
                             leadingIcon = {
                                 Icon(imageVector = Icons.Default.Close, contentDescription = null)
                             },
@@ -183,7 +241,8 @@ fun HojaPesoDetallada(
             item(key = "resumen") {
                 Column {
                     Text(
-                        text = ultimo?.let { "${formatearKilos(it.peso)} kg" } ?: "Sin datos",
+                        text = ultimo?.let { formato.formatearPeso(it.peso, conUnidad = true) }
+                            ?: stringResource(Res.string.peso_resumen_sin_datos),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -191,12 +250,22 @@ fun HojaPesoDetallada(
                         text = buildString {
                             append(
                                 if (filtrados.isEmpty()) {
-                                    "No hay pesajes en este rango"
+                                    stringResource(Res.string.peso_sin_pesajes_en_rango)
                                 } else {
-                                    plural(filtrados.size, "pesaje en el gráfico", "pesajes en el gráfico")
+                                    "${filtrados.size} " + pluralStringResource(
+                                        Res.plurals.peso_en_grafico,
+                                        filtrados.size
+                                    )
                                 }
                             )
-                            pesoIdeal?.let { append(" · Ideal: ${formatearKilos(it)} kg") }
+                            pesoIdeal?.let {
+                                append(
+                                    stringResource(
+                                        Res.string.peso_resumen_ideal,
+                                        formato.formatearPeso(it, conUnidad = true)
+                                    )
+                                )
+                            }
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -228,7 +297,7 @@ fun HojaPesoDetallada(
                             hastaTexto.isNotBlank() && hastaTexto.toFechaONull() == null
                         ) {
                             Text(
-                                text = "Usa el formato DD/MM/AAAA en las fechas",
+                                text = stringResource(Res.string.peso_formato_fechas),
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -266,13 +335,16 @@ fun HojaPesoDetallada(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Histórico",
+                                text = stringResource(Res.string.peso_historico),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
-                                text = plural(filtrados.size, "pesaje", "pesajes"),
+                                text = "${filtrados.size} " + pluralStringResource(
+                                    Res.plurals.peso_contador,
+                                    filtrados.size
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -282,7 +354,13 @@ fun HojaPesoDetallada(
                                 } else {
                                     Icons.Default.ExpandMore
                                 },
-                                contentDescription = if (expandido) "Ocultar histórico" else "Mostrar histórico"
+                                contentDescription = stringResource(
+                                    if (expandido) {
+                                        Res.string.a11y_historial_ocultar
+                                    } else {
+                                        Res.string.a11y_historial_mostrar
+                                    }
+                                )
                             )
                         }
                     }
@@ -291,7 +369,7 @@ fun HojaPesoDetallada(
                         Spacer(modifier = Modifier.height(6.dp))
                         if (filtrados.isEmpty()) {
                             Text(
-                                text = "Aún no hay pesajes registrados",
+                                text = stringResource(Res.string.peso_historico_vacio),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         } else {
@@ -309,7 +387,10 @@ fun HojaPesoDetallada(
             }
         }
 
-        FilaAccionHoja(etiquetaAccion = "Añadir pesaje", onAccion = onAgregar)
+        FilaAccionHoja(
+            etiquetaAccion = stringResource(Res.string.peso_anadir),
+            onAccion = onAgregar
+        )
     }
 
     if (editandoPesoIdeal) {
@@ -345,7 +426,12 @@ private fun FechaFiltroCompacto(
                 FilterChip(
                     selected = filtro == opcion,
                     onClick = { onFiltro(opcion) },
-                    label = { Text(opcion.etiqueta, style = MaterialTheme.typography.labelMedium) }
+                    label = {
+                        Text(
+                            stringResource(opcion.etiqueta),
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
                 )
             }
         }
@@ -354,7 +440,7 @@ private fun FechaFiltroCompacto(
             Spacer(modifier = Modifier.height(4.dp))
             if (aniosConDatos.isEmpty()) {
                 Text(
-                    text = "Todavía no hay pesajes",
+                    text = stringResource(Res.string.peso_todavia_no_hay),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -398,12 +484,12 @@ private fun FilaPesoHistorico(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = formatosFechaAmigable(registro.fecha),
+                text = fechaLarga(registro.fecha),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = "${formatearKilos(registro.peso)} kg",
+                text = localizacion.formatearPeso(registro.peso, conUnidad = true),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -411,9 +497,38 @@ private fun FilaPesoHistorico(
     }
 }
 
+/** "7 Oct 2026", más legible que el formato numérico para una lista de lectura rápida. */
+@Composable
+private fun fechaLarga(fecha: LocalDate): String =
+    "${fecha.dayOfMonth} ${mesCortoHoja(fecha.monthNumber)} ${fecha.year}"
+
+/**
+ * Abreviatura del mes con la inicial en mayúscula, para la fecha larga del histórico.
+ * Se reutilizan las mismas cadenas del eje del gráfico.
+ */
+@Composable
+private fun mesCortoHoja(mes: Int): String = when (mes) {
+    1 -> stringResource(Res.string.mes_corto_1)
+    2 -> stringResource(Res.string.mes_corto_2)
+    3 -> stringResource(Res.string.mes_corto_3)
+    4 -> stringResource(Res.string.mes_corto_4)
+    5 -> stringResource(Res.string.mes_corto_5)
+    6 -> stringResource(Res.string.mes_corto_6)
+    7 -> stringResource(Res.string.mes_corto_7)
+    8 -> stringResource(Res.string.mes_corto_8)
+    9 -> stringResource(Res.string.mes_corto_9)
+    10 -> stringResource(Res.string.mes_corto_10)
+    11 -> stringResource(Res.string.mes_corto_11)
+    else -> stringResource(Res.string.mes_corto_12)
+}
+
 /**
  * Diálogo para fijar o cambiar el peso ideal sin salir de la hoja de Peso. Guardar en blanco
  * lo quita (vuelve a quedar sin configurar).
+ *
+ * El valor se muestra y se pide **en la unidad del usuario** (kg o lb), pero se guarda siempre
+ * en kilos: al aceptar se convierte. Si no, un usuario estadounidense metería 59 "kilos"
+ * creyendo que son libras.
  */
 @Composable
 private fun DialogoPesoIdeal(
@@ -421,18 +536,24 @@ private fun DialogoPesoIdeal(
     onCancelar: () -> Unit,
     onGuardar: (Double?) -> Unit
 ) {
+    val formato = localizacion
+    // El valor guardado está en kilos; se convierte a la unidad mostrada para el campo.
     var texto by remember {
-        mutableStateOf(pesoIdealActual?.let { formatearKilos(it) } ?: "")
+        mutableStateOf(
+            pesoIdealActual?.let { formato.formatearPeso(it) } ?: ""
+        )
     }
     var error by remember { mutableStateOf<String?>(null) }
+    // Se resuelven fuera del `onClick`, que no es composable.
+    val textoIndicacion = stringResource(Res.string.peso_ideal_indicacion)
 
     AlertDialog(
         onDismissRequest = onCancelar,
-        title = { Text("Peso ideal") },
+        title = { Text(stringResource(Res.string.peso_ideal)) },
         text = {
             Column {
                 Text(
-                    text = "Se dibujará como referencia en el gráfico. Déjalo vacío para quitarlo.",
+                    text = stringResource(Res.string.peso_ideal_ayuda),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -440,8 +561,10 @@ private fun DialogoPesoIdeal(
                 OutlinedTextField(
                     value = texto,
                     onValueChange = { texto = it; error = null },
-                    label = { Text("Peso ideal (kg)") },
-                    placeholder = { Text("Ej: 12,4") },
+                    label = {
+                        Text(stringResource(Res.string.peso_ideal_kg, formato.unidadPesoSufijo))
+                    },
+                    placeholder = { Text(stringResource(Res.string.peso_ideal_ejemplo)) },
                     singleLine = true,
                     isError = error != null,
                     supportingText = error?.let { { Text(it) } },
@@ -455,40 +578,27 @@ private fun DialogoPesoIdeal(
                     if (texto.isBlank()) {
                         onGuardar(null)
                     } else {
-                        val valor = parseKilos(texto)
-                        if (valor == null || valor <= 0.0) {
-                            error = "Indica el peso en kilos (por ejemplo 12,4)"
+                        val valorMostrado = parseKilos(texto)
+                        if (valorMostrado == null || valorMostrado <= 0.0) {
+                            error = textoIndicacion
                         } else {
-                            onGuardar(valor)
+                            // Se guarda en kilos, que es la unidad de la base de datos.
+                            onGuardar(UnidadPeso.aKilos(valorMostrado, formato.unidadPeso))
                         }
                     }
                 }
             ) {
-                Text("Guardar")
+                Text(stringResource(Res.string.accion_guardar))
             }
         },
         dismissButton = {
-            TextButton(onClick = onCancelar) { Text("Cancelar") }
+            TextButton(onClick = onCancelar) { Text(stringResource(Res.string.accion_cancelar)) }
         }
     )
 }
 
-/** "7 Oct 2026", más legible que el formato numérico para una lista de lectura rápida. */
-private val MESES_AMIGABLES = listOf(
-    "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-    "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
-)
-
-private fun formatosFechaAmigable(fecha: kotlinx.datetime.LocalDate): String =
-    "${fecha.dayOfMonth} ${MESES_AMIGABLES[fecha.monthNumber - 1]} ${fecha.year}"
-
 /** Un mes del gráfico: su posición temporal y el peso medio de ese mes (null si no hay). */
 private data class MesPeso(val anio: Int, val mes: Int, val media: Double?)
-
-private val MESES_CORTOS_GRAFICO = listOf(
-    "ene", "feb", "mar", "abr", "may", "jun",
-    "jul", "ago", "sep", "oct", "nov", "dic"
-)
 
 /** Cuántos meses hay entre dos claves (año, mes). */
 private fun mesesEntre(anioInicio: Int, mesInicio: Int, anioFin: Int, mesFin: Int): Int =
@@ -533,7 +643,7 @@ private fun GraficoLineaMeses(
     if (meses.isEmpty()) {
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
             Text(
-                text = "Sin datos para el filtro elegido",
+                text = stringResource(Res.string.peso_grafico_vacio),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -549,6 +659,31 @@ private fun GraficoLineaMeses(
     val estiloEtiqueta = TextStyle(fontSize = 9.sp, color = colorTexto)
     val densidad = LocalDensity.current
     val altoEtiquetas = with(densidad) { 16.dp.toPx() }
+    // Unidad y separador decimal del usuario. Los datos se guardan en kilos, así que se
+    // convierte al dibujar, tanto para la escala como para las etiquetas.
+    val formato = localizacion
+    val unidad = formato.unidadPeso
+    // Las abreviaturas de mes se resuelven ANTES del lienzo: `stringResource` es una función
+    // composable y dentro de un Canvas no hay contexto de composición.
+    val etiquetasMes = listOf(
+        stringResource(Res.string.mes_corto_1),
+        stringResource(Res.string.mes_corto_2),
+        stringResource(Res.string.mes_corto_3),
+        stringResource(Res.string.mes_corto_4),
+        stringResource(Res.string.mes_corto_5),
+        stringResource(Res.string.mes_corto_6),
+        stringResource(Res.string.mes_corto_7),
+        stringResource(Res.string.mes_corto_8),
+        stringResource(Res.string.mes_corto_9),
+        stringResource(Res.string.mes_corto_10),
+        stringResource(Res.string.mes_corto_11),
+        stringResource(Res.string.mes_corto_12)
+    )
+    // El texto del peso ideal se resuelve fuera del lienzo: dentro no hay contexto composable.
+    val etiquetaIdealTexto = stringResource(
+        Res.string.peso_etiqueta_ideal,
+        formato.formatearPeso(pesoIdeal ?: 0.0)
+    )
 
     BoxWithConstraints(modifier = modifier) {
         // Todo el histórico se ajusta al ancho disponible: no hay desplazamiento, así que la
@@ -571,15 +706,18 @@ private fun GraficoLineaMeses(
 
             // Solo los meses con pesaje: los huecos (meses sin datos) no se dibujan como
             // puntos, pero la línea sí los atraviesa para que la evolución se vea entera.
+            // Se trabaja en la unidad mostrada: si el eje fuera en kilos, los números de la
+            // derecha (en libras) no cuadrarían con la línea.
             val conDatos = meses.indices.filter { meses[it].media != null }
-            val valores = conDatos.map { meses[it].media!! }
+            val valores = conDatos.map { UnidadPeso.desdeKilos(meses[it].media!!, unidad) }
             val minDatos = valores.minOrNull() ?: 0.0
             val maxDatos = valores.maxOrNull() ?: 0.0
+            val idealMostrado = pesoIdeal?.let { UnidadPeso.desdeKilos(it, unidad) }
 
             // El peso ideal entra en la escala: si queda fuera del rango de los datos, la
             // referencia se vería pegada al borde (o fuera) y no se entendería.
-            val minPeso = if (pesoIdeal != null) minOf(minDatos, pesoIdeal) else minDatos
-            val maxPeso = if (pesoIdeal != null) maxOf(maxDatos, pesoIdeal) else maxDatos
+            val minPeso = if (idealMostrado != null) minOf(minDatos, idealMostrado) else minDatos
+            val maxPeso = if (idealMostrado != null) maxOf(maxDatos, idealMostrado) else maxDatos
             val rango = (maxPeso - minPeso).toFloat()
 
             fun y(peso: Double): Float {
@@ -587,7 +725,7 @@ private fun GraficoLineaMeses(
                 return margenInterno + altoUtil * (1f - normalizado)
             }
 
-            val puntos = conDatos.map { Offset(x(it), y(meses[it].media!!)) }
+            val puntos = conDatos.map { Offset(x(it), y(UnidadPeso.desdeKilos(meses[it].media!!, unidad))) }
 
             // Referencias horizontales sutiles, como en la tarjeta de la ficha.
             listOf(0f, 0.5f, 1f).forEach { fraccion ->
@@ -602,9 +740,9 @@ private fun GraficoLineaMeses(
 
             // Línea del PESO IDEAL: discontinua y en tono neutro, para que se lea como una
             // referencia y no como un dato medido. Lleva su valor rotulado a la izquierda.
-            if (pesoIdeal != null) {
-                val yIdeal = y(pesoIdeal)
-                val etiquetaIdeal = "ideal ${formatearKilos(pesoIdeal)}"
+            if (idealMostrado != null) {
+                val yIdeal = y(idealMostrado)
+                val etiquetaIdeal = etiquetaIdealTexto
                 val medidaIdeal = textMeasurer.measure(etiquetaIdeal, style = estiloEtiqueta)
                 // Encima de la línea si hay sitio, debajo si está muy arriba.
                 val yEtiqueta = if (yIdeal - medidaIdeal.size.height - 2.dp.toPx() >= 0f) {
@@ -668,9 +806,9 @@ private fun GraficoLineaMeses(
                 val primeraDelAnio = indice == 0 || meses[indice - 1].anio != mes.anio
                 if (indice % saltoEtiquetas != 0 && !primeraDelAnio) return@forEachIndexed
                 val etiqueta = if (primeraDelAnio) {
-                    "${MESES_CORTOS_GRAFICO[mes.mes - 1]} ${mes.anio % 100}"
+                    "${etiquetasMes[mes.mes - 1]} ${mes.anio % 100}"
                 } else {
-                    MESES_CORTOS_GRAFICO[mes.mes - 1]
+                    etiquetasMes[mes.mes - 1]
                 }
                 val medida = textMeasurer.measure(etiqueta, style = estiloEtiqueta)
                 // Se centra en el mes, se mete dentro del margen y, si quedaría pegada a la
@@ -717,25 +855,25 @@ private fun FieldFechasFiltro(
     onDesde: (String) -> Unit,
     onHasta: (String) -> Unit
 ) {
+    // La pista de formato acompaña al orden que pide la región.
+    val pista = localizacion.pistaFormatoFecha
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         CampoFecha(
             valor = desde,
             onValorCambia = onDesde,
-            etiqueta = "Desde (DD/MM/AAAA)",
+            etiqueta = stringResource(Res.string.peso_desde, pista),
             modifier = Modifier.weight(1f),
             esError = false
         )
         CampoFecha(
             valor = hasta,
             onValorCambia = onHasta,
-            etiqueta = "Hasta (DD/MM/AAAA)",
+            etiqueta = stringResource(Res.string.peso_hasta, pista),
             modifier = Modifier.weight(1f),
             esError = false
         )
     }
 }
 
-/** "1 pesaje" / "2 pesajes". */
-private fun plural(cantidad: Int, singular: String, plural: String): String =
-    "$cantidad ${if (cantidad == 1) singular else plural}"
+
 
