@@ -51,9 +51,53 @@ import com.example.virtualpetkmp.Revision
 import com.example.virtualpetkmp.Tratamiento
 import com.example.virtualpetkmp.Vacuna
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
+import com.example.virtualpetkmp.util.TraduccionesDatos
+import com.example.virtualpetkmp.util.estadoDosis
+import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.util.rememberAbridorArchivo
 import com.example.virtualpetkmp.util.rememberAgregadorCalendario
-import com.example.virtualpetkmp.util.toFormatoEuropeo
+import com.example.virtualpetkmp.util.textoEstadoDosis
+import org.jetbrains.compose.resources.stringResource
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.calendario_preventivo_descripcion
+import virtualpetkmp.shared.generated.resources.calendario_preventivo_descripcion_fin
+import virtualpetkmp.shared.generated.resources.calendario_preventivo_titulo
+import virtualpetkmp.shared.generated.resources.calendario_vacuna_descripcion
+import virtualpetkmp.shared.generated.resources.calendario_vacuna_descripcion_fin
+import virtualpetkmp.shared.generated.resources.calendario_vacuna_titulo
+import virtualpetkmp.shared.generated.resources.hoja_activos
+import virtualpetkmp.shared.generated.resources.hoja_anadir_informe
+import virtualpetkmp.shared.generated.resources.hoja_anadir_nota
+import virtualpetkmp.shared.generated.resources.hoja_anadir_tratamiento
+import virtualpetkmp.shared.generated.resources.hoja_anadir_visita
+import virtualpetkmp.shared.generated.resources.hoja_cancelar_edicion
+import virtualpetkmp.shared.generated.resources.hoja_guardar_cambios
+import virtualpetkmp.shared.generated.resources.hoja_historial_ocultar
+import virtualpetkmp.shared.generated.resources.hoja_historial_ver
+import virtualpetkmp.shared.generated.resources.hoja_informe_error_abrir
+import virtualpetkmp.shared.generated.resources.hoja_informes_titulo
+import virtualpetkmp.shared.generated.resources.hoja_nota_editando
+import virtualpetkmp.shared.generated.resources.hoja_nota_nueva
+import virtualpetkmp.shared.generated.resources.hoja_notas_titulo
+import virtualpetkmp.shared.generated.resources.hoja_preventivos_pestana
+import virtualpetkmp.shared.generated.resources.hoja_proxima_dosis
+import virtualpetkmp.shared.generated.resources.hoja_salud_informes
+import virtualpetkmp.shared.generated.resources.hoja_salud_titulo
+import virtualpetkmp.shared.generated.resources.hoja_salud_tratamientos
+import virtualpetkmp.shared.generated.resources.hoja_salud_visitas
+import virtualpetkmp.shared.generated.resources.hoja_sin_fecha
+import virtualpetkmp.shared.generated.resources.hoja_sin_informes
+import virtualpetkmp.shared.generated.resources.hoja_sin_notas
+import virtualpetkmp.shared.generated.resources.hoja_sin_preventivos
+import virtualpetkmp.shared.generated.resources.hoja_sin_tratamientos
+import virtualpetkmp.shared.generated.resources.hoja_sin_vacunas
+import virtualpetkmp.shared.generated.resources.hoja_sin_visitas
+import virtualpetkmp.shared.generated.resources.hoja_tratamiento_cronico
+import virtualpetkmp.shared.generated.resources.hoja_tratamiento_finalizado
+import virtualpetkmp.shared.generated.resources.hoja_tratamiento_hasta
+import virtualpetkmp.shared.generated.resources.hoja_vacunas_pestana
+import virtualpetkmp.shared.generated.resources.hoja_vacunas_titulo
+import virtualpetkmp.shared.generated.resources.hoja_visitas_titulo
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -62,6 +106,15 @@ import kotlinx.datetime.todayIn
 
 /** Alto máximo de las hojas modales, para que no tapen toda la ficha. */
 private val ALTO_MAXIMO_HOJA = 0.86f
+
+/**
+ * Días de antelación con los que se considera que una dosis "vence pronto".
+ *
+ * Tienen que coincidir con los avisos de [ReprogramadorNotificaciones]: si la pastilla dijera
+ * "vence pronto" cuando la notificación aún no ha saltado (o al revés), la app se contradiría.
+ */
+private const val DIAS_AVISO_VACUNA = 15
+private const val DIAS_AVISO_PREVENTIVO = 5
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -218,18 +271,29 @@ fun HojaVacunasPreventivos(
     var pestana by rememberSaveable { mutableStateOf(0) }
     val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
     val agregarAlCalendario = rememberAgregadorCalendario()
+    // Formato de fecha del usuario para las fechas que se muestran aquí.
+    val formato = localizacion
+    // Los textos que se añaden al calendario del teléfono se resuelven AQUÍ, antes del
+    // LazyColumn: dentro de su bloque (y de los lambdas de los botones) no hay contexto
+    // composable y `stringResource` no se puede llamar.
+    val tituloEventoVacuna = stringResource(Res.string.calendario_vacuna_titulo)
+    val textoEventoVacuna = stringResource(Res.string.calendario_vacuna_descripcion)
+    val textoEventoFin = stringResource(Res.string.calendario_vacuna_descripcion_fin)
+    val tituloEventoPreventivo = stringResource(Res.string.calendario_preventivo_titulo)
+    val textoEventoPreventivo = stringResource(Res.string.calendario_preventivo_descripcion)
+    val textoEventoPreventivoFin = stringResource(Res.string.calendario_preventivo_descripcion_fin)
 
-    HojaFicha(titulo = "Vacunas y preventivos", onCerrar = onCerrar) {
+    HojaFicha(titulo = stringResource(Res.string.hoja_vacunas_titulo), onCerrar = onCerrar) {
         TabRow(selectedTabIndex = pestana) {
             Tab(
                 selected = pestana == 0,
                 onClick = { pestana = 0 },
-                text = { Text("Vacunas (${vacunas.size})") }
+                text = { Text(stringResource(Res.string.hoja_vacunas_pestana, vacunas.size)) }
             )
             Tab(
                 selected = pestana == 1,
                 onClick = { pestana = 1 },
-                text = { Text("Preventivos (${preventivos.size})") }
+                text = { Text(stringResource(Res.string.hoja_preventivos_pestana, preventivos.size)) }
             )
         }
 
@@ -247,25 +311,23 @@ fun HojaVacunasPreventivos(
         ) {
             if (pestana == 0) {
                 if (vacunas.isEmpty()) {
-                    item { Text("Sin vacunas registradas") }
+                    item { Text(stringResource(Res.string.hoja_sin_vacunas)) }
                 }
                 items(vacunas, key = { it.id ?: 0 }) { vacuna ->
-                    val vencida = vacuna.fechaProximaDosis < hoy
-                    val proxima = !vencida && vacuna.fechaProximaDosis <= hoyMasDias(hoy, 15)
+                    val estado = estadoDosis(vacuna.fechaProximaDosis, hoy, DIAS_AVISO_VACUNA)
                     TarjetaContenidoHoja(
                         titulo = vacuna.nombre,
-                        subtitulo = "Próxima dosis: ${vacuna.fechaProximaDosis.toFormatoEuropeo()}",
-                        detalle = when {
-                            vencida -> "Vencida"
-                            proxima -> "Vence pronto"
-                            else -> "Al día"
-                        },
+                        subtitulo = stringResource(
+                            Res.string.hoja_proxima_dosis,
+                            formato.formatearFecha(vacuna.fechaProximaDosis)
+                        ),
+                        detalle = textoEstadoDosis(estado),
                         // El botón de calendario es el que añade el recordatorio; para
                         // modificar los datos está el lápiz.
                         onCalendario = {
                             agregarAlCalendario(
-                                "Vacuna: ${vacuna.nombre}",
-                                "Recuerda poner la vacuna ${vacuna.nombre} a $nombreMascota",
+                                tituloEventoVacuna + vacuna.nombre,
+                                textoEventoVacuna + vacuna.nombre + textoEventoFin + nombreMascota,
                                 vacuna.fechaProximaDosis.aMedianocheMillis()
                             )
                         },
@@ -275,23 +337,21 @@ fun HojaVacunasPreventivos(
                 }
             } else {
                 if (preventivos.isEmpty()) {
-                    item { Text("Sin preventivos registrados") }
+                    item { Text(stringResource(Res.string.hoja_sin_preventivos)) }
                 }
                 items(preventivos, key = { it.id ?: 0 }) { preventivo ->
-                    val vencido = preventivo.fechaProximaDosis < hoy
-                    val proximo = !vencido && preventivo.fechaProximaDosis <= hoyMasDias(hoy, 5)
+                    val estado = estadoDosis(preventivo.fechaProximaDosis, hoy, DIAS_AVISO_PREVENTIVO)
                     TarjetaContenidoHoja(
                         titulo = preventivo.nombre,
-                        subtitulo = "${preventivo.tipo} · ${preventivo.fechaProximaDosis.toFormatoEuropeo()}",
-                        detalle = when {
-                            vencido -> "Vencido"
-                            proximo -> "Vence pronto"
-                            else -> "Al día"
-                        },
+                        // El tipo se guarda en español en la base de datos: se traduce al mostrarlo.
+                        subtitulo = "${TraduccionesDatos.etiqueta(preventivo.tipo, formato.idioma)}" +
+                            " · ${formato.formatearFecha(preventivo.fechaProximaDosis)}",
+                        detalle = textoEstadoDosis(estado),
                         onCalendario = {
                             agregarAlCalendario(
-                                "Preventivo: ${preventivo.nombre}",
-                                "Recuerda aplicar ${preventivo.nombre} a $nombreMascota",
+                                tituloEventoPreventivo + preventivo.nombre,
+                                textoEventoPreventivo + preventivo.nombre +
+                                    textoEventoPreventivoFin + nombreMascota,
                                 preventivo.fechaProximaDosis.aMedianocheMillis()
                             )
                         },
@@ -377,6 +437,8 @@ fun HojaSaludYSeguimiento(
     var errorAlAbrir by remember { mutableStateOf(false) }
     val abrirArchivo = rememberAbridorArchivo()
     val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    // Formato de fecha del usuario para las fechas que se muestran aquí.
+    val formato = localizacion
 
     val activos = remember(tratamientos, hoy) {
         tratamientos.filter { it.fechaInicio <= hoy && (it.fechaFin == null || it.fechaFin >= hoy) }
@@ -385,22 +447,22 @@ fun HojaSaludYSeguimiento(
         tratamientos.filterNot { it.fechaInicio <= hoy && (it.fechaFin == null || it.fechaFin >= hoy) }
     }
 
-    HojaFicha(titulo = "Salud y seguimiento", onCerrar = onCerrar) {
+    HojaFicha(titulo = stringResource(Res.string.hoja_salud_titulo), onCerrar = onCerrar) {
         TabRow(selectedTabIndex = pestana) {
             Tab(
                 selected = pestana == 0,
                 onClick = { pestana = 0 },
-                text = { Text("Tratamientos") }
+                text = { Text(stringResource(Res.string.hoja_salud_tratamientos)) }
             )
             Tab(
                 selected = pestana == 1,
                 onClick = { pestana = 1 },
-                text = { Text("Informes") }
+                text = { Text(stringResource(Res.string.hoja_salud_informes)) }
             )
             Tab(
                 selected = pestana == 2,
                 onClick = { pestana = 2 },
-                text = { Text("Visitas") }
+                text = { Text(stringResource(Res.string.hoja_salud_visitas)) }
             )
         }
 
@@ -418,9 +480,9 @@ fun HojaSaludYSeguimiento(
         ) {
             when (pestana) {
                 0 -> {
-                    item { TituloSeccion("Activos (${activos.size})") }
+                    item { TituloSeccion(stringResource(Res.string.hoja_activos, activos.size)) }
                     if (activos.isEmpty()) {
-                        item { Text("Sin tratamientos activos") }
+                        item { Text(stringResource(Res.string.hoja_sin_tratamientos)) }
                     }
                     items(activos, key = { it.id ?: 0 }) { tratamiento ->
                         TarjetaContenidoHoja(
@@ -429,9 +491,15 @@ fun HojaSaludYSeguimiento(
                                 .joinToString(" · ")
                                 .ifBlank { null },
                             detalle = if (tratamiento.fechaFin == null) {
-                                "Crónico · desde ${tratamiento.fechaInicio.toFormatoEuropeo()}"
+                                stringResource(
+                                    Res.string.hoja_tratamiento_cronico,
+                                    formato.formatearFecha(tratamiento.fechaInicio)
+                                )
                             } else {
-                                "Hasta ${tratamiento.fechaFin.toFormatoEuropeo()}"
+                                stringResource(
+                                    Res.string.hoja_tratamiento_hasta,
+                                    formato.formatearFecha(tratamiento.fechaFin)
+                                )
                             },
                             onAbrir = { onEditarTratamiento(tratamiento) },
                             onBorrar = tratamiento.id?.let { id -> { onBorrarTratamiento(id) } }
@@ -444,11 +512,14 @@ fun HojaSaludYSeguimiento(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                if (mostrarHistorial) {
-                                    "Ocultar historial (${finalizados.size})"
-                                } else {
-                                    "Ver historial (${finalizados.size})"
-                                }
+                                stringResource(
+                                    if (mostrarHistorial) {
+                                        Res.string.hoja_historial_ocultar
+                                    } else {
+                                        Res.string.hoja_historial_ver
+                                    },
+                                    finalizados.size
+                                )
                             )
                         }
                     }
@@ -460,7 +531,11 @@ fun HojaSaludYSeguimiento(
                                 subtitulo = listOfNotNull(tratamiento.dosis, tratamiento.frecuencia)
                                     .joinToString(" · ")
                                     .ifBlank { null },
-                                detalle = "Finalizado: ${tratamiento.fechaFin?.toFormatoEuropeo() ?: "sin fecha"}",
+                                detalle = stringResource(
+                                    Res.string.hoja_tratamiento_finalizado,
+                                    tratamiento.fechaFin?.let { formato.formatearFecha(it) }
+                                        ?: stringResource(Res.string.hoja_sin_fecha)
+                                ),
                                 onAbrir = { onEditarTratamiento(tratamiento) },
                                 onBorrar = tratamiento.id?.let { id -> { onBorrarTratamiento(id) } }
                             )
@@ -469,14 +544,14 @@ fun HojaSaludYSeguimiento(
                 }
 
                 1 -> {
-                    item { TituloSeccion("Informes (${informes.size})") }
+                    item { TituloSeccion(stringResource(Res.string.hoja_informes_titulo, informes.size)) }
                     if (informes.isEmpty()) {
-                        item { Text("Sin informes adjuntos") }
+                        item { Text(stringResource(Res.string.hoja_sin_informes)) }
                     }
                     if (errorAlAbrir) {
                         item {
                             Text(
-                                text = "No se pudo abrir el archivo del informe",
+                                text = stringResource(Res.string.hoja_informe_error_abrir),
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -486,7 +561,8 @@ fun HojaSaludYSeguimiento(
                         // Tocar el informe lo abre con la app del sistema; para modificarlo
                         // está el botón de editar de la tarjeta.
                         TarjetaContenidoHoja(
-                            titulo = "${informe.tipo} · ${informe.fecha.toFormatoEuropeo()}",
+                            // El tipo de informe lo escribe el usuario, así que se muestra tal cual.
+                            titulo = "${informe.tipo} · ${formato.formatearFecha(informe.fecha)}",
                             subtitulo = informe.descripcion,
                             detalle = informe.nombreArchivo,
                             onAbrir = {
@@ -499,16 +575,16 @@ fun HojaSaludYSeguimiento(
                 }
 
                 else -> {
-                    item { TituloSeccion("Visitas (${revisiones.size})") }
+                    item { TituloSeccion(stringResource(Res.string.hoja_visitas_titulo, revisiones.size)) }
                     if (revisiones.isEmpty()) {
-                        item { Text("Sin visitas registradas") }
+                        item { Text(stringResource(Res.string.hoja_sin_visitas)) }
                     }
                     items(
                         revisiones.sortedByDescending { it.fecha },
                         key = { it.id ?: 0 }
                     ) { revision ->
                         TarjetaContenidoHoja(
-                            titulo = "${revision.fecha.toFormatoEuropeo()} · ${revision.motivo}",
+                            titulo = "${formato.formatearFecha(revision.fecha)} · ${revision.motivo}",
                             subtitulo = revision.diagnostico,
                             detalle = listOfNotNull(revision.veterinario, revision.notas)
                                 .joinToString(" · ")
@@ -523,9 +599,18 @@ fun HojaSaludYSeguimiento(
 
         // Abajo solo el alta, con el mismo "+" que en el resto de la app
         when (pestana) {
-            0 -> FilaAccionHoja(etiquetaAccion = "Añadir tratamiento", onAccion = onAgregar)
-            1 -> FilaAccionHoja(etiquetaAccion = "Añadir informe", onAccion = onAgregarInforme)
-            else -> FilaAccionHoja(etiquetaAccion = "Añadir visita", onAccion = onAgregarRevision)
+            0 -> FilaAccionHoja(
+                etiquetaAccion = stringResource(Res.string.hoja_anadir_tratamiento),
+                onAccion = onAgregar
+            )
+            1 -> FilaAccionHoja(
+                etiquetaAccion = stringResource(Res.string.hoja_anadir_informe),
+                onAccion = onAgregarInforme
+            )
+            else -> FilaAccionHoja(
+                etiquetaAccion = stringResource(Res.string.hoja_anadir_visita),
+                onAccion = onAgregarRevision
+            )
         }
     }
 }
@@ -547,7 +632,7 @@ fun HojaNotas(
     var texto by rememberSaveable { mutableStateOf("") }
     var notaEditando by rememberSaveable { mutableStateOf<Long?>(null) }
 
-    HojaFicha(titulo = "A tener en cuenta", onCerrar = onCerrar) {
+    HojaFicha(titulo = stringResource(Res.string.hoja_notas_titulo), onCerrar = onCerrar) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -558,7 +643,17 @@ fun HojaNotas(
             androidx.compose.material3.OutlinedTextField(
                 value = texto,
                 onValueChange = { texto = it },
-                label = { Text(if (notaEditando == null) "Nueva nota" else "Editando nota") },
+                label = {
+                    Text(
+                        stringResource(
+                            if (notaEditando == null) {
+                                Res.string.hoja_nota_nueva
+                            } else {
+                                Res.string.hoja_nota_editando
+                            }
+                        )
+                    )
+                },
                 modifier = Modifier.weight(1f),
                 maxLines = 3
             )
@@ -579,7 +674,13 @@ fun HojaNotas(
             ) {
                 Icon(
                     imageVector = if (notaEditando == null) Icons.Default.Add else Icons.Default.Check,
-                    contentDescription = if (notaEditando == null) "Añadir nota" else "Guardar cambios"
+                    contentDescription = stringResource(
+                        if (notaEditando == null) {
+                            Res.string.hoja_anadir_nota
+                        } else {
+                            Res.string.hoja_guardar_cambios
+                        }
+                    )
                 )
             }
             if (notaEditando != null) {
@@ -587,7 +688,10 @@ fun HojaNotas(
                     notaEditando = null
                     texto = ""
                 }) {
-                    Icon(Icons.Default.Close, contentDescription = "Cancelar edición")
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = stringResource(Res.string.hoja_cancelar_edicion)
+                    )
                 }
             }
         }
@@ -604,7 +708,7 @@ fun HojaNotas(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (notas.isEmpty()) {
-                item { Text("Sin notas registradas") }
+                item { Text(stringResource(Res.string.hoja_sin_notas)) }
             }
             items(notas, key = { it.id ?: 0 }) { nota ->
                 TarjetaContenidoHoja(

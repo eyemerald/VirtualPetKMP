@@ -137,4 +137,66 @@
         <item quantity="one">pesaje</item>
         <item quantity="other">pesajes</item>
     </plurals>
+
+    <!-- Estado de una dosis pendiente (vacuna o preventivo) -->
+    <string name="estado_vencida">Vencida</string>
+    <string name="estado_vence_pronto">Vence pronto</string>
+    <string name="estado_al_dia">Al día</string>
+
+    <!-- Hojas de la ficha: títulos y pestañas -->
+    <string name="hoja_vacunas_titulo">Vacunas y preventivos</string>
+    <string name="hoja_vacunas_pestana">Vacunas (%1$d)</string>
+    <string name="hoja_preventivos_pestana">Preventivos (%1$d)</string>
+    <string name="hoja_salud_titulo">Salud y seguimiento</string>
+    <string name="hoja_salud_tratamientos">Tratamientos</string>
+    <string name="hoja_salud_informes">Informes</string>
+    <string name="hoja_salud_visitas">Visitas</string>
+    <string name="hoja_notas_titulo">A tener en cuenta</string>
+
+    <!-- Hojas de la ficha: listas -->
+    <string name="hoja_sin_vacunas">Sin vacunas registradas</string>
+    <string name="hoja_sin_preventivos">Sin preventivos registrados</string>
+    <string name="hoja_sin_tratamientos">Sin tratamientos activos</string>
+    <string name="hoja_sin_informes">Sin informes adjuntos</string>
+    <string name="hoja_sin_visitas">Sin visitas registradas</string>
+    <string name="hoja_sin_notas">Sin notas registradas</string>
+    <string name="hoja_activos">Activos (%1$d)</string>
+    <string name="hoja_informes_titulo">Informes (%1$d)</string>
+    <string name="hoja_visitas_titulo">Visitas (%1$d)</string>
+    <string name="hoja_historial_ver">Ver historial (%1$d)</string>
+    <string name="hoja_historial_ocultar">Ocultar historial (%1$d)</string>
+    <string name="hoja_informe_error_abrir">No se pudo abrir el archivo del informe</string>
+
+    <!-- Hojas de la ficha: acciones -->
+    <string name="hoja_anadir_vacuna">Añadir vacuna</string>
+    <string name="hoja_anadir_preventivo">Añadir preventivo</string>
+    <string name="hoja_anadir_tratamiento">Añadir tratamiento</string>
+    <string name="hoja_anadir_informe">Añadir informe</string>
+    <string name="hoja_anadir_visita">Añadir visita</string>
+    <string name="hoja_anadir_nota">Añadir nota</string>
+    <string name="hoja_guardar_cambios">Guardar cambios</string>
+    <string name="hoja_cancelar_edicion">Cancelar edición</string>
+    <string name="hoja_anadir_calendario">Añadir al calendario</string>
+
+    <!-- Hojas de la ficha: detalles de cada registro -->
+    <string name="hoja_proxima_dosis">Próxima dosis: %1$s</string>
+    <string name="hoja_tratamiento_cronico">Crónico · desde %1$s</string>
+    <string name="hoja_tratamiento_hasta">Hasta %1$s</string>
+    <string name="hoja_tratamiento_finalizado">Finalizado: %1$s</string>
+    <string name="hoja_sin_fecha">sin fecha</string>
+
+    <!-- Notas: campos -->
+    <string name="hoja_nota_nueva">Nueva nota</string>
+    <string name="hoja_nota_editando">Editando nota</string>
+
+    <!-- Recordatorios que se añaden al calendario del teléfono.
+         Van en dos trozos (prefijo + sufijo) en vez de con "%1$s": el nombre de la mascota se
+         añade al vuelo y no se puede pedir el texto ya montado porque el evento se compone
+         dentro de un lambda que no es composable. -->
+    <string name="calendario_vacuna_titulo">Vacuna: </string>
+    <string name="calendario_vacuna_descripcion">Recuerda poner la vacuna </string>
+    <string name="calendario_vacuna_descripcion_fin"> a </string>
+    <string name="calendario_preventivo_titulo">Preventivo: </string>
+    <string name="calendario_preventivo_descripcion">Recuerda aplicar </string>
+    <string name="calendario_preventivo_descripcion_fin"> a </string>
 </resources>
