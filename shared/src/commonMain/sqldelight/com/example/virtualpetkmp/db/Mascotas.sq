@@ -7,7 +7,9 @@ CREATE TABLE mascotas (
     sexo TEXT NOT NULL,
     color TEXT NOT NULL,
     microchip TEXT,
-    foto TEXT
+    foto TEXT,
+    -- Peso ideal en kilos, opcional: null = el usuario no lo ha configurado.
+    peso_ideal REAL
 );
 
 selectAll:
@@ -20,16 +22,19 @@ checkNombreUnico:
 SELECT id FROM mascotas WHERE LOWER(nombre) = LOWER(?);
 
 insert:
-INSERT INTO mascotas(nombre, especie, raza, fechaNacimiento, sexo, color, microchip, foto)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO mascotas(nombre, especie, raza, fechaNacimiento, sexo, color, microchip, foto, peso_ideal)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE mascotas
-SET nombre = ?, especie = ?, raza = ?, fechaNacimiento = ?, sexo = ?, color = ?, microchip = ?, foto = ?
+SET nombre = ?, especie = ?, raza = ?, fechaNacimiento = ?, sexo = ?, color = ?, microchip = ?, foto = ?, peso_ideal = ?
 WHERE id = ?;
 
 updateFoto:
 UPDATE mascotas SET foto = ? WHERE id = ?;
+
+updatePesoIdeal:
+UPDATE mascotas SET peso_ideal = ? WHERE id = ?;
 
 delete:
 DELETE FROM mascotas WHERE id = ?;

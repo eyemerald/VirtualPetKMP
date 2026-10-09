@@ -39,7 +39,8 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
                 sexo = mascota.sexo,
                 color = mascota.color,
                 microchip = mascota.microchip,
-                foto = mascota.foto
+                foto = mascota.foto,
+                peso_ideal = mascota.pesoIdeal
             )
 
             // Obtener el ID insertado usando last_insert_rowid()
@@ -76,6 +77,7 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
                 color = mascota.color,
                 microchip = mascota.microchip,
                 foto = mascota.foto,
+                peso_ideal = mascota.pesoIdeal,
                 id = mascota.id
             )
 
@@ -106,6 +108,19 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
             Result.failure(e)
         }
     }
+
+    /**
+     * Actualiza solo el peso ideal. Se llama desde la hoja de Peso, para poder fijarlo o
+     * quitarlo sin abrir el formulario completo de la mascota. `null` lo deja sin configurar.
+     */
+    suspend fun updatePesoIdeal(id: Long, pesoIdeal: Double?): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            database.mascotasQueries.updatePesoIdeal(peso_ideal = pesoIdeal, id = id)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
 
 private fun com.example.virtualpetkmp.db.Mascotas.toMascota(): Mascota {
@@ -118,6 +133,7 @@ private fun com.example.virtualpetkmp.db.Mascotas.toMascota(): Mascota {
         sexo = sexo,
         color = color,
         microchip = microchip,
-        foto = foto
+        foto = foto,
+        pesoIdeal = peso_ideal
     )
 }

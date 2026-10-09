@@ -14,17 +14,30 @@ actual class DatabaseFactory {
         }
         val dbFile = File(appDir, "virtualpet.db")
 
-        // Al pasarle el schema, JdbcSqliteDriver gestiona automáticamente
-        // si hay que crear la base de datos desde cero o aplicar las
-        // migraciones pendientes (usando PRAGMA user_version internamente).
-        val driver: SqlDriver = JdbcSqliteDriver(
-            url = "jdbc:sqlite:${dbFile.absolutePath}",
-            schema = VirtualPetDatabase.Schema
-        )
+        // El esquema se envuelve para que, si la base de datos ya existía con una versión
+        // anterior, se le apliquen las migraciones en lugar de recrearla.
+        val esquema = SqlSchemaDelegado(VirtualPetDatabase.Schema)
 
-        // SQLite tiene las claves foráneas desactivadas por defecto.
-        // Sin esto, ON DELETE CASCADE de las tablas relacionadas (notas, etc.)
-        // no se ejecutaría realmente al borrar una mascota.
+        val driver: SqlDriver = JdbcSqliteDriver(url = "jdbc:sqlite:${dbFile.absolutePath}")
+
+        // Si el fichero es nuevo (versión 0) se crea el esquema completo; si ya existía en
+        // una versión anterior, se migra conservando los datos.
+        val versionActual = driver.executeQuery(
+            identifier = null,
+            sql = "PRAGMA user_version",
+            mapper = { cursor ->
+                cursor.next()
+                app.cash.sqldelight.db.QueryResult.Value(cursor.getLong(0) ?: 0L)
+            },
+            parameters = 0
+        ).value
+
+        if (versionActual == 0L) {
+            esquema.create(driver).value
+        } else if (versionActual < esquema.version) {
+            esquema.migrate(driver, versionActual, esquema.version).value
+        }
+
         driver.execute(null, "PRAGMA foreign_keys = ON;", 0)
 
         return VirtualPetDatabase(driver)

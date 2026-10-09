@@ -12,5 +12,7 @@ data class Mascota(
     val color: String,
     val microchip: String?,
     /** Ruta absoluta del archivo de imagen de la mascota. null = sin foto. */
-    val foto: String? = null
+    val foto: String? = null,
+    /** Peso ideal en kilos. null = el usuario no lo ha configurado. */
+    val pesoIdeal: Double? = null
 )

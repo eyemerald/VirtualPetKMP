@@ -18,7 +18,9 @@ import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.util.ESPECIES
 import com.example.virtualpetkmp.util.RAZAS_POR_ESPECIE
+import com.example.virtualpetkmp.util.formatearKilos
 import com.example.virtualpetkmp.util.parseFormatoEuropeo
+import com.example.virtualpetkmp.util.parseKilos
 import com.example.virtualpetkmp.util.rememberFotoMascota
 import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
@@ -50,6 +52,8 @@ fun MascotaFormScreen(
     }
     var color by rememberSaveable { mutableStateOf("") }
     var microchip by rememberSaveable { mutableStateOf("") }
+    var pesoIdealTexto by rememberSaveable { mutableStateOf("") }
+    var errorPesoIdeal by remember { mutableStateOf<String?>(null) }
 
     // Foto de la mascota: ruta local de la copia guardada por la app.
     var rutaFoto by rememberSaveable { mutableStateOf<String?>(null) }
@@ -86,6 +90,7 @@ fun MascotaFormScreen(
                 sexo = mascota.sexo
                 color = mascota.color
                 microchip = mascota.microchip ?: ""
+                pesoIdealTexto = mascota.pesoIdeal?.let { formatearKilos(it) } ?: ""
                 rutaFoto = mascota.foto
 
                 if (mascota.especie in ESPECIES && mascota.especie != "Otro") {
@@ -298,6 +303,19 @@ fun MascotaFormScreen(
                 singleLine = true
             )
 
+            // Peso ideal: opcional y solo informativo. Sirve para comparar con el último
+            // pesaje en la lista y para dibujar la referencia en el gráfico de peso.
+            OutlinedTextField(
+                value = pesoIdealTexto,
+                onValueChange = { pesoIdealTexto = it; errorPesoIdeal = null },
+                label = { Text("Peso Ideal (kg, opcional)") },
+                placeholder = { Text("Ej: 12,4") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                isError = errorPesoIdeal != null,
+                supportingText = errorPesoIdeal?.let { { Text(it) } }
+            )
+
             if (errorMessage != null) {
                 Card(
                     colors = CardDefaults.cardColors(
@@ -330,6 +348,19 @@ fun MascotaFormScreen(
                         return@Button
                     }
 
+                    // El peso ideal es opcional; si se escribe algo tiene que ser un número.
+                    val pesoIdeal = if (pesoIdealTexto.isBlank()) {
+                        null
+                    } else {
+                        val valor = parseKilos(pesoIdealTexto)
+                        if (valor == null || valor <= 0.0) {
+                            errorPesoIdeal = "Indica el peso en kilos (por ejemplo 12,4)"
+                            return@Button
+                        }
+                        errorPesoIdeal = null
+                        valor
+                    }
+
                     val especieFinal: String
                     val razaFinal: String
                     if (especieSeleccionada == "Otro") {
@@ -349,7 +380,8 @@ fun MascotaFormScreen(
                         sexo = sexo,
                         color = color,
                         microchip = microchip.ifBlank { null },
-                        foto = rutaFoto
+                        foto = rutaFoto,
+                        pesoIdeal = pesoIdeal
                     )
 
                     viewModel.saveMascota(mascota) {

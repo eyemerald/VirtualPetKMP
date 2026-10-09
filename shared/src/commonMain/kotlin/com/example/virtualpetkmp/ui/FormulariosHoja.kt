@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.virtualpetkmp.util.formatearKilos
 import com.example.virtualpetkmp.util.parseFormatoEuropeo
 import com.example.virtualpetkmp.util.toFormatoEuropeo
 import kotlinx.datetime.Clock
@@ -551,10 +552,3 @@ fun FormularioPeso(
     )
 }
 
-/** Kilos con dos decimales y coma, como se escriben en español. */
-private fun formatearKilos(valor: Double): String {
-    val centesimas = kotlin.math.round(valor * 100).toLong()
-    val entero = centesimas / 100
-    val decimales = centesimas % 100
-    return "$entero,${decimales.toString().padStart(2, '0')}"
-}

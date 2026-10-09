@@ -7,10 +7,15 @@ import com.example.virtualpetkmp.db.VirtualPetDatabase
 
 actual class DatabaseFactory(private val context: Context) {
     actual fun createDatabase(): VirtualPetDatabase {
+        // El esquema se envuelve para que Android ejecute las migraciones (.sqm) cuando la
+        // base de datos del móvil ya existía con una versión anterior.
+        val esquema = SqlSchemaDelegado(VirtualPetDatabase.Schema)
+
         val driver: SqlDriver = AndroidSqliteDriver(
-            schema = VirtualPetDatabase.Schema,
+            schema = esquema,
             context = context,
-            name = "virtualpet.db"
+            name = "virtualpet.db",
+            callback = AndroidSqliteDriver.Callback(esquema)
         )
 
         // SQLite tiene las claves foráneas desactivadas por defecto.

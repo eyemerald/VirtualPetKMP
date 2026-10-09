@@ -41,6 +41,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.virtualpetkmp.Peso
+import com.example.virtualpetkmp.util.formatearKilos
 import com.example.virtualpetkmp.util.parseFormatoEuropeo
 import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
@@ -113,7 +114,7 @@ fun HojaPesoDetallada(
             item(key = "resumen") {
                 Column {
                     Text(
-                        text = ultimo?.let { "${formatearKilosHoja(it.peso)} kg" } ?: "Sin datos",
+                        text = ultimo?.let { "${formatearKilos(it.peso)} kg" } ?: "Sin datos",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -228,7 +229,7 @@ fun HojaPesoDetallada(
 
             items(filtrados.sortedByDescending { it.fecha }, key = { it.id ?: 0 }) { registro ->
                 TarjetaContenidoHoja(
-                    titulo = "${formatearKilosHoja(registro.peso)} kg · ${registro.fecha.toFormatoEuropeo()}",
+                    titulo = "${formatearKilos(registro.peso)} kg · ${registro.fecha.toFormatoEuropeo()}",
                     detalle = registro.notas,
                     onAbrir = { onEditar(registro) },
                     onBorrar = registro.id?.let { id -> { onBorrar(id) } }
@@ -488,10 +489,3 @@ private fun FieldFechasFiltro(
 private fun plural(cantidad: Int, singular: String, plural: String): String =
     "$cantidad ${if (cantidad == 1) singular else plural}"
 
-/** Kilos con dos decimales y coma, como se escriben en español. */
-private fun formatearKilosHoja(valor: Double): String {
-    val centesimas = kotlin.math.round(valor * 100).toLong()
-    val entero = centesimas / 100
-    val decimales = centesimas % 100
-    return "$entero,${decimales.toString().padStart(2, '0')}"
-}

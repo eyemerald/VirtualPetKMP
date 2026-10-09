@@ -1,0 +1,6 @@
+-- Migración de la versión 10 a la 11: peso ideal opcional de la mascota.
+--
+-- Solo AÑADE una columna anulable, así que los datos que ya existen (mascotas, vacunas,
+-- pesos, notas...) se conservan tal cual y las mascotas actuales quedan sin peso ideal.
+-- No se toca ninguna otra tabla ni columna.
+ALTER TABLE mascotas ADD COLUMN peso_ideal REAL;
