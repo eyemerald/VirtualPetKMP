@@ -6,6 +6,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 
+/**
+ * Acceso a las vacunas.
+ *
+ * Devuelve modelos de dominio ([Vacuna]) ya convertidos, no filas de SQLDelight, y hace todas
+ * las consultas en [Dispatchers.IO] para no bloquear la interfaz. Las escrituras devuelven
+ * `Result` en lugar de lanzar: la app es offline y un fallo de escritura se comunica al
+ * usuario, no se propaga como excepción.
+ *
+ * Tras cualquier alta, edición o borrado, quien llama es responsable de volver a leer la
+ * lista (y de reprogramar los avisos, cosa que hace el `FichaMascotaViewModel`).
+ */
 class VacunaRepository(private val database: VirtualPetDatabase) {
 
     suspend fun getVacunasByMascotaId(mascotaId: Long): List<Vacuna> = withContext(Dispatchers.IO) {

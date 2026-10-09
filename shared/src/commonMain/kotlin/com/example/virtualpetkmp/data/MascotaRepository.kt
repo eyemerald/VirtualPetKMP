@@ -6,6 +6,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 
+/**
+ * Acceso a las mascotas, que son la entidad raíz de la app.
+ *
+ * Además del CRUD, aquí vive la única regla de negocio de este nivel: **el nombre no se puede
+ * repetir** (comparando sin distinguir mayúsculas). La comprobación se hace antes de escribir
+ * y excluyendo el propio id al editar, y devuelve el error como `Result.failure` con un
+ * mensaje ya listo para enseñar.
+ *
+ * Todas las consultas van a [Dispatchers.IO].
+ */
 class MascotaRepository(private val database: VirtualPetDatabase) {
 
     suspend fun getAllMascotas(): List<Mascota> = withContext(Dispatchers.IO) {

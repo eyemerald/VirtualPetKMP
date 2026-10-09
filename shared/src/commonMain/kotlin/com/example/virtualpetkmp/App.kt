@@ -63,7 +63,7 @@ fun App(databaseFactory: DatabaseFactory) {
             }
             preventivoRepository.getAllPreventivos().forEach { preventivo ->
                 preventivo.id?.let { id ->
-                    ReprogramadorNotificaciones.cancelar(programador, id)
+                    ReprogramadorNotificaciones.cancelarPreventivo(programador, id)
                     ReprogramadorNotificaciones.programarPreventivo(programador, preventivo)
                 }
             }

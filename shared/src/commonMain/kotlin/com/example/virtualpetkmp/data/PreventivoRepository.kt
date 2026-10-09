@@ -6,6 +6,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 
+/**
+ * Acceso a los tratamientos preventivos (pipetas, desparasitaciones...).
+ *
+ * Mismo contrato que `VacunaRepository`: CRUD en [Dispatchers.IO] y escrituras que devuelven
+ * `Result` en vez de lanzar.
+ */
 class PreventivoRepository(private val database: VirtualPetDatabase) {
 
     suspend fun getPreventivosByMascotaId(mascotaId: Long): List<Preventivo> = withContext(Dispatchers.IO) {

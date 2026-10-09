@@ -10,6 +10,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * Estado de la agenda de veterinarios (lista, carga y error).
+ *
+ * Sigue el mismo patrón que `MascotaViewModel`: expone `StateFlow` y recarga la lista tras
+ * cada escritura, para que todas las pantallas que la observan vean el cambio.
+ */
 class VeterinarioViewModel(private val repository: VeterinarioRepository) {
     private val scope = CoroutineScope(Dispatchers.Main + Job())
 

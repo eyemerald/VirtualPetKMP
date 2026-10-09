@@ -6,6 +6,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 
+/**
+ * Acceso a los informes veterinarios adjuntos.
+ *
+ * Guarda y devuelve **rutas** de archivo, no los archivos: el documento sigue viviendo en el
+ * almacenamiento del dispositivo. Consecuencia práctica: al borrar un informe se elimina la
+ * fila, pero el archivo se deja donde está (no es responsabilidad de la app borrar documentos
+ * del usuario).
+ */
 class InformeRepository(private val database: VirtualPetDatabase) {
 
     suspend fun getInformesByMascotaId(mascotaId: Long): List<Informe> = withContext(Dispatchers.IO) {

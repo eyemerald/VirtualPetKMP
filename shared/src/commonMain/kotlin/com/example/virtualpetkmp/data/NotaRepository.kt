@@ -5,6 +5,12 @@ import com.example.virtualpetkmp.db.VirtualPetDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/**
+ * Acceso a las notas de las mascotas.
+ *
+ * Las notas no tienen fecha ni estado, así que no hay cálculos aquí: solo el CRUD, en
+ * [Dispatchers.IO] y devolviendo `Result` en las escrituras.
+ */
 class NotaRepository(private val database: VirtualPetDatabase) {
 
     suspend fun getNotasByMascotaId(mascotaId: Long): List<Nota> = withContext(Dispatchers.IO) {

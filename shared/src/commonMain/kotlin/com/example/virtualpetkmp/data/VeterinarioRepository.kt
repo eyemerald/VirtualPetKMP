@@ -5,6 +5,12 @@ import com.example.virtualpetkmp.db.VirtualPetDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/**
+ * Acceso a la agenda de clínicas veterinarias.
+ *
+ * Es independiente de las mascotas: no hay relación entre ambas tablas. La consulta principal
+ * ya devuelve las clínicas ordenadas con las de urgencias primero.
+ */
 class VeterinarioRepository(private val database: VirtualPetDatabase) {
 
     suspend fun getAllVeterinarios(): List<Veterinario> = withContext(Dispatchers.IO) {

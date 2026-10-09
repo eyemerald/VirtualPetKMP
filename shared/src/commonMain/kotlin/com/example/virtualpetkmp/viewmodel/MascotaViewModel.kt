@@ -11,6 +11,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * Estado de la lista de mascotas: los datos, si está cargando y el último error.
+ *
+ * Es el único ViewModel que vive durante toda la sesión (se crea en [App]), así que también
+ * es quien mantiene el **último peso de cada mascota**, que la lista necesita para dibujar el
+ * indicador ▲/▼ frente al peso ideal sin consultar la base de datos mascota a mascota.
+ *
+ * @param pesoRepository es opcional a propósito: si no se pasa, la lista funciona igual y
+ *   simplemente no muestra el indicador de peso. Así el ViewModel sigue siendo usable en
+ *   tests y en pantallas que no necesitan pesos.
+ */
 class MascotaViewModel(
     private val repository: MascotaRepository,
     private val pesoRepository: PesoRepository? = null

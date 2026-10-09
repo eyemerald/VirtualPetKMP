@@ -2,19 +2,19 @@
 
 **VirtualPetKMP** es una aplicación multiplataforma (Android y Escritorio) para llevar un registro completo de la salud y los cuidados de tus mascotas: vacunas, desparasitaciones, peso, revisiones veterinarias, tratamientos e informes, todo en un solo lugar.
 
-Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartiendo toda la lógica y la interfaz de usuario entre Android y escritorio. **El código es privado**; si estás interesado en él, puedes contactar con el autor.
+Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartiendo toda la lógica y la interfaz de usuario entre Android y escritorio. Funciona **sin conexión**: todos los datos viven en una base de datos SQLite del propio dispositivo, con migraciones versionadas. **El código es privado**; si estás interesado en él, puedes contactar con el autor.
 
 ---
 
 ## ✨ Características
 
-- 🐶 **Gestión de mascotas**: fichas con datos básicos (nombre, especie, raza, fecha de nacimiento, sexo, color, microchip) y **peso ideal** opcional.
+- 🐶 **Gestión de mascotas**: ficha con datos básicos (nombre, especie, raza, fecha de nacimiento, sexo, color, microchip) y **peso ideal** opcional. Las acciones de cada mascota (editar, eliminar) están en un menú **⋮**, tanto en la lista como en su ficha.
 - 📷 **Foto de la mascota**: se puede elegir de los archivos o **hacer con la cámara** (Android); se ve en la ficha y en la lista de mascotas.
-- 🏠 **Ficha como panel**: cabecera con la foto, el nombre y la edad, y tarjetas por bloque (peso, vacunas y preventivos, salud y seguimiento, notas) que muestran **un solo aviso** cada una: en ámbar lo que vence pronto y en rojo lo vencido. Las acciones de la mascota (modificar datos) van en un menú **⋮** en la propia cabecera.
-- ⚖️ **Pesos**: registro y evolución en un **gráfico de línea arrastrable** en la ficha, y una vista detallada con el histórico mes a mes, filtros (todo, por año o por rango de fechas) y el **histórico plegable**: al pulsar un pesaje se abre un modal para editarlo o borrarlo.
-- 🎯 **Peso ideal**: se puede fijar en la ficha de la mascota o desde la propia hoja de peso. Se dibuja como **línea discontinua** de referencia en el gráfico y, en la lista, el último peso lleva un indicador **▲ verde** si está por encima o **▼ rojo** si está por debajo.
+- 🏠 **Ficha como panel**: cabecera con la foto, el nombre y la edad, y tarjetas por bloque (peso, vacunas y preventivos, salud y seguimiento, notas) que muestran **un solo aviso** cada una: en ámbar lo que vence pronto y en rojo lo vencido.
+- ⚖️ **Pesos**: registro y evolución en un **gráfico de línea** en la ficha, y una vista detallada con el histórico mes a mes, filtros (todo, por año o por rango de fechas) y el **histórico plegable**. Al pulsar un pesaje se abre un modal para editarlo o eliminarlo.
+- 🎯 **Peso ideal**: se fija desde la ficha de la mascota o desde la propia hoja de peso. Se dibuja como **línea discontinua** de referencia en el gráfico y, en la lista, el último peso lleva un indicador **▲ verde** si está por encima o **▼ rojo** si está por debajo.
 - 💉 **Vacunas**: registro con próxima dosis, **notificaciones locales** 15 días antes y **añadir el recordatorio al calendario** del teléfono.
-- 💊 **Preventivos**: pipetas, desparasitaciones y otros tratamientos preventivos, con aviso 5 días antes y también añadibles al calendario.
+- 💊 **Preventivos**: pipetas, desparasitaciones y otros tratamientos preventivos, con aviso 1 día antes y también añadibles al calendario.
 - 🩺 **Revisiones veterinarias**: historial con motivo, diagnóstico, notas y veterinario.
 - 💊 **Tratamientos**: medicamentos con dosis, frecuencia y fechas, con los activos separados del historial.
 - 📄 **Informes**: adjuntar informes veterinarios con tipo, descripción y archivo, y abrirlos desde la app.
@@ -24,7 +24,6 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 - 🔔 **Notificaciones locales**: para no olvidar las próximas dosis.
 - 🌓 **Tema claro / oscuro**: se adapta a la configuración del sistema.
 - 📱 **Multiplataforma**: misma experiencia en Android y Escritorio.
-- 🔌 **Funciona sin conexión**: todos los datos viven en una base de datos SQLite local del dispositivo, con migraciones versionadas, así que nada depende de un servidor.
 
 ---
 
@@ -74,12 +73,13 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 VirtualPetKMP/
 ├── androidApp/          # Módulo Android (Activity, manifest, recursos)
 ├── desktopApp/          # Módulo Desktop (main.kt, empaquetado)
-├── shared/              # Código compartido KMP
-│   ├── commonMain/      # Código común (UI, lógica, BD)
-│   ├── androidMain/     # Implementaciones específicas de Android
-│   ├── jvmMain/         # Implementaciones específicas de JVM/Desktop
-│   └── sqldelight/      # Esquema y migraciones de la BD
-└── build.gradle.kts
+├── docs/                # Documentación técnica
+├── screenshots/         # Capturas usadas en este README
+└── shared/              # Código compartido KMP
+    ├── commonMain/      # Código común (UI, lógica, BD)
+    ├── androidMain/     # Implementaciones específicas de Android
+    ├── jvmMain/         # Implementaciones específicas de JVM/Desktop
+    └── sqldelight/      # Esquema y migraciones de la BD
 ```
 
 ---
@@ -115,9 +115,19 @@ Con **hot reload** durante el desarrollo:
 ./gradlew :shared:allTests        # Todos los tests
 ```
 
+Los tests usan una base de datos SQLite en memoria creada desde el esquema, así que prueban los
+repositorios y los cálculos de verdad. **Al arreglar un fallo, añade el test que lo habría
+cazado**: es la única red de seguridad de un proyecto sin backend.
+
 ---
 
-## 🖼️ Capturas para la documentación
+## 📚 Documentación
+
+- **[Arquitectura](docs/ARQUITECTURA.md)** — capas, navegación, base de datos y migraciones,
+  convenciones, decisiones de interfaz y cómo trabajar con el código específico de plataforma.
+  Es el documento que hay que leer antes de tocar el proyecto.
+
+### Capturas para la documentación
 
 Las imágenes de este README se generan a partir de una base de datos de ejemplo, para que
 muestren siempre el mismo aspecto (una vacuna vencida, una próxima, un tratamiento activo…):
@@ -137,7 +147,23 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 
 🚧 **En desarrollo activo.** Actualmente en fase beta con testers.
 
-**Pendiente antes de la v1.0:**
+### ✅ Implantado
+
+- [x] **Gestión de mascotas** completa: alta, edición, borrado con confirmación y foto (galería o cámara).
+- [x] **Ficha como panel**, con cabecera (foto, nombre, edad y menú de acciones) y tarjetas por bloque con un único aviso cada una.
+- [x] **Vacunas y preventivos** con próxima dosis, estado (vencida / vence pronto / al día) y recordatorio añadible al calendario.
+- [x] **Peso**: gráfico de línea con todo el histórico ajustado al ancho, eje de meses con el año al cambiar, y peso ideal como referencia discontinua.
+- [x] **Peso ideal**: opcional, configurable desde la ficha de la mascota o desde la hoja de peso, con indicador ▲/▼ en la lista.
+- [x] **Histórico de peso plegable**, con filtros (todo / año / rango de fechas) y modal para editar o eliminar un pesaje.
+- [x] **Revisiones veterinarias, tratamientos, informes adjuntos y notas**.
+- [x] **Agenda de veterinarios** con urgencias 24 h, llamada directa y navegación con Google Maps.
+- [x] **Exportar la ficha a PDF**, en versión resumida o completa.
+- [x] **Notificaciones locales** de próximas dosis, con permiso de alarmas exactas en Android 12+.
+- [x] **Tema claro y oscuro**.
+- [x] **Arquitectura offline-first** con base de datos local y migraciones versionadas.
+- [x] **Tests** de repositorios y de los cálculos del resumen de la ficha.
+
+### 🔜 Pendiente antes de la v1.0
 
 - [ ] **Compartir el PDF de la ficha** en lugar de solo guardarlo: el botón de exportar debe
       ofrecer enviarlo por correo, WhatsApp, guardarlo en una carpeta, etc. Enfoque acordado:
@@ -156,6 +182,17 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
       sincronización automática entre dispositivos queda para más adelante: necesita backend
       o cuenta de Google y resolver conflictos.
 - [ ] Publicación en Google Play Store.
+
+### 🔍 Revisar (no bloquea la v1.0)
+
+- [ ] **Unificar el menú ⋮ en las tarjetas de veterinario**: hoy conservan sus iconos propios
+      (llamada, mapa, editar, borrar) en vez de un único menú, como ya se hizo en las de
+      mascota.
+- [ ] **Línea de peso ideal en los extremos**: si el peso ideal coincide con el máximo o el
+      mínimo de los datos, la referencia queda pegada al borde del gráfico y se ve poco.
+      Habría que darle un margen extra en ese caso.
+- [ ] **Peso ideal en el PDF**: hoy la ficha exportada no incluye el peso ideal ni la
+      comparación con el último pesaje.
 
 ---
 

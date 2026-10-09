@@ -28,6 +28,13 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 
+/**
+ * Resumen de una mascota para la pantalla de ficha: los contadores y avisos ya calculados.
+ *
+ * La tarjeta de cada bloque muestra **un solo dato**, no un recuento de todo: por eso hay
+ * campos para lo que reclama atención (vencidas, próximas, activos) y también para los
+ * totales, que se usan al entrar en la hoja correspondiente.
+ */
 data class ResumenFicha(
     val vacunasVencidas: Int = 0,
     val vacunasProximas: Int = 0,
@@ -69,6 +76,28 @@ data class DatosFichaPdf(
     val preventivos: List<Preventivo> = emptyList()
 )
 
+/**
+ * Estado de la ficha de UNA mascota: su resumen, sus listas y los avisos.
+ *
+ * Es el ViewModel más grande de la app porque la ficha es un panel que lo abarca todo: peso,
+ * vacunas, preventivos, revisiones, tratamientos, informes y notas.
+ *
+ * Dos ideas que conviene tener claras antes de tocarlo:
+ *
+ * 1. **Se crea uno por mascota** (desde `App`, con `remember(mascotaId)`) y se comparte entre
+ *    la pantalla y todas sus hojas modales. Por eso el resumen y las listas son coherentes:
+ *    hay una sola fuente de verdad mientras la ficha está abierta.
+ * 2. **Al cargar el resumen se reprograman los avisos** de esa mascota: se cancelan y se
+ *    vuelven a programar sus dosis pendientes. Es lo que mantiene las notificaciones al día
+ *    sin necesidad de un servicio en segundo plano.
+ *
+ * Los cálculos de estado (vencida / próxima / al día, tratamiento activo) se hacen **aquí**, a
+ * partir de la fecha de hoy, no en los repositorios: la base de datos guarda fechas, no
+ * conclusiones.
+ *
+ * @param programador si es `null`, la ficha funciona igual pero sin tocar notificaciones. Así
+ *   el ViewModel se puede probar sin Android por medio.
+ */
 class FichaMascotaViewModel(
     private val mascotaId: Long,
     private val vacunaRepository: VacunaRepository,
@@ -184,7 +213,7 @@ class FichaMascotaViewModel(
                 }
                 preventivos.forEach { preventivo ->
                     preventivo.id?.let { id ->
-                        ReprogramadorNotificaciones.cancelar(prog, id)
+                        ReprogramadorNotificaciones.cancelarPreventivo(prog, id)
                         ReprogramadorNotificaciones.programarPreventivo(prog, preventivo)
                     }
                 }
@@ -343,7 +372,7 @@ class FichaMascotaViewModel(
     fun borrarPreventivo(id: Long) {
         scope.launch {
             preventivoRepository.deletePreventivo(id)
-            programador?.let { prog -> ReprogramadorNotificaciones.cancelar(prog, id) }
+            programador?.let { prog -> ReprogramadorNotificaciones.cancelarPreventivo(prog, id) }
             cargarResumen()
         }
     }
@@ -414,7 +443,7 @@ class FichaMascotaViewModel(
                 lote = null
             )
             programador?.let { prog ->
-                ReprogramadorNotificaciones.cancelar(prog, id)
+                ReprogramadorNotificaciones.cancelarPreventivo(prog, id)
                 ReprogramadorNotificaciones.programarPreventivo(
                     prog,
                     Preventivo(

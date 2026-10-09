@@ -6,6 +6,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 
+/**
+ * Acceso a los tratamientos con medicamentos.
+ *
+ * Devuelve la lista tal cual está guardada: **la separación entre activos e historial no se
+ * hace aquí**, sino en el `FichaMascotaViewModel`, porque depende de la fecha de hoy y eso es
+ * lógica de presentación, no de persistencia.
+ */
 class TratamientoRepository(private val database: VirtualPetDatabase) {
 
     suspend fun getTratamientosByMascotaId(mascotaId: Long): List<Tratamiento> = withContext(Dispatchers.IO) {

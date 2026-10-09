@@ -6,6 +6,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 
+/**
+ * Acceso a las visitas al veterinario.
+ *
+ * CRUD sencillo en [Dispatchers.IO]: las revisiones son un registro histórico y no participan
+ * en ningún cálculo de estado ni de avisos.
+ */
 class RevisionRepository(private val database: VirtualPetDatabase) {
 
     suspend fun getRevisionesByMascotaId(mascotaId: Long): List<Revision> = withContext(Dispatchers.IO) {

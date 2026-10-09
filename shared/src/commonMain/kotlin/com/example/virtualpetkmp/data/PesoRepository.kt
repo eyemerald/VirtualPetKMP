@@ -6,6 +6,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 
+/**
+ * Acceso a los pesajes.
+ *
+ * Además del CRUD, expone dos consultas que usan otras pantallas: la lista completa de una
+ * mascota (para el gráfico y el histórico) y el último peso de cada mascota de una sola vez
+ * (para el indicador ▲/▼ de la lista, que si no tendría que consultar mascota a mascota).
+ */
 class PesoRepository(private val database: VirtualPetDatabase) {
 
     suspend fun getPesosByMascotaId(mascotaId: Long): List<Peso> = withContext(Dispatchers.IO) {
