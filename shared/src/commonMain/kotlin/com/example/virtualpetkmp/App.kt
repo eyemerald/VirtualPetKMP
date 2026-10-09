@@ -20,7 +20,9 @@ import com.example.virtualpetkmp.ui.MascotaListScreen
 import com.example.virtualpetkmp.ui.VeterinarioFormScreen
 import com.example.virtualpetkmp.ui.VeterinariosListScreen
 import com.example.virtualpetkmp.ui.theme.VirtualPetTheme
+import com.example.virtualpetkmp.util.ConLocalizacion
 import com.example.virtualpetkmp.util.ReprogramadorNotificaciones
+import com.example.virtualpetkmp.util.localizacionDelSistema
 import com.example.virtualpetkmp.util.rememberProgramadorNotificaciones
 import com.example.virtualpetkmp.viewmodel.FichaMascotaViewModel
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
@@ -115,8 +117,14 @@ fun App(databaseFactory: DatabaseFactory) {
         }
     }
 
+    // La configuración regional se decide UNA vez aquí y se publica al resto de la interfaz:
+    // unidades, orden de fecha y separador decimal salen siempre de este valor, así que no
+    // puede haber dos pantallas que opinen distinto.
+    val localizacion = localizacionDelSistema()
+
     VirtualPetTheme {
-        MainScreen(
+        ConLocalizacion(localizacion) {
+            MainScreen(
             mostrarAcciones = enDetalleMascota,
             onVolver = volverAtras,
             onCompartir = if (enDetalleMascota) {
@@ -194,5 +202,6 @@ fun App(databaseFactory: DatabaseFactory) {
                 }
             }
         )
+        }
     }
 }

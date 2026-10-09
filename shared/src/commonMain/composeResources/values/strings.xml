@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Textos por defecto (inglés).
+
+  OJO: `values/` es el idioma de RESPALDO de Compose Multiplatform, no "el idioma base del
+  código". Por eso aquí va el inglés: si el dispositivo pide un idioma que no tenemos, se
+  muestra esto en lugar de dejar la interfaz a medias. El español, que es el idioma de origen
+  de la app, vive en `values-es/`.
+-->
+<resources>
+    <!-- Pestañas principales -->
+    <string name="pestana_mascotas">Pets</string>
+    <string name="pestana_veterinarios">Vets</string>
+
+    <!-- Lista de mascotas -->
+    <string name="lista_mascotas_vacia">No pets registered</string>
+    <string name="lista_mascotas_vacia_ayuda">Tap the + button to add one</string>
+    <string name="lista_mascotas_reintentar">Retry</string>
+    <string name="lista_peso_ideal">ideal %1$s %2$s</string>
+
+    <!-- Acciones genéricas -->
+    <string name="accion_editar">Edit</string>
+    <string name="accion_eliminar">Delete</string>
+    <string name="accion_cancelar">Cancel</string>
+    <string name="accion_guardar">Save</string>
+    <string name="accion_anadir">Add</string>
+</resources>

@@ -18,8 +18,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
-import com.example.virtualpetkmp.util.formatearKilos
+import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
+import org.jetbrains.compose.resources.stringResource
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.accion_editar
+import virtualpetkmp.shared.generated.resources.accion_eliminar
+import virtualpetkmp.shared.generated.resources.lista_mascotas_reintentar
+import virtualpetkmp.shared.generated.resources.lista_mascotas_vacia
+import virtualpetkmp.shared.generated.resources.lista_mascotas_vacia_ayuda
+import virtualpetkmp.shared.generated.resources.lista_peso_ideal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +95,7 @@ fun MascotaListScreen(
                             viewModel.clearError()
                             viewModel.loadMascotas()
                         }) {
-                            Text("Reintentar")
+                            Text(stringResource(Res.string.lista_mascotas_reintentar))
                         }
                     }
                 }
@@ -100,12 +108,12 @@ fun MascotaListScreen(
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "No hay mascotas registradas",
+                            text = stringResource(Res.string.lista_mascotas_vacia),
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Toca el botón + para agregar una",
+                            text = stringResource(Res.string.lista_mascotas_vacia_ayuda),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
@@ -268,7 +276,7 @@ fun MascotaCard(
                     onDismissRequest = { menuAbierto = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Editar mascota") },
+                        text = { Text(stringResource(Res.string.accion_editar)) },
                         leadingIcon = {
                             Icon(imageVector = Icons.Default.Edit, contentDescription = null)
                         },
@@ -279,7 +287,10 @@ fun MascotaCard(
                     )
                     DropdownMenuItem(
                         text = {
-                            Text("Eliminar mascota", color = MaterialTheme.colorScheme.error)
+                            Text(
+                                text = stringResource(Res.string.accion_eliminar),
+                                color = MaterialTheme.colorScheme.error
+                            )
                         },
                         leadingIcon = {
                             Icon(
@@ -302,18 +313,23 @@ fun MascotaCard(
 /**
  * Último peso junto a su peso ideal: ▲ verde si está por encima, ▼ rojo si está por debajo.
  * Si coinciden (margen de 10 gramos), no se dibuja flecha: no hay nada que indicar.
+ *
+ * El peso se muestra en la unidad de la región (kg o lb), pero la comparación con el ideal se
+ * hace **siempre en kilos**, que es como está guardado: convertir los dos valores daría el
+ * mismo resultado pero acumularía error de redondeo.
  */
 @Composable
 private fun IndicadorPeso(
     ultimoPeso: Double,
     pesoIdeal: Double
 ) {
+    val formato = localizacion
     val diferencia = ultimoPeso - pesoIdeal
     val hayDiferencia = kotlin.math.abs(diferencia) > 0.01
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            text = "${formatearKilos(ultimoPeso)} kg",
+            text = "${formato.formatearPeso(ultimoPeso)} ${formato.unidadPesoSufijo}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
         )
@@ -332,7 +348,11 @@ private fun IndicadorPeso(
         }
         Spacer(modifier = Modifier.width(6.dp))
         Text(
-            text = "ideal ${formatearKilos(pesoIdeal)}",
+            text = stringResource(
+                Res.string.lista_peso_ideal,
+                formato.formatearPeso(pesoIdeal),
+                formato.unidadPesoSufijo
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

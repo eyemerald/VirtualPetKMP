@@ -36,8 +36,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
 import virtualpetkmp.shared.generated.resources.logo
+import virtualpetkmp.shared.generated.resources.pestana_mascotas
+import virtualpetkmp.shared.generated.resources.pestana_veterinarios
 
 /** Opacidad de la marca de agua del logo, lo bastante baja para no molestar la lectura. */
 private const val OPACIDAD_MARCA_DE_AGUA = 0.05f
@@ -83,12 +86,12 @@ fun MainScreen(
                     Tab(
                         selected = tabActual == 0,
                         onClick = { tabActual = 0 },
-                        text = { Text("Mascotas") }
+                        text = { Text(stringResource(Res.string.pestana_mascotas)) }
                     )
                     Tab(
                         selected = tabActual == 1,
                         onClick = { tabActual = 1 },
-                        text = { Text("Veterinarios") }
+                        text = { Text(stringResource(Res.string.pestana_veterinarios)) }
                     )
                 }
 

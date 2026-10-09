@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Español: idioma de origen de la aplicación. Es la traducción de referencia, así que los
+  textos de aquí son los que estaban escritos directamente en el código.
+-->
+<resources>
+    <!-- Pestañas principales -->
+    <string name="pestana_mascotas">Mascotas</string>
+    <string name="pestana_veterinarios">Veterinarios</string>
+
+    <!-- Lista de mascotas -->
+    <string name="lista_mascotas_vacia">No hay mascotas registradas</string>
+    <string name="lista_mascotas_vacia_ayuda">Toca el botón + para agregar una</string>
+    <string name="lista_mascotas_reintentar">Reintentar</string>
+    <string name="lista_peso_ideal">ideal %1$s %2$s</string>
+
+    <!-- Acciones genéricas -->
+    <string name="accion_editar">Editar</string>
+    <string name="accion_eliminar">Eliminar</string>
+    <string name="accion_cancelar">Cancelar</string>
+    <string name="accion_guardar">Guardar</string>
+    <string name="accion_anadir">Añadir</string>
+</resources>
