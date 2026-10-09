@@ -6,6 +6,9 @@ import kotlinx.datetime.LocalDate
 /**
  * Convierte una fecha a formato europeo (DD/MM/AAAA) para mostrarla al usuario.
  * Internamente la fecha se sigue guardando en formato ISO (AAAA-MM-DD).
+ *
+ * Se mantiene por compatibilidad y para los sitios que aún no usan la capa de localización;
+ * lo nuevo debería usar `Localizacion.formatearFecha`, que respeta la región.
  */
 fun LocalDate.toFormatoEuropeo(): String {
     val dia = dayOfMonth.toString().padStart(2, '0')
@@ -29,6 +32,40 @@ fun parseFormatoEuropeo(texto: String): LocalDate {
         ?: throw IllegalArgumentException("Año inválido")
 
     return LocalDate(anio, mes, dia)
+}
+
+/**
+ * Lee una fecha escrita por el usuario aceptando el orden de su región y, como respaldo, el
+ * contrario.
+ *
+ * Por qué se acepta el otro orden: el usuario de habla inglesa escribe MM/DD/AAAA, pero las
+ * fechas que ya tenía guardadas y las que le muestra la app pueden ser DD/MM. Rechazar el
+ * formato "que no toca" llevaría a errores tontos al corregir un registro antiguo.
+ *
+ * Cuando el texto es ambiguo ("03/04/2026" vale como 3 de abril y como 4 de marzo) **gana el
+ * orden preferido de la región**, que es lo que el usuario espera. Por eso el orden preferido
+ * es un parámetro obligatorio: no hay una interpretación "correcta" sin saber de dónde es.
+ *
+ * Devuelve `null` si no encaja en ningún orden o si la fecha no existe (31/02).
+ */
+fun parseFechaLocalizada(texto: String, ordenPreferido: OrdenFecha): LocalDate? {
+    val partes = texto.trim().split("/")
+    if (partes.size != 3) return null
+
+    val primero = partes[0].trim().toIntOrNull() ?: return null
+    val segundo = partes[1].trim().toIntOrNull() ?: return null
+    val anio = partes[2].trim().toIntOrNull() ?: return null
+    // Los años de dos cifras no se admiten: ambigüedad innecesaria.
+    if (anio < 1000 || anio > 9999) return null
+
+    val intentos = when (ordenPreferido) {
+        OrdenFecha.DIA_MES_ANIO -> listOf(primero to segundo, segundo to primero)
+        OrdenFecha.MES_DIA_ANIO -> listOf(segundo to primero, primero to segundo)
+    }
+
+    return intentos.firstNotNullOfOrNull { (dia, mes) ->
+        runCatching { LocalDate(anio, mes, dia) }.getOrNull()
+    }
 }
 
 /**

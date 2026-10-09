@@ -34,6 +34,7 @@
     <string name="a11y_volver">Back</string>
     <string name="a11y_compartir">Share</string>
     <string name="a11y_mas_acciones">More actions</string>
+    <string name="a11y_elegir_calendario">Pick from calendar</string>
     <string name="a11y_historial_mostrar">Show history</string>
     <string name="a11y_historial_ocultar">Hide history</string>
 
@@ -203,4 +204,53 @@
     <string name="calendario_preventivo_titulo">Preventive: </string>
     <string name="calendario_preventivo_descripcion">Remember to apply </string>
     <string name="calendario_preventivo_descripcion_fin"> to </string>
+
+    <!-- Formularios de alta y edición dentro de las hojas -->
+    <string name="form_anadir_vacuna">Add vaccine</string>
+    <string name="form_editar_vacuna">Edit vaccine</string>
+    <string name="form_anadir_preventivo">Add preventive</string>
+    <string name="form_editar_preventivo">Edit preventive</string>
+    <string name="form_anadir_tratamiento">Add treatment</string>
+    <string name="form_editar_tratamiento">Edit treatment</string>
+    <string name="form_anadir_visita">Add visit</string>
+    <string name="form_editar_visita">Edit visit</string>
+    <string name="form_anadir_pesaje">Add weigh-in</string>
+    <string name="form_editar_pesaje">Edit weigh-in</string>
+
+    <string name="form_nombre_vacuna">Vaccine name</string>
+    <string name="form_fecha_aplicacion">Date given (%1$s)</string>
+    <string name="form_proxima_dosis">Next dose (%1$s)</string>
+    <string name="form_veterinario_opcional">Vet (optional)</string>
+    <string name="form_lote_opcional">Batch (optional)</string>
+    <string name="form_nombre_producto">Product name</string>
+    <string name="form_tipo_preventivo">Type</string>
+
+    <string name="form_medicamento">Medication</string>
+    <string name="form_dosis">Dose (e.g. ½ tablet)</string>
+    <string name="form_frecuencia">Frequency (e.g. every 24h)</string>
+    <string name="form_fecha_inicio">Start date (%1$s)</string>
+    <string name="form_fecha_fin">End date (%1$s)</string>
+    <string name="form_cronico">Chronic</string>
+    <string name="form_con_fecha_fin">With end date</string>
+
+    <string name="form_motivo_consulta">Reason for the visit</string>
+    <string name="form_diagnostico_opcional">Diagnosis (optional)</string>
+    <string name="form_notas_consulta_opcional">Visit notes (optional)</string>
+
+    <string name="form_fecha">Date (%1$s)</string>
+    <string name="form_peso_kg">Weight in %1$s (e.g. %2$s)</string>
+    <string name="form_notas_opcional">Notes (optional)</string>
+    <string name="form_ejemplo_peso">12.4</string>
+    <string name="form_doce_coma_cuatro">12.4 kg</string>
+
+    <string name="form_error_nombre_vacuna">Enter the vaccine name</string>
+    <string name="form_error_nombre_producto">Enter the product name</string>
+    <string name="form_error_medicamento">Enter the medication</string>
+    <string name="form_error_motivo">Enter the reason for the visit</string>
+    <string name="form_error_peso">Enter the weight in kilos (for example 12.4)</string>
+    <string name="form_error_fecha">The date must use the %1$s format</string>
+    <string name="form_error_fechas">The dates must use the %1$s format</string>
+
+    <string name="form_eliminar_pesaje">Delete weigh-in</string>
+    <string name="form_eliminar_pesaje_mensaje">Delete this weigh-in? This cannot be undone.</string>
 </resources>

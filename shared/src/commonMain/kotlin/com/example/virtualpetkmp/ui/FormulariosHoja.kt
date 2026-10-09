@@ -27,13 +27,60 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.virtualpetkmp.util.formatearKilos
-import com.example.virtualpetkmp.util.parseFormatoEuropeo
-import com.example.virtualpetkmp.util.toFormatoEuropeo
+import com.example.virtualpetkmp.util.Localizacion
+import com.example.virtualpetkmp.util.TraduccionesDatos
+import com.example.virtualpetkmp.util.UnidadPeso
+import com.example.virtualpetkmp.util.localizacion
+import com.example.virtualpetkmp.util.parseFechaLocalizada
+import com.example.virtualpetkmp.util.parseKilos
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import org.jetbrains.compose.resources.stringResource
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.accion_cancelar
+import virtualpetkmp.shared.generated.resources.accion_guardar
+import virtualpetkmp.shared.generated.resources.form_anadir_pesaje
+import virtualpetkmp.shared.generated.resources.form_anadir_preventivo
+import virtualpetkmp.shared.generated.resources.form_anadir_tratamiento
+import virtualpetkmp.shared.generated.resources.form_anadir_vacuna
+import virtualpetkmp.shared.generated.resources.form_anadir_visita
+import virtualpetkmp.shared.generated.resources.form_con_fecha_fin
+import virtualpetkmp.shared.generated.resources.form_cronico
+import virtualpetkmp.shared.generated.resources.form_diagnostico_opcional
+import virtualpetkmp.shared.generated.resources.form_dosis
+import virtualpetkmp.shared.generated.resources.form_editar_pesaje
+import virtualpetkmp.shared.generated.resources.form_editar_preventivo
+import virtualpetkmp.shared.generated.resources.form_editar_tratamiento
+import virtualpetkmp.shared.generated.resources.form_editar_vacuna
+import virtualpetkmp.shared.generated.resources.form_editar_visita
+import virtualpetkmp.shared.generated.resources.form_ejemplo_peso
+import virtualpetkmp.shared.generated.resources.form_eliminar_pesaje
+import virtualpetkmp.shared.generated.resources.form_eliminar_pesaje_mensaje
+import virtualpetkmp.shared.generated.resources.form_error_fecha
+import virtualpetkmp.shared.generated.resources.form_error_fechas
+import virtualpetkmp.shared.generated.resources.form_error_medicamento
+import virtualpetkmp.shared.generated.resources.form_error_motivo
+import virtualpetkmp.shared.generated.resources.form_error_nombre_producto
+import virtualpetkmp.shared.generated.resources.form_error_nombre_vacuna
+import virtualpetkmp.shared.generated.resources.form_error_peso
+import virtualpetkmp.shared.generated.resources.form_fecha
+import virtualpetkmp.shared.generated.resources.form_fecha_aplicacion
+import virtualpetkmp.shared.generated.resources.form_fecha_fin
+import virtualpetkmp.shared.generated.resources.form_fecha_inicio
+import virtualpetkmp.shared.generated.resources.form_frecuencia
+import virtualpetkmp.shared.generated.resources.form_lote_opcional
+import virtualpetkmp.shared.generated.resources.form_medicamento
+import virtualpetkmp.shared.generated.resources.form_motivo_consulta
+import virtualpetkmp.shared.generated.resources.form_nombre_producto
+import virtualpetkmp.shared.generated.resources.form_nombre_vacuna
+import virtualpetkmp.shared.generated.resources.form_notas_consulta_opcional
+import virtualpetkmp.shared.generated.resources.form_notas_opcional
+import virtualpetkmp.shared.generated.resources.form_peso_kg
+import virtualpetkmp.shared.generated.resources.form_proxima_dosis
+import virtualpetkmp.shared.generated.resources.form_veterinario_opcional
+import virtualpetkmp.shared.generated.resources.hoja_guardar_cambios
 
 /** Formulario que se está mostrando dentro de una hoja modal de la ficha. */
 sealed interface FormularioHoja {
@@ -57,13 +104,58 @@ sealed interface EdicionHoja {
     data object InformeNuevo : EdicionHoja
 }
 
-private fun hoyTexto(): String =
-    Clock.System.todayIn(TimeZone.currentSystemDefault()).toFormatoEuropeo()
+/**
+ * Tipos de preventivo que ofrece el formulario.
+ *
+ * Son las **claves estables que se guardan en la base de datos**: en el desplegable se muestran
+ * traducidas (con [TraduccionesDatos]) pero lo que se persiste es esto, así que no se pueden
+ * traducir aquí ni cambiar sin migrar los registros que ya existen.
+ */
+private val TIPOS_PREVENTIVO = listOf("Pipeta", "Desparasitación", "Otro")
+
+/**
+ * Fecha de hoy en el formato que espera el campo, que es el de la región.
+ * Se resuelve en cada composición para que siga al idioma activo.
+ */
+/** Fecha de hoy ya formateada, calculada una vez por formulario. */
+private fun hoyTexto(formato: Localizacion): String =
+    formato.formatearFecha(Clock.System.todayIn(TimeZone.currentSystemDefault()))
+
+/**
+ * Textos de error y pistas de formato que usan los formularios de esta hoja.
+ *
+ * Se agrupan aquí porque los comparten los cinco formularios: cada uno los pide una vez y los
+ * usa dentro de sus `onClick`, donde no se pueden leer recursos.
+ */
+private data class TextosFormulario(
+    val pistaFecha: String,
+    val errorNombreVacuna: String,
+    val errorNombreProducto: String,
+    val errorMedicamento: String,
+    val errorMotivo: String,
+    val errorPeso: String,
+    val errorFecha: String,
+    val errorFechas: String
+)
+
+@Composable
+private fun textosDelFormulario(): TextosFormulario {
+    val pista = localizacion.pistaFormatoFecha
+    return TextosFormulario(
+        pistaFecha = pista,
+        errorNombreVacuna = stringResource(Res.string.form_error_nombre_vacuna),
+        errorNombreProducto = stringResource(Res.string.form_error_nombre_producto),
+        errorMedicamento = stringResource(Res.string.form_error_medicamento),
+        errorMotivo = stringResource(Res.string.form_error_motivo),
+        errorPeso = stringResource(Res.string.form_error_peso),
+        errorFecha = stringResource(Res.string.form_error_fecha, pista),
+        errorFechas = stringResource(Res.string.form_error_fechas, pista)
+    )
+}
 
 /**
  * Diálogo de vacuna, para alta o edición. Si [vacuna] no es null, el formulario llega
  * relleno con sus datos y el botón guarda los cambios.
- * Valida las fechas con [parseFormatoEuropeo] antes de guardar.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,12 +164,19 @@ fun FormularioVacuna(
     onCancelar: () -> Unit,
     onGuardar: (nombre: String, aplicacion: LocalDate, proxima: LocalDate, veterinario: String?, lote: String?) -> Unit
 ) {
+    val formato = localizacion
+    val fechaHoy = hoyTexto(formato)
+    val textos = textosDelFormulario()
+    val pistaFecha = textos.pistaFecha
+    val textoErrorNombreVacuna = textos.errorNombreVacuna
+    val textoErrorFechas = textos.errorFechas
+
     var nombre by rememberSaveable { mutableStateOf(vacuna?.nombre ?: "") }
     var aplicacion by rememberSaveable {
-        mutableStateOf(vacuna?.fechaAplicacion?.toFormatoEuropeo() ?: hoyTexto())
+        mutableStateOf(vacuna?.fechaAplicacion?.let { formato.formatearFecha(it) } ?: fechaHoy)
     }
     var proxima by rememberSaveable {
-        mutableStateOf(vacuna?.fechaProximaDosis?.toFormatoEuropeo() ?: hoyTexto())
+        mutableStateOf(vacuna?.fechaProximaDosis?.let { formato.formatearFecha(it) } ?: fechaHoy)
     }
     var veterinario by rememberSaveable { mutableStateOf(vacuna?.veterinario ?: "") }
     var lote by rememberSaveable { mutableStateOf(vacuna?.lote ?: "") }
@@ -85,41 +184,41 @@ fun FormularioVacuna(
 
     AlertDialog(
         onDismissRequest = onCancelar,
-        title = { Text(if (vacuna == null) "Añadir vacuna" else "Editar vacuna") },
+        title = { Text(stringResource(if (vacuna == null) Res.string.form_anadir_vacuna else Res.string.form_editar_vacuna)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = nombre,
                     onValueChange = { nombre = it },
-                    label = { Text("Nombre de la vacuna") },
+                    label = { Text(stringResource(Res.string.form_nombre_vacuna)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 CampoFecha(
                     valor = aplicacion,
                     onValorCambia = { aplicacion = it },
-                    etiqueta = "Fecha de aplicación (DD/MM/AAAA)",
+                    etiqueta = stringResource(Res.string.form_fecha_aplicacion, pistaFecha),
                     modifier = Modifier.fillMaxWidth(),
                     esError = error != null
                 )
                 CampoFecha(
                     valor = proxima,
                     onValorCambia = { proxima = it },
-                    etiqueta = "Próxima dosis (DD/MM/AAAA)",
+                    etiqueta = stringResource(Res.string.form_proxima_dosis, pistaFecha),
                     modifier = Modifier.fillMaxWidth(),
                     esError = error != null
                 )
                 OutlinedTextField(
                     value = veterinario,
                     onValueChange = { veterinario = it },
-                    label = { Text("Veterinario (opcional)") },
+                    label = { Text(stringResource(Res.string.form_veterinario_opcional)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = lote,
                     onValueChange = { lote = it },
-                    label = { Text("Lote (opcional)") },
+                    label = { Text(stringResource(Res.string.form_lote_opcional)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -136,27 +235,27 @@ fun FormularioVacuna(
             TextButton(
                 onClick = {
                     if (nombre.isBlank()) {
-                        error = "Indica el nombre de la vacuna"
+                        error = textoErrorNombreVacuna
                         return@TextButton
                     }
                     try {
                         onGuardar(
                             nombre.trim(),
-                            parseFormatoEuropeo(aplicacion),
-                            parseFormatoEuropeo(proxima),
+                            parseFechaLocalizada(aplicacion, formato.ordenFechaMostrada)!!,
+                            parseFechaLocalizada(proxima, formato.ordenFechaMostrada)!!,
                             veterinario.ifBlank { null },
                             lote.ifBlank { null }
                         )
                     } catch (e: Exception) {
-                        error = "Las fechas deben tener el formato DD/MM/AAAA"
+                        error = textoErrorFechas
                     }
                 }
             ) {
-                Text(if (vacuna == null) "Guardar" else "Guardar cambios")
+                Text(stringResource(if (vacuna == null) Res.string.accion_guardar else Res.string.hoja_guardar_cambios))
             }
         },
         dismissButton = {
-            TextButton(onClick = onCancelar) { Text("Cancelar") }
+            TextButton(onClick = onCancelar) { Text(stringResource(Res.string.accion_cancelar)) }
         }
     )
 }
@@ -169,19 +268,29 @@ fun FormularioPreventivo(
     onCancelar: () -> Unit,
     onGuardar: (tipo: String, nombre: String, aplicacion: LocalDate, proxima: LocalDate) -> Unit
 ) {
+    val formato = localizacion
+    val fechaHoy = hoyTexto(formato)
+    val textos = textosDelFormulario()
+    val pistaFecha = textos.pistaFecha
+    val textoErrorNombreProducto = textos.errorNombreProducto
+    val textoErrorMedicamento = textos.errorMedicamento
+    val textoErrorMotivo = textos.errorMotivo
+    val textoErrorPeso = textos.errorPeso
+    val textoErrorFecha = textos.errorFecha
+    val textoErrorFechas = textos.errorFechas
     var tipo by rememberSaveable { mutableStateOf(preventivo?.tipo ?: "Pipeta") }
     var nombre by rememberSaveable { mutableStateOf(preventivo?.nombre ?: "") }
     var aplicacion by rememberSaveable {
-        mutableStateOf(preventivo?.fechaAplicacion?.toFormatoEuropeo() ?: hoyTexto())
+        mutableStateOf(preventivo?.fechaAplicacion?.let { formato.formatearFecha(it) } ?: fechaHoy)
     }
     var proxima by rememberSaveable {
-        mutableStateOf(preventivo?.fechaProximaDosis?.toFormatoEuropeo() ?: hoyTexto())
+        mutableStateOf(preventivo?.fechaProximaDosis?.let { formato.formatearFecha(it) } ?: fechaHoy)
     }
     var error by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onCancelar,
-        title = { Text(if (preventivo == null) "Añadir preventivo" else "Editar preventivo") },
+        title = { Text(stringResource(if (preventivo == null) Res.string.form_anadir_preventivo else Res.string.form_editar_preventivo)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 // El tipo se elige con chips y no con un desplegable: dentro de un diálogo el
@@ -196,11 +305,11 @@ fun FormularioPreventivo(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    listOf("Pipeta", "Desparasitación", "Otro").forEach { opcion ->
+                    TIPOS_PREVENTIVO.forEach { opcion ->
                         androidx.compose.material3.FilterChip(
                             selected = tipo == opcion,
                             onClick = { tipo = opcion },
-                            label = { Text(opcion, fontSize = 12.sp, maxLines = 1) },
+                            label = { Text(TraduccionesDatos.etiqueta(opcion, formato.idioma), fontSize = 12.sp, maxLines = 1) },
                             modifier = Modifier.height(32.dp)
                         )
                     }
@@ -208,21 +317,21 @@ fun FormularioPreventivo(
                 OutlinedTextField(
                     value = nombre,
                     onValueChange = { nombre = it },
-                    label = { Text("Nombre del producto") },
+                    label = { Text(stringResource(Res.string.form_nombre_producto)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 CampoFecha(
                     valor = aplicacion,
                     onValorCambia = { aplicacion = it },
-                    etiqueta = "Fecha de aplicación (DD/MM/AAAA)",
+                    etiqueta = stringResource(Res.string.form_fecha_aplicacion, pistaFecha),
                     modifier = Modifier.fillMaxWidth(),
                     esError = error != null
                 )
                 CampoFecha(
                     valor = proxima,
                     onValorCambia = { proxima = it },
-                    etiqueta = "Próxima dosis (DD/MM/AAAA)",
+                    etiqueta = stringResource(Res.string.form_proxima_dosis, pistaFecha),
                     modifier = Modifier.fillMaxWidth(),
                     esError = error != null
                 )
@@ -239,26 +348,26 @@ fun FormularioPreventivo(
             TextButton(
                 onClick = {
                     if (nombre.isBlank()) {
-                        error = "Indica el nombre del producto"
+                        error = textoErrorNombreProducto
                         return@TextButton
                     }
                     try {
                         onGuardar(
                             tipo,
                             nombre.trim(),
-                            parseFormatoEuropeo(aplicacion),
-                            parseFormatoEuropeo(proxima)
+                            parseFechaLocalizada(aplicacion, formato.ordenFechaMostrada)!!,
+                            parseFechaLocalizada(proxima, formato.ordenFechaMostrada)!!
                         )
                     } catch (e: Exception) {
-                        error = "Las fechas deben tener el formato DD/MM/AAAA"
+                        error = textoErrorFechas
                     }
                 }
             ) {
-                Text(if (preventivo == null) "Guardar" else "Guardar cambios")
+                Text(stringResource(if (preventivo == null) Res.string.accion_guardar else Res.string.hoja_guardar_cambios))
             }
         },
         dismissButton = {
-            TextButton(onClick = onCancelar) { Text("Cancelar") }
+            TextButton(onClick = onCancelar) { Text(stringResource(Res.string.accion_cancelar)) }
         }
     )
 }
@@ -271,48 +380,58 @@ fun FormularioTratamiento(
     onCancelar: () -> Unit,
     onGuardar: (nombre: String, dosis: String?, frecuencia: String?, inicio: LocalDate, fin: LocalDate?) -> Unit
 ) {
+    val formato = localizacion
+    val fechaHoy = hoyTexto(formato)
+    val textos = textosDelFormulario()
+    val pistaFecha = textos.pistaFecha
+    val textoErrorNombreProducto = textos.errorNombreProducto
+    val textoErrorMedicamento = textos.errorMedicamento
+    val textoErrorMotivo = textos.errorMotivo
+    val textoErrorPeso = textos.errorPeso
+    val textoErrorFecha = textos.errorFecha
+    val textoErrorFechas = textos.errorFechas
     var nombre by rememberSaveable { mutableStateOf(tratamiento?.nombreMedicamento ?: "") }
     var dosis by rememberSaveable { mutableStateOf(tratamiento?.dosis ?: "") }
     var frecuencia by rememberSaveable { mutableStateOf(tratamiento?.frecuencia ?: "") }
     var inicio by rememberSaveable {
-        mutableStateOf(tratamiento?.fechaInicio?.toFormatoEuropeo() ?: hoyTexto())
+        mutableStateOf(tratamiento?.fechaInicio?.let { formato.formatearFecha(it) } ?: fechaHoy)
     }
     var fin by rememberSaveable {
-        mutableStateOf(tratamiento?.fechaFin?.toFormatoEuropeo() ?: "")
+        mutableStateOf(tratamiento?.fechaFin?.let { formato.formatearFecha(it) } ?: "")
     }
     var cronico by rememberSaveable { mutableStateOf(tratamiento?.fechaFin == null) }
     var error by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onCancelar,
-        title = { Text(if (tratamiento == null) "Añadir tratamiento" else "Editar tratamiento") },
+        title = { Text(stringResource(if (tratamiento == null) Res.string.form_anadir_tratamiento else Res.string.form_editar_tratamiento)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = nombre,
                     onValueChange = { nombre = it },
-                    label = { Text("Medicamento") },
+                    label = { Text(stringResource(Res.string.form_medicamento)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = dosis,
                     onValueChange = { dosis = it },
-                    label = { Text("Dosis (ej: ½ comprimido)") },
+                    label = { Text(stringResource(Res.string.form_dosis)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = frecuencia,
                     onValueChange = { frecuencia = it },
-                    label = { Text("Frecuencia (ej: cada 24h)") },
+                    label = { Text(stringResource(Res.string.form_frecuencia)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 CampoFecha(
                     valor = inicio,
                     onValorCambia = { inicio = it },
-                    etiqueta = "Fecha de inicio (DD/MM/AAAA)",
+                    etiqueta = stringResource(Res.string.form_fecha_inicio, pistaFecha),
                     modifier = Modifier.fillMaxWidth(),
                     esError = error != null
                 )
@@ -322,19 +441,19 @@ fun FormularioTratamiento(
                     androidx.compose.material3.FilterChip(
                         selected = cronico,
                         onClick = { cronico = true },
-                        label = { Text("Crónico") }
+                        label = { Text(stringResource(Res.string.form_cronico)) }
                     )
                     androidx.compose.material3.FilterChip(
                         selected = !cronico,
                         onClick = { cronico = false },
-                        label = { Text("Con fecha fin") }
+                        label = { Text(stringResource(Res.string.form_con_fecha_fin)) }
                     )
                 }
                 if (!cronico) {
                     CampoFecha(
                         valor = fin,
                         onValorCambia = { fin = it },
-                        etiqueta = "Fecha de fin (DD/MM/AAAA)",
+                        etiqueta = stringResource(Res.string.form_fecha_fin, pistaFecha),
                         modifier = Modifier.fillMaxWidth(),
                         esError = error != null
                     )
@@ -352,7 +471,7 @@ fun FormularioTratamiento(
             TextButton(
                 onClick = {
                     if (nombre.isBlank()) {
-                        error = "Indica el medicamento"
+                        error = textoErrorMedicamento
                         return@TextButton
                     }
                     try {
@@ -360,19 +479,19 @@ fun FormularioTratamiento(
                             nombre.trim(),
                             dosis.ifBlank { null },
                             frecuencia.ifBlank { null },
-                            parseFormatoEuropeo(inicio),
-                            if (cronico || fin.isBlank()) null else parseFormatoEuropeo(fin)
+                            parseFechaLocalizada(inicio, formato.ordenFechaMostrada)!!,
+                            if (cronico || fin.isBlank()) null else parseFechaLocalizada(fin, formato.ordenFechaMostrada)!!
                         )
                     } catch (e: Exception) {
-                        error = "Las fechas deben tener el formato DD/MM/AAAA"
+                        error = textoErrorFechas
                     }
                 }
             ) {
-                Text(if (tratamiento == null) "Guardar" else "Guardar cambios")
+                Text(stringResource(if (tratamiento == null) Res.string.accion_guardar else Res.string.hoja_guardar_cambios))
             }
         },
         dismissButton = {
-            TextButton(onClick = onCancelar) { Text("Cancelar") }
+            TextButton(onClick = onCancelar) { Text(stringResource(Res.string.accion_cancelar)) }
         }
     )
 }
@@ -388,8 +507,18 @@ fun FormularioRevision(
     onCancelar: () -> Unit,
     onGuardar: (fecha: LocalDate, motivo: String, diagnostico: String?, notas: String?, veterinario: String?) -> Unit
 ) {
+    val formato = localizacion
+    val fechaHoy = hoyTexto(formato)
+    val textos = textosDelFormulario()
+    val pistaFecha = textos.pistaFecha
+    val textoErrorNombreProducto = textos.errorNombreProducto
+    val textoErrorMedicamento = textos.errorMedicamento
+    val textoErrorMotivo = textos.errorMotivo
+    val textoErrorPeso = textos.errorPeso
+    val textoErrorFecha = textos.errorFecha
+    val textoErrorFechas = textos.errorFechas
     var fecha by rememberSaveable {
-        mutableStateOf(revision?.fecha?.toFormatoEuropeo() ?: hoyTexto())
+        mutableStateOf(revision?.fecha?.let { formato.formatearFecha(it) } ?: fechaHoy)
     }
     var motivo by rememberSaveable { mutableStateOf(revision?.motivo ?: "") }
     var diagnostico by rememberSaveable { mutableStateOf(revision?.diagnostico ?: "") }
@@ -399,41 +528,41 @@ fun FormularioRevision(
 
     AlertDialog(
         onDismissRequest = onCancelar,
-        title = { Text(if (revision == null) "Añadir visita" else "Editar visita") },
+        title = { Text(stringResource(if (revision == null) Res.string.form_anadir_visita else Res.string.form_editar_visita)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 CampoFecha(
                     valor = fecha,
                     onValorCambia = { fecha = it },
-                    etiqueta = "Fecha (DD/MM/AAAA)",
+                    etiqueta = stringResource(Res.string.form_fecha, pistaFecha),
                     modifier = Modifier.fillMaxWidth(),
                     esError = error != null
                 )
                 OutlinedTextField(
                     value = motivo,
                     onValueChange = { motivo = it },
-                    label = { Text("Motivo de la consulta") },
+                    label = { Text(stringResource(Res.string.form_motivo_consulta)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = diagnostico,
                     onValueChange = { diagnostico = it },
-                    label = { Text("Diagnóstico (opcional)") },
+                    label = { Text(stringResource(Res.string.form_diagnostico_opcional)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = veterinario,
                     onValueChange = { veterinario = it },
-                    label = { Text("Veterinario (opcional)") },
+                    label = { Text(stringResource(Res.string.form_veterinario_opcional)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = notas,
                     onValueChange = { notas = it },
-                    label = { Text("Notas de la consulta (opcional)") },
+                    label = { Text(stringResource(Res.string.form_notas_consulta_opcional)) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 3
                 )
@@ -450,27 +579,27 @@ fun FormularioRevision(
             TextButton(
                 onClick = {
                     if (motivo.isBlank()) {
-                        error = "Indica el motivo de la consulta"
+                        error = textoErrorMotivo
                         return@TextButton
                     }
                     try {
                         onGuardar(
-                            parseFormatoEuropeo(fecha),
+                            parseFechaLocalizada(fecha, formato.ordenFechaMostrada)!!,
                             motivo.trim(),
                             diagnostico.ifBlank { null },
                             notas.ifBlank { null },
                             veterinario.ifBlank { null }
                         )
                     } catch (e: Exception) {
-                        error = "La fecha debe tener el formato DD/MM/AAAA"
+                        error = textoErrorFecha
                     }
                 }
             ) {
-                Text(if (revision == null) "Guardar" else "Guardar cambios")
+                Text(stringResource(if (revision == null) Res.string.accion_guardar else Res.string.hoja_guardar_cambios))
             }
         },
         dismissButton = {
-            TextButton(onClick = onCancelar) { Text("Cancelar") }
+            TextButton(onClick = onCancelar) { Text(stringResource(Res.string.accion_cancelar)) }
         }
     )
 }
@@ -491,11 +620,21 @@ fun FormularioPeso(
      */
     onBorrar: (() -> Unit)? = null
 ) {
+    val formato = localizacion
+    val fechaHoy = hoyTexto(formato)
+    val textos = textosDelFormulario()
+    val pistaFecha = textos.pistaFecha
+    val textoErrorNombreProducto = textos.errorNombreProducto
+    val textoErrorMedicamento = textos.errorMedicamento
+    val textoErrorMotivo = textos.errorMotivo
+    val textoErrorPeso = textos.errorPeso
+    val textoErrorFecha = textos.errorFecha
+    val textoErrorFechas = textos.errorFechas
     var fecha by rememberSaveable {
-        mutableStateOf(peso?.fecha?.toFormatoEuropeo() ?: hoyTexto())
+        mutableStateOf(peso?.fecha?.let { formato.formatearFecha(it) } ?: fechaHoy)
     }
     var kilos by rememberSaveable {
-        mutableStateOf(peso?.peso?.let { formatearKilos(it) } ?: "")
+        mutableStateOf(peso?.peso?.let { formato.formatearPeso(it) } ?: "")
     }
     var notas by rememberSaveable { mutableStateOf(peso?.notas ?: "") }
     var error by remember { mutableStateOf<String?>(null) }
@@ -503,27 +642,27 @@ fun FormularioPeso(
 
     AlertDialog(
         onDismissRequest = onCancelar,
-        title = { Text(if (peso == null) "Añadir pesaje" else "Editar pesaje") },
+        title = { Text(stringResource(if (peso == null) Res.string.form_anadir_pesaje else Res.string.form_editar_pesaje)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 CampoFecha(
                     valor = fecha,
                     onValorCambia = { fecha = it },
-                    etiqueta = "Fecha (DD/MM/AAAA)",
+                    etiqueta = stringResource(Res.string.form_fecha, pistaFecha),
                     modifier = Modifier.fillMaxWidth(),
                     esError = error != null
                 )
                 OutlinedTextField(
                     value = kilos,
                     onValueChange = { kilos = it },
-                    label = { Text("Peso en kg (ej: 12,4)") },
+                    label = { Text(stringResource(Res.string.form_peso_kg, formato.unidadPesoSufijo, stringResource(Res.string.form_ejemplo_peso))) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = notas,
                     onValueChange = { notas = it },
-                    label = { Text("Notas (opcional)") },
+                    label = { Text(stringResource(Res.string.form_notas_opcional)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -539,19 +678,23 @@ fun FormularioPeso(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val valor = kilos.trim().replace(',', '.').toDoubleOrNull()
-                    if (valor == null || valor <= 0.0) {
-                        error = "Indica el peso en kilos (por ejemplo 12,4)"
+                    val valorMostrado = parseKilos(kilos)
+                    if (valorMostrado == null || valorMostrado <= 0.0) {
+                        error = textoErrorPeso
                         return@TextButton
                     }
                     try {
-                        onGuardar(parseFormatoEuropeo(fecha), valor, notas.ifBlank { null })
+                        onGuardar(
+                            parseFechaLocalizada(fecha, formato.ordenFechaMostrada)!!,
+                            UnidadPeso.aKilos(valorMostrado, formato.unidadPeso),
+                            notas.ifBlank { null }
+                        )
                     } catch (e: Exception) {
-                        error = "La fecha debe tener el formato DD/MM/AAAA"
+                        error = textoErrorFecha
                     }
                 }
             ) {
-                Text(if (peso == null) "Guardar" else "Guardar cambios")
+                Text(stringResource(if (peso == null) Res.string.accion_guardar else Res.string.hoja_guardar_cambios))
             }
         },
         dismissButton = {
@@ -566,7 +709,7 @@ fun FormularioPeso(
                         Text("Eliminar")
                     }
                 }
-                TextButton(onClick = onCancelar) { Text("Cancelar") }
+                TextButton(onClick = onCancelar) { Text(stringResource(Res.string.accion_cancelar)) }
             }
         }
     )
@@ -574,8 +717,8 @@ fun FormularioPeso(
     if (confirmandoBorrado && onBorrar != null) {
         AlertDialog(
             onDismissRequest = { confirmandoBorrado = false },
-            title = { Text("Eliminar pesaje") },
-            text = { Text("¿Seguro que quieres eliminar este pesaje? Esta acción no se puede deshacer.") },
+            title = { Text(stringResource(Res.string.form_eliminar_pesaje)) },
+            text = { Text(stringResource(Res.string.form_eliminar_pesaje_mensaje)) },
             confirmButton = {
                 TextButton(
                     onClick = {
