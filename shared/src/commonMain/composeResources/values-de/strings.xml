@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Standardtexte (Deutsch).
+
+  ACHTUNG: `values/` ist die RÜCKFALL-Sprache von Compose Multiplatform, nicht "die
+  Basissprache des Codes". Deshalb steht dort Englisch: fordert ein Gerät eine Sprache an, die
+  wir nicht haben, wird das angezeigt, statt die Oberfläche halbfertig zu lassen. Das Spanische,
+  die Ausgangssprache der App, liegt in `values-es/`.
+-->
+<resources>
+    <!-- Haupttabs -->
+    <string name="pestana_mascotas">Tiere</string>
+    <string name="pestana_veterinarios">Tierärzte</string>
+
+    <!-- Tierliste -->
+    <string name="lista_mascotas_vacia">Keine Tiere erfasst</string>
+    <string name="lista_mascotas_vacia_ayuda">Zum Hinzufügen auf + tippen</string>
+    <string name="lista_mascotas_reintentar">Erneut versuchen</string>
+    <string name="lista_peso_ideal">ideal %1$s %2$s</string>
+
+    <!-- Allgemeine Aktionen -->
+    <string name="accion_abrir">Öffnen</string>
+    <string name="accion_editar">Bearbeiten</string>
+    <string name="accion_eliminar">Löschen</string>
+    <string name="accion_cancelar">Abbrechen</string>
+    <string name="accion_guardar">Speichern</string>
+    <string name="accion_anadir">Hinzufügen</string>
+    <string name="accion_cerrar">Schließen</string>
+    <string name="accion_reintentar">Erneut versuchen</string>
+    <string name="accion_aceptar">OK</string>
+
+    <!-- Barrierefreiheit (Screenreader) -->
+    <string name="a11y_agregar_mascota">Tier hinzufügen</string>
+    <string name="a11y_acciones_de">Aktionen für %1$s</string>
+    <string name="a11y_volver">Zurück</string>
+    <string name="a11y_compartir">Teilen</string>
+    <string name="a11y_mas_acciones">Weitere Aktionen</string>
+    <string name="a11y_elegir_calendario">Aus Kalender wählen</string>
+    <string name="a11y_historial_mostrar">Verlauf anzeigen</string>
+    <string name="a11y_historial_ocultar">Verlauf ausblenden</string>
+    <string name="a11y_foto_mascota">Foto des Tieres</string>
+    <string name="a11y_foto_de">Foto von %1$s</string>
+    <string name="a11y_foto_de_cambiar">Foto von %1$s. Zum Ändern tippen</string>
+
+    <!-- Dialog zum Löschen eines Tieres -->
+    <string name="borrar_mascota_titulo">Tier löschen</string>
+    <string name="borrar_mascota_mensaje">%1$s wirklich löschen? Das kann nicht rückgängig gemacht werden.</string>
+    <string name="borrar_mascota_mensaje_sin_nombre">Dieses Tier wirklich löschen? Das kann nicht rückgängig gemacht werden.</string>
+
+    <!-- Karte: Gewichtskarte -->
+    <string name="ficha_peso_actual">Aktuelles Gewicht</string>
+    <string name="ficha_sin_datos">Keine Daten</string>
+
+    <!-- Karte: Blockkarten -->
+    <string name="ficha_tarjeta_vacunas">Impfungen und Prophylaxe</string>
+    <string name="ficha_tarjeta_salud">Gesundheit und Verlauf</string>
+    <string name="ficha_tarjeta_notas">Zu beachten</string>
+    <string name="ficha_tarjeta_notas_detalle">Wichtige Infos zum Tier</string>
+
+    <!-- Status der Dosen, verwendet in den Chips der Karte.
+         ACHTUNG: ohne "%d" darin. `pluralStringResource` wählt die Form nach der Menge,
+         ersetzt aber KEINE Argumente (geprüft), deshalb wird die Zahl im Code separat
+         zusammengesetzt. -->
+    <plurals name="ficha_vencidas">
+        <item quantity="one">überfällig</item>
+        <item quantity="other">überfällig</item>
+    </plurals>
+    <plurals name="ficha_proximas">
+        <item quantity="one">bald fällig</item>
+        <item quantity="other">bald fällig</item>
+    </plurals>
+    <plurals name="ficha_activos">
+        <item quantity="one">aktiv</item>
+        <item quantity="other">aktiv</item>
+    </plurals>
+
+    <!-- Karte: Fotooptionen -->
+    <string name="foto_titulo">Foto von %1$s</string>
+    <string name="foto_hacer">Foto aufnehmen</string>
+    <string name="foto_elegir">Aus meinen Dateien wählen</string>
+    <string name="foto_quitar">Foto entfernen</string>
+
+    <!-- Karte: Aktionsmenü -->
+    <string name="ficha_modificar_datos">Daten ändern</string>
+
+    <!-- Dialog zum PDF-Export -->
+    <string name="exportar_titulo">Tierakte als PDF exportieren</string>
+    <string name="exportar_elegir_version">Version zum Exportieren wählen:</string>
+    <string name="exportar_version_resumida">Kurz</string>
+    <string name="exportar_version_completa">Vollständig</string>
+    <string name="exportar_en_curso">Export läuft…</string>
+    <string name="exportar_ok_abierto">PDF erstellt und erfolgreich geöffnet.</string>
+    <string name="exportar_ok_guardado">PDF erstellt und gespeichert unter: %1$s</string>
+    <string name="exportar_error_guardar">PDF konnte am gewählten Ort nicht gespeichert werden.</string>
+    <string name="exportar_error_generar">Fehler beim Erstellen des PDFs: %1$s</string>
+    <string name="exportar_error_desconocido">unbekannt</string>
+    <string name="exportar_error_no_es_pdf">Der erzeugte Inhalt scheint kein gültiges PDF zu sein (%1$s). Er wurde nicht gespeichert.</string>
+
+    <!--
+      Abgekürzte Monate für die Achse des Diagramms. Sie liegen in Ressourcen und nicht in einer
+      Liste im Code, weil jede Sprache anders abkürzt: "mar" ist im Deutschen nicht März ("Mär").
+    -->
+    <string name="mes_corto_1">Jan</string>
+    <string name="mes_corto_2">Feb</string>
+    <string name="mes_corto_3">Mär</string>
+    <string name="mes_corto_4">Apr</string>
+    <string name="mes_corto_5">Mai</string>
+    <string name="mes_corto_6">Jun</string>
+    <string name="mes_corto_7">Jul</string>
+    <string name="mes_corto_8">Aug</string>
+    <string name="mes_corto_9">Sep</string>
+    <string name="mes_corto_10">Okt</string>
+    <string name="mes_corto_11">Nov</string>
+    <string name="mes_corto_12">Dez</string>
+
+    <!-- Gewichtsblatt -->
+    <string name="hoja_peso_titulo">Gewicht</string>
+    <string name="peso_filtro_todo">Alles</string>
+    <string name="peso_filtro_anio">Jahr</string>
+    <string name="peso_filtro_fechas">Daten wählen</string>
+    <string name="peso_ideal">Idealgewicht</string>
+    <string name="peso_ideal_kg">Idealgewicht (%1$s)</string>
+    <string name="peso_ideal_fijar">Idealgewicht festlegen</string>
+    <string name="peso_ideal_cambiar">Idealgewicht ändern</string>
+    <string name="peso_ideal_quitar">Idealgewicht entfernen</string>
+    <string name="peso_ideal_ayuda">Wird als Referenzlinie im Diagramm gezeichnet. Leer lassen, um sie zu entfernen.</string>
+    <string name="peso_ideal_ejemplo">z. B. 12,4</string>
+    <string name="peso_ideal_indicacion">Gewicht in Kilo angeben (zum Beispiel 12,4)</string>
+    <string name="peso_resumen_sin_datos">Keine Daten</string>
+    <string name="peso_resumen_ideal"> · Ideal: %1$s</string>
+    <string name="peso_sin_pesajes_en_rango">Keine Wägungen in diesem Bereich</string>
+    <string name="peso_historico">Verlauf</string>
+    <string name="peso_historico_vacio">Noch keine Wägungen erfasst</string>
+    <string name="peso_grafico_vacio">Keine Daten für den gewählten Filter</string>
+    <string name="peso_etiqueta_ideal">ideal %1$s</string>
+    <string name="peso_anadir">Wägung hinzufügen</string>
+    <string name="peso_mas_opciones">Weitere Gewichtsoptionen</string>
+    <string name="peso_todavia_no_hay">Noch keine Wägungen</string>
+    <string name="peso_formato_fechas">Datum im Format %1$s eingeben</string>
+    <string name="peso_desde">Von (%1$s)</string>
+    <string name="peso_hasta">Bis (%1$s)</string>
+    <plurals name="peso_en_grafico">
+        <item quantity="one">Wägung im Diagramm</item>
+        <item quantity="other">Wägungen im Diagramm</item>
+    </plurals>
+    <plurals name="peso_contador">
+        <item quantity="one">Wägung</item>
+        <item quantity="other">Wägungen</item>
+    </plurals>
+
+    <!-- Status einer offenen Dosis (Impfung oder Prophylaxe) -->
+    <string name="estado_vencida">Überfällig</string>
+    <string name="estado_vence_pronto">Bald fällig</string>
+    <string name="estado_al_dia">Aktuell</string>
+
+    <!-- Blätter der Karte: Titel und Tabs -->
+    <string name="hoja_vacunas_titulo">Impfungen und Prophylaxe</string>
+    <string name="hoja_vacunas_pestana">Impfungen (%1$d)</string>
+    <string name="hoja_preventivos_pestana">Prophylaxe (%1$d)</string>
+    <string name="hoja_salud_titulo">Gesundheit und Verlauf</string>
+    <string name="hoja_salud_tratamientos">Behandlungen</string>
+    <string name="hoja_salud_informes">Berichte</string>
+    <string name="hoja_salud_visitas">Besuche</string>
+    <string name="hoja_notas_titulo">Zu beachten</string>
+
+    <!-- Blätter der Karte: Listen -->
+    <string name="hoja_sin_vacunas">Keine Impfungen erfasst</string>
+    <string name="hoja_sin_preventivos">Keine Prophylaxe erfasst</string>
+    <string name="hoja_sin_tratamientos">Keine aktiven Behandlungen</string>
+    <string name="hoja_sin_informes">Keine Berichte angehängt</string>
+    <string name="hoja_sin_visitas">Keine Besuche erfasst</string>
+    <string name="hoja_sin_notas">Keine Notizen erfasst</string>
+    <string name="hoja_activos">Aktiv (%1$d)</string>
+    <string name="hoja_informes_titulo">Berichte (%1$d)</string>
+    <string name="hoja_visitas_titulo">Besuche (%1$d)</string>
+    <string name="hoja_historial_ver">Verlauf anzeigen (%1$d)</string>
+    <string name="hoja_historial_ocultar">Verlauf ausblenden (%1$d)</string>
+    <string name="hoja_informe_error_abrir">Berichtsdatei konnte nicht geöffnet werden</string>
+
+    <!-- Blätter der Karte: Aktionen -->
+    <string name="hoja_anadir_vacuna">Impfung hinzufügen</string>
+    <string name="hoja_anadir_preventivo">Prophylaxe hinzufügen</string>
+    <string name="hoja_anadir_tratamiento">Behandlung hinzufügen</string>
+    <string name="hoja_anadir_informe">Bericht hinzufügen</string>
+    <string name="hoja_anadir_visita">Besuch hinzufügen</string>
+    <string name="hoja_anadir_nota">Notiz hinzufügen</string>
+    <string name="hoja_guardar_cambios">Änderungen speichern</string>
+    <string name="hoja_cancelar_edicion">Bearbeitung abbrechen</string>
+    <string name="hoja_anadir_calendario">Zum Kalender hinzufügen</string>
+
+    <!-- Blätter der Karte: Details der einzelnen Einträge -->
+    <string name="hoja_proxima_dosis">Nächste Dosis: %1$s</string>
+    <string name="hoja_tratamiento_cronico">Chronisch · seit %1$s</string>
+    <string name="hoja_tratamiento_hasta">Bis %1$s</string>
+    <string name="hoja_tratamiento_finalizado">Beendet: %1$s</string>
+    <string name="hoja_sin_fecha">ohne Datum</string>
+
+    <!-- Notizen: Felder -->
+    <string name="hoja_nota_nueva">Neue Notiz</string>
+    <string name="hoja_nota_editando">Notiz bearbeiten</string>
+
+    <!-- Erinnerungen, die im Kalender des Telefons angelegt werden.
+         Sie bestehen aus zwei Teilen (Präfix + Suffix) statt aus "%1$s": der Name des Tieres
+         wird spontan ergänzt und der fertige Text kann nicht angefordert werden, weil das
+         Ereignis in einem Lambda zusammengesetzt wird, das nicht composable ist. -->
+    <string name="calendario_vacuna_titulo">Impfung: </string>
+    <string name="calendario_vacuna_descripcion">Erinnerung: Impfung geben </string>
+    <string name="calendario_vacuna_descripcion_fin"> an </string>
+    <string name="calendario_preventivo_titulo">Prophylaxe: </string>
+    <string name="calendario_preventivo_descripcion">Erinnerung: auftragen </string>
+    <string name="calendario_preventivo_descripcion_fin"> an </string>
+
+    <!-- Formulare zum Anlegen und Bearbeiten in den Blättern -->
+    <string name="form_anadir_vacuna">Impfung hinzufügen</string>
+    <string name="form_editar_vacuna">Impfung bearbeiten</string>
+    <string name="form_anadir_preventivo">Prophylaxe hinzufügen</string>
+    <string name="form_editar_preventivo">Prophylaxe bearbeiten</string>
+    <string name="form_anadir_tratamiento">Behandlung hinzufügen</string>
+    <string name="form_editar_tratamiento">Behandlung bearbeiten</string>
+    <string name="form_anadir_visita">Besuch hinzufügen</string>
+    <string name="form_editar_visita">Besuch bearbeiten</string>
+    <string name="form_anadir_pesaje">Wägung hinzufügen</string>
+    <string name="form_editar_pesaje">Wägung bearbeiten</string>
+
+    <string name="form_nombre_vacuna">Name der Impfung</string>
+    <string name="form_fecha_aplicacion">Gabe am (%1$s)</string>
+    <string name="form_proxima_dosis">Nächste Dosis (%1$s)</string>
+    <string name="form_veterinario_opcional">Tierarzt (optional)</string>
+    <string name="form_lote_opcional">Charge (optional)</string>
+    <string name="form_nombre_producto">Produktname</string>
+    <string name="form_tipo_preventivo">Typ</string>
+
+    <string name="form_medicamento">Medikament</string>
+    <string name="form_dosis">Dosis (z. B. ½ Tablette)</string>
+    <string name="form_frecuencia">Häufigkeit (z. B. alle 24h)</string>
+    <string name="form_fecha_inicio">Startdatum (%1$s)</string>
+    <string name="form_fecha_fin">Enddatum (%1$s)</string>
+    <string name="form_cronico">Chronisch</string>
+    <string name="form_con_fecha_fin">Mit Enddatum</string>
+
+    <string name="form_motivo_consulta">Grund des Besuchs</string>
+    <string name="form_diagnostico_opcional">Diagnose (optional)</string>
+    <string name="form_notas_consulta_opcional">Notizen zum Besuch (optional)</string>
+
+    <string name="form_fecha">Datum (%1$s)</string>
+    <string name="form_campo_tipo">Typ</string>
+    <string name="form_peso_kg">Gewicht in %1$s (z. B. %2$s)</string>
+    <string name="form_notas_opcional">Notizen (optional)</string>
+    <string name="form_ejemplo_peso">12,4</string>
+
+    <string name="form_error_nombre_vacuna">Name der Impfung angeben</string>
+    <string name="form_error_nombre_producto">Produktnamen angeben</string>
+    <string name="form_error_medicamento">Medikament angeben</string>
+    <string name="form_error_motivo">Grund des Besuchs angeben</string>
+    <string name="form_error_peso">Gewicht in %1$s angeben (zum Beispiel %2$s)</string>
+    <string name="form_error_fecha">Das Datum muss das Format %1$s haben</string>
+    <string name="form_error_fechas">Die Daten müssen das Format %1$s haben</string>
+
+    <string name="form_eliminar_pesaje">Wägung löschen</string>
+    <string name="form_eliminar_pesaje_mensaje">Diese Wägung wirklich löschen? Das kann nicht rückgängig gemacht werden.</string>
+
+    <!-- Formular für Tiere -->
+    <string name="mascota_nueva">Neues Tier</string>
+    <string name="mascota_editar">Tier bearbeiten</string>
+    <string name="mascota_guardar">Tier speichern</string>
+    <string name="mascota_actualizar">Tier aktualisieren</string>
+    <string name="mascota_campo_nombre">Name *</string>
+    <string name="mascota_campo_especie">Art *</string>
+    <string name="mascota_campo_raza">Rasse *</string>
+    <string name="mascota_campo_sexo">Geschlecht *</string>
+    <string name="mascota_campo_color">Farbe *</string>
+    <string name="mascota_campo_microchip">Mikrochip (optional)</string>
+    <string name="mascota_campo_peso_ideal">Idealgewicht (%1$s, optional)</string>
+    <string name="mascota_campo_fecha_nacimiento">Geburtsdatum (%1$s) *</string>
+    <string name="mascota_especifica_especie_raza">Art und Rasse angeben *</string>
+    <string name="mascota_especifica_raza">Rasse angeben *</string>
+    <string name="mascota_cambiar_foto">Foto ändern</string>
+    <string name="mascota_anadir_foto">Foto hinzufügen (optional)</string>
+    <string name="mascota_foto_titulo">Foto des Tieres</string>
+    <string name="mascota_completar_campos">Alle Pflichtfelder ausfüllen</string>
+    <string name="mascota_error_fecha">Das Datum muss das Format %1$s haben</string>
+
+    <!-- Liste der Tierärzte -->
+    <string name="vet_anadir">Tierarzt hinzufügen</string>
+    <string name="vet_vacio">Keine Tierärzte erfasst</string>
+    <string name="vet_vacio_ayuda">Zum Hinzufügen auf + tippen</string>
+    <string name="vet_urgencias_titulo">Notfälle 24h</string>
+    <string name="vet_todos_titulo">Alle Tierärzte</string>
+    <string name="vet_cercanos">Tierärzte in der Nähe</string>
+    <string name="vet_buscar_cercanos">Tierärzte in meiner Nähe</string>
+    <string name="vet_llamar_urgencias">Notdienst anrufen</string>
+    <string name="vet_borrar_titulo">Löschen bestätigen</string>
+    <string name="vet_borrar_mensaje">Diesen Tierarzt wirklich löschen? Das kann nicht rückgängig gemacht werden.</string>
+
+    <!-- Formular für Tierärzte -->
+    <string name="vet_nuevo">Neuer Tierarzt</string>
+    <string name="vet_editar">Tierarzt bearbeiten</string>
+    <string name="vet_guardar">Tierarzt speichern</string>
+    <string name="vet_actualizar">Tierarzt aktualisieren</string>
+    <string name="vet_campo_clinica">Name der Praxis *</string>
+    <string name="vet_campo_veterinario">Name des Tierarztes (optional)</string>
+    <string name="vet_campo_telefono">Telefon *</string>
+    <string name="vet_campo_direccion">Adresse *</string>
+    <string name="vet_campo_urgencias">Dieser Tierarzt macht 24h-Notdienst</string>
+
+    <!-- Barrierefreiheit der Tierarztkarten -->
+    <string name="a11y_llamar">Anrufen</string>
+    <string name="a11y_mapa">Karte</string>
+
+    <!-- Formular für Berichte -->
+    <string name="informe_anadir">Bericht hinzufügen</string>
+    <string name="informe_editar">Bericht bearbeiten</string>
+    <string name="informe_campo_tipo">Typ (z. B. Blutbild, Röntgen)</string>
+    <string name="informe_campo_descripcion">Beschreibung (optional)</string>
+    <string name="informe_seleccionar_archivo">Datei wählen</string>
+    <string name="informe_cambiar_archivo">Datei ändern</string>
+    <string name="informe_archivo_elegido">Gewählte Datei: %1$s</string>
+    <string name="informe_archivo">Datei: %1$s</string>
+    <string name="informe_guardar_cambios">Änderungen speichern</string>
+
+    <!-- Fehlermeldungen der Datenschicht (löst das ViewModel auf) -->
+    <string name="error_cargar_mascotas">Fehler beim Laden der Tiere: %1$s</string>
+    <string name="error_cargar_veterinarios">Fehler beim Laden der Tierärzte: %1$s</string>
+    <string name="error_borrar_mascota">Fehler beim Löschen des Tieres: %1$s</string>
+    <string name="error_borrar_veterinario">Fehler beim Löschen des Tierarztes: %1$s</string>
+    <string name="error_guardar_foto">Foto konnte nicht gespeichert werden: %1$s</string>
+    <string name="error_guardar_foto_corto">Foto konnte nicht gespeichert werden</string>
+    <string name="error_guardar_peso_ideal">Idealgewicht konnte nicht gespeichert werden: %1$s</string>
+    <string name="error_guardar_peso_ideal_corto">Idealgewicht konnte nicht gespeichert werden</string>
+    <string name="error_nombre_duplicado">Ein Tier mit diesem Namen existiert bereits</string>
+    <string name="error_id_requerido">Zum Aktualisieren ist eine ID nötig</string>
+    <string name="error_desconocido">Unbekannter Fehler</string>
+
+    <!-- Beschriftungen des exportierten PDFs (werden außerhalb der Komposition mit getString erzeugt) -->
+    <string name="pdf_ficha_de">Akte von %1$s</string>
+    <string name="pdf_resumen_cuidador">Zusammenfassung für Betreuung</string>
+    <string name="pdf_ficha_veterinaria">Tierärztliche Akte</string>
+    <string name="pdf_nombre">Name</string>
+    <string name="pdf_especie">Art</string>
+    <string name="pdf_raza">Rasse</string>
+    <string name="pdf_sexo">Geschlecht</string>
+    <string name="pdf_edad">Alter</string>
+    <string name="pdf_fecha_nacimiento">Geburtsdatum</string>
+    <string name="pdf_microchip">Mikrochip</string>
+    <string name="pdf_peso_actual">Aktuelles Gewicht</string>
+    <string name="pdf_vacunas_proximas">Nächste Impfungen</string>
+    <string name="pdf_no_vacunas_proximas">Keine nächsten Impfungen geplant</string>
+    <string name="pdf_vacuna">Impfstoff</string>
+    <string name="pdf_proxima_dosis">Nächste Dosis</string>
+    <string name="pdf_tratamientos_activos">Aktive Behandlungen</string>
+    <string name="pdf_no_tratamientos_activos">Keine aktiven Behandlungen</string>
+    <string name="pdf_medicamento">Medikament</string>
+    <string name="pdf_frecuencia">Häufigkeit</string>
+    <string name="pdf_resumen_general">Gesamtübersicht</string>
+    <string name="pdf_ultimo_peso">Letztes Gewicht</string>
+    <string name="pdf_fecha_reporte">Datum des Berichts</string>
+    <string name="pdf_a_tener_en_cuenta">Zu beachten</string>
+    <string name="pdf_nota">Notiz</string>
+    <string name="pdf_vacunas">Impfungen</string>
+    <string name="pdf_aplicada">Gegeben</string>
+    <string name="pdf_proxima">Nächste</string>
+    <string name="pdf_revisiones">Tierärztliche Untersuchungen</string>
+    <string name="pdf_fecha">Datum</string>
+    <string name="pdf_motivo">Grund</string>
+    <string name="pdf_diagnostico">Diagnose</string>
+    <string name="pdf_inicio">Beginn</string>
+    <string name="pdf_fin">Ende</string>
+    <string name="pdf_informes_notas">Berichte und Notizen</string>
+    <string name="pdf_tipo">Typ</string>
+    <string name="pdf_descripcion">Beschreibung</string>
+    <string name="pdf_generado_el">Erstellt am %1$s</string>
+</resources>

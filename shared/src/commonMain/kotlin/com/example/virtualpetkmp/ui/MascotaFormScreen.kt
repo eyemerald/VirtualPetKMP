@@ -69,7 +69,12 @@ fun MascotaFormScreen(
     // Textos de error resueltos fuera del onClick: dentro no hay contexto composable.
     val textoCamposObligatorios = stringResource(Res.string.mascota_completar_campos)
     val textoErrorFecha = stringResource(Res.string.mascota_error_fecha, pistaFecha)
-    val textoErrorPeso = stringResource(Res.string.form_error_peso)
+    // La unidad se pasa al texto: el aviso tiene que hablar de kg o de lb según la región.
+    val textoErrorPeso = stringResource(
+        Res.string.form_error_peso,
+        formato.unidadPesoSufijo,
+        stringResource(Res.string.form_ejemplo_peso)
+    )
 
     var nombre by rememberSaveable { mutableStateOf("") }
 

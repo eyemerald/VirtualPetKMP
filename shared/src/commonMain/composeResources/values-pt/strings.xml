@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Português: tradução do catálogo de textos da aplicação.
+
+  ATENÇÃO: `values/` é o idioma de RESERVA do Compose Multiplatform, não "o idioma base do
+  código". Por isso ali fica o inglês: se o dispositivo pedir um idioma que não temos,
+  mostra-se esse texto em vez de deixar a interface a meio. O espanhol, que é o idioma de
+  origem da app, vive em `values-es/`.
+-->
+<resources>
+    <!-- Separadores principais -->
+    <string name="pestana_mascotas">Animais</string>
+    <string name="pestana_veterinarios">Veterinários</string>
+
+    <!-- Lista de animais -->
+    <string name="lista_mascotas_vacia">Nenhum animal registado</string>
+    <string name="lista_mascotas_vacia_ayuda">Toca no botão + para adicionar um</string>
+    <string name="lista_mascotas_reintentar">Tentar de novo</string>
+    <string name="lista_peso_ideal">ideal %1$s %2$s</string>
+
+    <!-- Ações genéricas -->
+    <string name="accion_abrir">Abrir</string>
+    <string name="accion_editar">Editar</string>
+    <string name="accion_eliminar">Eliminar</string>
+    <string name="accion_cancelar">Cancelar</string>
+    <string name="accion_guardar">Guardar</string>
+    <string name="accion_anadir">Adicionar</string>
+    <string name="accion_cerrar">Fechar</string>
+    <string name="accion_reintentar">Tentar de novo</string>
+    <string name="accion_aceptar">Aceitar</string>
+
+    <!-- Acessibilidade (leitores de ecrã) -->
+    <string name="a11y_agregar_mascota">Adicionar animal</string>
+    <string name="a11y_acciones_de">Ações de %1$s</string>
+    <string name="a11y_volver">Voltar</string>
+    <string name="a11y_compartir">Partilhar</string>
+    <string name="a11y_mas_acciones">Mais ações</string>
+    <string name="a11y_elegir_calendario">Escolher do calendário</string>
+    <string name="a11y_historial_mostrar">Mostrar histórico</string>
+    <string name="a11y_historial_ocultar">Ocultar histórico</string>
+    <string name="a11y_foto_mascota">Foto do animal</string>
+    <string name="a11y_foto_de">Foto de %1$s</string>
+    <string name="a11y_foto_de_cambiar">Foto de %1$s. Toca para alterar</string>
+
+    <!-- Diálogo de eliminação de animal -->
+    <string name="borrar_mascota_titulo">Eliminar animal</string>
+    <string name="borrar_mascota_mensaje">Eliminar %1$s? Esta ação não pode ser anulada.</string>
+    <string name="borrar_mascota_mensaje_sin_nombre">Eliminar este animal? Esta ação não pode ser anulada.</string>
+
+    <!-- Ficha: cartão de peso -->
+    <string name="ficha_peso_actual">Peso atual</string>
+    <string name="ficha_sin_datos">Sem dados</string>
+
+    <!-- Ficha: cartões de bloco -->
+    <string name="ficha_tarjeta_vacunas">Vacinas e preventivos</string>
+    <string name="ficha_tarjeta_salud">Saúde e acompanhamento</string>
+    <string name="ficha_tarjeta_notas">A ter em conta</string>
+    <string name="ficha_tarjeta_notas_detalle">Informação importante do animal</string>
+
+    <!-- Estados das doses, usados nas etiquetas da ficha.
+         ATENÇÃO: sem "%d" dentro. `pluralStringResource` escolhe a forma pela quantidade mas
+         NÃO substitui argumentos (comprovado), por isso o número é composto à parte no código. -->
+    <plurals name="ficha_vencidas">
+        <item quantity="one">em atraso</item>
+        <item quantity="other">em atraso</item>
+    </plurals>
+    <plurals name="ficha_proximas">
+        <item quantity="one">a vencer</item>
+        <item quantity="other">a vencer</item>
+    </plurals>
+    <plurals name="ficha_activos">
+        <item quantity="one">ativo</item>
+        <item quantity="other">ativos</item>
+    </plurals>
+
+    <!-- Ficha: opções de foto -->
+    <string name="foto_titulo">Foto de %1$s</string>
+    <string name="foto_hacer">Tirar uma foto</string>
+    <string name="foto_elegir">Escolher dos meus ficheiros</string>
+    <string name="foto_quitar">Remover a foto</string>
+
+    <!-- Ficha: menu de ações -->
+    <string name="ficha_modificar_datos">Editar dados</string>
+
+    <!-- Diálogo de exportação para PDF -->
+    <string name="exportar_titulo">Exportar ficha do animal em PDF</string>
+    <string name="exportar_elegir_version">Escolhe a versão que queres exportar:</string>
+    <string name="exportar_version_resumida">Resumida</string>
+    <string name="exportar_version_completa">Completa</string>
+    <string name="exportar_en_curso">A exportar…</string>
+    <string name="exportar_ok_abierto">PDF criado e aberto com êxito.</string>
+    <string name="exportar_ok_guardado">PDF criado e guardado em: %1$s</string>
+    <string name="exportar_error_guardar">Não foi possível guardar o PDF no local escolhido.</string>
+    <string name="exportar_error_generar">Erro ao criar o PDF: %1$s</string>
+    <string name="exportar_error_desconocido">desconhecido</string>
+    <string name="exportar_error_no_es_pdf">O conteúdo criado não parece um PDF válido (%1$s). Não foi guardado.</string>
+
+    <!--
+      Meses abreviados para o eixo do gráfico. Ficam nos recursos e não numa lista do código
+      porque cada idioma abrevia à sua maneira: "mar" não é março em alemão ("Mär").
+    -->
+    <string name="mes_corto_1">jan</string>
+    <string name="mes_corto_2">fev</string>
+    <string name="mes_corto_3">mar</string>
+    <string name="mes_corto_4">abr</string>
+    <string name="mes_corto_5">mai</string>
+    <string name="mes_corto_6">jun</string>
+    <string name="mes_corto_7">jul</string>
+    <string name="mes_corto_8">ago</string>
+    <string name="mes_corto_9">set</string>
+    <string name="mes_corto_10">out</string>
+    <string name="mes_corto_11">nov</string>
+    <string name="mes_corto_12">dez</string>
+
+    <!-- Ficha de peso -->
+    <string name="hoja_peso_titulo">Peso</string>
+    <string name="peso_filtro_todo">Tudo</string>
+    <string name="peso_filtro_anio">Ano</string>
+    <string name="peso_filtro_fechas">Escolher datas</string>
+    <string name="peso_ideal">Peso ideal</string>
+    <string name="peso_ideal_kg">Peso ideal (%1$s)</string>
+    <string name="peso_ideal_fijar">Definir peso ideal</string>
+    <string name="peso_ideal_cambiar">Alterar peso ideal</string>
+    <string name="peso_ideal_quitar">Remover peso ideal</string>
+    <string name="peso_ideal_ayuda">Será desenhado como linha de referência no gráfico. Deixa-o vazio para o remover.</string>
+    <string name="peso_ideal_ejemplo">Ex.: 12,4</string>
+    <string name="peso_ideal_indicacion">Indica o peso em quilos (por exemplo 12,4)</string>
+    <string name="peso_resumen_sin_datos">Sem dados</string>
+    <string name="peso_resumen_ideal"> · Ideal: %1$s</string>
+    <string name="peso_sin_pesajes_en_rango">Não há pesagens neste intervalo</string>
+    <string name="peso_historico">Histórico</string>
+    <string name="peso_historico_vacio">Ainda não há pesagens registadas</string>
+    <string name="peso_grafico_vacio">Sem dados para o filtro escolhido</string>
+    <string name="peso_etiqueta_ideal">ideal %1$s</string>
+    <string name="peso_anadir">Adicionar pesagem</string>
+    <string name="peso_mas_opciones">Mais opções de peso</string>
+    <string name="peso_todavia_no_hay">Ainda não há pesagens</string>
+    <string name="peso_formato_fechas">Usa o formato %1$s nas datas</string>
+    <string name="peso_desde">Desde (%1$s)</string>
+    <string name="peso_hasta">Até (%1$s)</string>
+    <plurals name="peso_en_grafico">
+        <item quantity="one">pesagem no gráfico</item>
+        <item quantity="other">pesagens no gráfico</item>
+    </plurals>
+    <plurals name="peso_contador">
+        <item quantity="one">pesagem</item>
+        <item quantity="other">pesagens</item>
+    </plurals>
+
+    <!-- Estado de uma dose pendente (vacina ou preventivo) -->
+    <string name="estado_vencida">Em atraso</string>
+    <string name="estado_vence_pronto">A vencer</string>
+    <string name="estado_al_dia">Em dia</string>
+
+    <!-- Fichas: títulos e separadores -->
+    <string name="hoja_vacunas_titulo">Vacinas e preventivos</string>
+    <string name="hoja_vacunas_pestana">Vacinas (%1$d)</string>
+    <string name="hoja_preventivos_pestana">Preventivos (%1$d)</string>
+    <string name="hoja_salud_titulo">Saúde e acompanhamento</string>
+    <string name="hoja_salud_tratamientos">Tratamentos</string>
+    <string name="hoja_salud_informes">Relatórios</string>
+    <string name="hoja_salud_visitas">Consultas</string>
+    <string name="hoja_notas_titulo">A ter em conta</string>
+
+    <!-- Fichas: listas -->
+    <string name="hoja_sin_vacunas">Sem vacinas registadas</string>
+    <string name="hoja_sin_preventivos">Sem preventivos registados</string>
+    <string name="hoja_sin_tratamientos">Sem tratamentos ativos</string>
+    <string name="hoja_sin_informes">Sem relatórios anexados</string>
+    <string name="hoja_sin_visitas">Sem consultas registadas</string>
+    <string name="hoja_sin_notas">Sem notas registadas</string>
+    <string name="hoja_activos">Ativos (%1$d)</string>
+    <string name="hoja_informes_titulo">Relatórios (%1$d)</string>
+    <string name="hoja_visitas_titulo">Consultas (%1$d)</string>
+    <string name="hoja_historial_ver">Ver histórico (%1$d)</string>
+    <string name="hoja_historial_ocultar">Ocultar histórico (%1$d)</string>
+    <string name="hoja_informe_error_abrir">Não foi possível abrir o ficheiro do relatório</string>
+
+    <!-- Fichas: ações -->
+    <string name="hoja_anadir_vacuna">Adicionar vacina</string>
+    <string name="hoja_anadir_preventivo">Adicionar preventivo</string>
+    <string name="hoja_anadir_tratamiento">Adicionar tratamento</string>
+    <string name="hoja_anadir_informe">Adicionar relatório</string>
+    <string name="hoja_anadir_visita">Adicionar consulta</string>
+    <string name="hoja_anadir_nota">Adicionar nota</string>
+    <string name="hoja_guardar_cambios">Guardar alterações</string>
+    <string name="hoja_cancelar_edicion">Cancelar edição</string>
+    <string name="hoja_anadir_calendario">Adicionar ao calendário</string>
+
+    <!-- Fichas: detalhes de cada registo -->
+    <string name="hoja_proxima_dosis">Próxima dose: %1$s</string>
+    <string name="hoja_tratamiento_cronico">Crónico · desde %1$s</string>
+    <string name="hoja_tratamiento_hasta">Até %1$s</string>
+    <string name="hoja_tratamiento_finalizado">Concluído: %1$s</string>
+    <string name="hoja_sin_fecha">sem data</string>
+
+    <!-- Notas: campos -->
+    <string name="hoja_nota_nueva">Nova nota</string>
+    <string name="hoja_nota_editando">A editar nota</string>
+
+    <!-- Lembretes que são adicionados ao calendário do telefone.
+         Ficam em dois troços (prefixo + sufixo) em vez de usar "%1$s": o nome do animal é
+         adicionado em tempo de execução e não se pode pedir o texto já montado porque o evento
+         é composto dentro de um lambda que não é composable. -->
+    <string name="calendario_vacuna_titulo">Vacina: </string>
+    <string name="calendario_vacuna_descripcion">Lembra-te de dar a vacina </string>
+    <string name="calendario_vacuna_descripcion_fin"> a </string>
+    <string name="calendario_preventivo_titulo">Preventivo: </string>
+    <string name="calendario_preventivo_descripcion">Lembra-te de aplicar </string>
+    <string name="calendario_preventivo_descripcion_fin"> a </string>
+
+    <!-- Formulários de criação e edição dentro das fichas -->
+    <string name="form_anadir_vacuna">Adicionar vacina</string>
+    <string name="form_editar_vacuna">Editar vacina</string>
+    <string name="form_anadir_preventivo">Adicionar preventivo</string>
+    <string name="form_editar_preventivo">Editar preventivo</string>
+    <string name="form_anadir_tratamiento">Adicionar tratamento</string>
+    <string name="form_editar_tratamiento">Editar tratamento</string>
+    <string name="form_anadir_visita">Adicionar consulta</string>
+    <string name="form_editar_visita">Editar consulta</string>
+    <string name="form_anadir_pesaje">Adicionar pesagem</string>
+    <string name="form_editar_pesaje">Editar pesagem</string>
+
+    <string name="form_nombre_vacuna">Nome da vacina</string>
+    <string name="form_fecha_aplicacion">Data de aplicação (%1$s)</string>
+    <string name="form_proxima_dosis">Próxima dose (%1$s)</string>
+    <string name="form_veterinario_opcional">Veterinário (opcional)</string>
+    <string name="form_lote_opcional">Lote (opcional)</string>
+    <string name="form_nombre_producto">Nome do produto</string>
+    <string name="form_tipo_preventivo">Tipo</string>
+
+    <string name="form_medicamento">Medicamento</string>
+    <string name="form_dosis">Dose (ex.: ½ comprimido)</string>
+    <string name="form_frecuencia">Frequência (ex.: a cada 24h)</string>
+    <string name="form_fecha_inicio">Data de início (%1$s)</string>
+    <string name="form_fecha_fin">Data de fim (%1$s)</string>
+    <string name="form_cronico">Crónico</string>
+    <string name="form_con_fecha_fin">Com data de fim</string>
+
+    <string name="form_motivo_consulta">Motivo da consulta</string>
+    <string name="form_diagnostico_opcional">Diagnóstico (opcional)</string>
+    <string name="form_notas_consulta_opcional">Notas da consulta (opcional)</string>
+
+    <string name="form_fecha">Data (%1$s)</string>
+    <string name="form_campo_tipo">Tipo</string>
+    <string name="form_peso_kg">Peso em %1$s (ex.: %2$s)</string>
+    <string name="form_notas_opcional">Notas (opcional)</string>
+    <string name="form_ejemplo_peso">12,4</string>
+
+    <string name="form_error_nombre_vacuna">Indica o nome da vacina</string>
+    <string name="form_error_nombre_producto">Indica o nome do produto</string>
+    <string name="form_error_medicamento">Indica o medicamento</string>
+    <string name="form_error_motivo">Indica o motivo da consulta</string>
+    <string name="form_error_peso">Indica o peso em %1$s (por exemplo %2$s)</string>
+    <string name="form_error_fecha">A data deve ter o formato %1$s</string>
+    <string name="form_error_fechas">As datas devem ter o formato %1$s</string>
+
+    <string name="form_eliminar_pesaje">Eliminar pesagem</string>
+    <string name="form_eliminar_pesaje_mensaje">Eliminar esta pesagem? Esta ação não pode ser anulada.</string>
+
+    <!-- Formulário de animal -->
+    <string name="mascota_nueva">Novo animal</string>
+    <string name="mascota_editar">Editar animal</string>
+    <string name="mascota_guardar">Guardar animal</string>
+    <string name="mascota_actualizar">Atualizar animal</string>
+    <string name="mascota_campo_nombre">Nome *</string>
+    <string name="mascota_campo_especie">Espécie *</string>
+    <string name="mascota_campo_raza">Raça *</string>
+    <string name="mascota_campo_sexo">Sexo *</string>
+    <string name="mascota_campo_color">Cor *</string>
+    <string name="mascota_campo_microchip">Microchip (opcional)</string>
+    <string name="mascota_campo_peso_ideal">Peso ideal (%1$s, opcional)</string>
+    <string name="mascota_campo_fecha_nacimiento">Data de nascimento (%1$s) *</string>
+    <string name="mascota_especifica_especie_raza">Especifica a espécie e a raça *</string>
+    <string name="mascota_especifica_raza">Especifica a raça *</string>
+    <string name="mascota_cambiar_foto">Alterar foto</string>
+    <string name="mascota_anadir_foto">Adicionar foto (opcional)</string>
+    <string name="mascota_foto_titulo">Foto do animal</string>
+    <string name="mascota_completar_campos">Preenche todos os campos obrigatórios</string>
+    <string name="mascota_error_fecha">A data deve ter o formato %1$s</string>
+
+    <!-- Lista de veterinários -->
+    <string name="vet_anadir">Adicionar veterinário</string>
+    <string name="vet_vacio">Nenhum veterinário registado</string>
+    <string name="vet_vacio_ayuda">Toca no botão + para adicionar um</string>
+    <string name="vet_urgencias_titulo">Urgências 24h</string>
+    <string name="vet_todos_titulo">Todos os veterinários</string>
+    <string name="vet_cercanos">Veterinários próximos</string>
+    <string name="vet_buscar_cercanos">veterinários perto de mim</string>
+    <string name="vet_llamar_urgencias">Ligar às urgências</string>
+    <string name="vet_borrar_titulo">Confirmar eliminação</string>
+    <string name="vet_borrar_mensaje">Eliminar este veterinário? Esta ação não pode ser anulada.</string>
+
+    <!-- Formulário de veterinário -->
+    <string name="vet_nuevo">Novo veterinário</string>
+    <string name="vet_editar">Editar veterinário</string>
+    <string name="vet_guardar">Guardar veterinário</string>
+    <string name="vet_actualizar">Atualizar veterinário</string>
+    <string name="vet_campo_clinica">Nome da clínica *</string>
+    <string name="vet_campo_veterinario">Nome do veterinário (opcional)</string>
+    <string name="vet_campo_telefono">Telefone *</string>
+    <string name="vet_campo_direccion">Morada *</string>
+    <string name="vet_campo_urgencias">Este veterinário faz urgências 24h</string>
+
+    <!-- Acessibilidade dos cartões de veterinário -->
+    <string name="a11y_llamar">Ligar</string>
+    <string name="a11y_mapa">Mapa</string>
+
+    <!-- Formulário de relatório -->
+    <string name="informe_anadir">Adicionar relatório</string>
+    <string name="informe_editar">Editar relatório</string>
+    <string name="informe_campo_tipo">Tipo (ex.: análises, radiografia)</string>
+    <string name="informe_campo_descripcion">Descrição (opcional)</string>
+    <string name="informe_seleccionar_archivo">Selecionar ficheiro</string>
+    <string name="informe_cambiar_archivo">Alterar ficheiro</string>
+    <string name="informe_archivo_elegido">Ficheiro escolhido: %1$s</string>
+    <string name="informe_archivo">Ficheiro: %1$s</string>
+    <string name="informe_guardar_cambios">Guardar alterações</string>
+
+    <!-- Mensagens de erro da camada de dados (resolve-as o ViewModel) -->
+    <string name="error_cargar_mascotas">Erro ao carregar animais: %1$s</string>
+    <string name="error_cargar_veterinarios">Erro ao carregar veterinários: %1$s</string>
+    <string name="error_borrar_mascota">Erro ao eliminar animal: %1$s</string>
+    <string name="error_borrar_veterinario">Erro ao eliminar veterinário: %1$s</string>
+    <string name="error_guardar_foto">Não foi possível guardar a foto: %1$s</string>
+    <string name="error_guardar_foto_corto">Não foi possível guardar a foto</string>
+    <string name="error_guardar_peso_ideal">Não foi possível guardar o peso ideal: %1$s</string>
+    <string name="error_guardar_peso_ideal_corto">Não foi possível guardar o peso ideal</string>
+    <string name="error_nombre_duplicado">Já existe um animal com esse nome</string>
+    <string name="error_id_requerido">É necessário um id para atualizar</string>
+    <string name="error_desconocido">Erro desconhecido</string>
+
+    <!-- Etiquetas do PDF exportado (são geradas fora da composição, com getString) -->
+    <string name="pdf_ficha_de">Ficha de %1$s</string>
+    <string name="pdf_resumen_cuidador">Resumo para o cuidador</string>
+    <string name="pdf_ficha_veterinaria">Ficha veterinária</string>
+    <string name="pdf_nombre">Nome</string>
+    <string name="pdf_especie">Espécie</string>
+    <string name="pdf_raza">Raça</string>
+    <string name="pdf_sexo">Sexo</string>
+    <string name="pdf_edad">Idade</string>
+    <string name="pdf_fecha_nacimiento">Data de nascimento</string>
+    <string name="pdf_microchip">Microchip</string>
+    <string name="pdf_peso_actual">Peso atual</string>
+    <string name="pdf_vacunas_proximas">Vacinas próximas</string>
+    <string name="pdf_no_vacunas_proximas">Não há vacinas próximas agendadas</string>
+    <string name="pdf_vacuna">Vacina</string>
+    <string name="pdf_proxima_dosis">Próxima dose</string>
+    <string name="pdf_tratamientos_activos">Tratamentos ativos</string>
+    <string name="pdf_no_tratamientos_activos">Sem tratamentos ativos</string>
+    <string name="pdf_medicamento">Medicamento</string>
+    <string name="pdf_frecuencia">Frequência</string>
+    <string name="pdf_resumen_general">Resumo geral</string>
+    <string name="pdf_ultimo_peso">Último peso</string>
+    <string name="pdf_fecha_reporte">Data do relatório</string>
+    <string name="pdf_a_tener_en_cuenta">A ter em conta</string>
+    <string name="pdf_nota">Nota</string>
+    <string name="pdf_vacunas">Vacinas</string>
+    <string name="pdf_aplicada">Aplicada</string>
+    <string name="pdf_proxima">Próxima</string>
+    <string name="pdf_revisiones">Consultas veterinárias</string>
+    <string name="pdf_fecha">Data</string>
+    <string name="pdf_motivo">Motivo</string>
+    <string name="pdf_diagnostico">Diagnóstico</string>
+    <string name="pdf_inicio">Início</string>
+    <string name="pdf_fin">Fim</string>
+    <string name="pdf_informes_notas">Relatórios e notas</string>
+    <string name="pdf_tipo">Tipo</string>
+    <string name="pdf_descripcion">Descrição</string>
+    <string name="pdf_generado_el">Gerado a %1$s</string>
+</resources>

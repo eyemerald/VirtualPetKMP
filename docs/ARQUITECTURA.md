@@ -63,6 +63,7 @@ VirtualPetKMP/
     │   │   │   └── theme/          # Colores y tema Material 3
     │   │   ├── util/               # Utilidades y contratos expect/actual
     │   │   └── viewmodel/          # Estado y reglas de negocio
+    │   ├── composeResources/       # Textos por idioma (values/, values-es/, ...)
     │   └── sqldelight/com/example/virtualpetkmp/db/
     │       ├── *.sq                # Esquema (describe la versión MÁS RECIENTE)
     │       └── ../migrations/*.sqm # Migraciones versionadas
@@ -195,15 +196,71 @@ No hay servicio en segundo plano: es un equilibrio consciente entre simplicidad 
 - **Orientación.** En horizontal la ficha se parte en dos columnas: identidad a la izquierda,
   tarjetas a la derecha. El hueco reservado al banner de publicidad va anclado **abajo**, fuera
   del área de desplazamiento.
+- **Textos largos (alemán).** Las filas de pastillas de estado y de chips de filtro usan
+  `FlowRow`, no `Row`: en alemán las etiquetas son bastante más largas y en una sola línea se
+  salían de la pantalla. Antes de dar por buena una fila nueva, comprueba que aguanta el alemán.
 
 ---
 
-## 9. Tests
+## 9. Idiomas, unidades y formato de fecha
+
+Está todo en `shared/src/commonMain/composeResources/` y en `util/Localizacion.kt`. La idea es
+que **el idioma de los textos lo resuelve Compose solo** y que las decisiones que dependen de la
+región (unidades, orden de fecha, separador decimal) estén en **un único sitio**.
+
+### Textos
+
+`values/` es el idioma **de respaldo** de Compose y contiene el inglés; el español, que es el
+idioma original de la app, está en `values-es/`. Los seis ficheros tienen las mismas claves en
+el mismo orden, y `ParidadTraduccionesTest` lo verifica, porque un idioma al que le falte una
+clave no falla al compilar: se ve en inglés y nadie se entera.
+
+Dos comportamientos de la librería que conviene tener presentes (están fijados con tests en
+`ComportamientoRecursosTest`, no son suposiciones):
+
+- `stringResource(recurso, args…)` **sí** sustituye los marcadores `%1$s`.
+- `pluralStringResource(recurso, cantidad, args…)` **no** sustituye nada: solo elige la forma.
+  Por eso los plurales **no** llevan el número dentro y el número se compone en Kotlin
+  (`"$n " + pluralStringResource(...)`).
+
+`stringResource` solo se puede llamar desde un contexto composable, así que **todo texto que se
+use dentro de un `onClick`, un `onCalendar` o un `DrawScope` se resuelve antes**, en el cuerpo
+del composable, y se captura en la lambda. Es el error que más veces ha aparecido al traducir.
+
+### Región
+
+`Localizacion` es la única fuente de verdad y se publica por composición con `ConLocalizacion`
+desde `App.kt`. Sus reglas:
+
+| Qué | Regla |
+| --- | --- |
+| Peso | Se guarda **siempre en kilos**; se muestra en libras solo en `en-US`. `UnidadPeso.aKilos` / `desdeKilos` convierten al leer y al escribir el campo. |
+| Fecha | Orden mes/día solo en inglés; el resto, día/mes. `parseFechaLocalizada` acepta el orden de la región y, como respaldo, el otro. |
+| Decimal | Coma en español y portugués; punto en el resto. |
+
+### Valores guardados en la base de datos
+
+Especie, raza, sexo y tipo de preventivo se guardan **en español** y se traducen **solo al
+mostrarlos**, con `TraduccionesDatos`. Es deliberado: el formulario de mascota comprueba
+`mascota.raza in razasDeEstaEspecie` para rellenar el desplegable, así que traducir lo guardado
+dejaría sin raza a las mascotas que ya existen. **Nunca traduzcas un valor antes de escribirlo.**
+
+Los motivos de error que devuelve la capa de datos también viajan sin texto
+(`ErrorAppException` con un `ErrorApp`), y el ViewModel los convierte a texto con
+`textoErrorApp`, que es `suspend` porque lee recursos fuera de la composición.
+
+⚠️ **Alemán, francés, portugués e italiano están sin revisión nativa.** Repásalos antes de
+publicar, sobre todo los nombres de raza.
+
+---
+
+## 10. Tests
 
 Están en `shared/src/jvmTest` y usan una base de datos SQLite **en memoria** creada desde el
 esquema, así que prueban los repositorios y los cálculos de verdad, sin mocks. Cubren el CRUD
-de cada entidad, la regla del nombre único, el peso ideal (incluido que `null` no sea `0`) y
-los cálculos del resumen de la ficha.
+de cada entidad, la regla del nombre único, el peso ideal (incluido que `null` no sea `0`), los
+cálculos del resumen de la ficha y la internacionalización (paridad entre los seis idiomas,
+resolución real del idioma en ejecución y comportamiento de los plurales).
 
 ```bash
 ./gradlew :shared:jvmTest
@@ -214,7 +271,7 @@ tiene un proyecto sin backend.
 
 ---
 
-## 10. Herramientas de desarrollo
+## 11. Herramientas de desarrollo
 
 En `shared/src/jvmMain/.../tools/` hay utilidades que **no forman parte de la app**:
 

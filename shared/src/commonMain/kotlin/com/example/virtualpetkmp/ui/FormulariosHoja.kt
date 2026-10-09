@@ -148,7 +148,12 @@ private fun textosDelFormulario(): TextosFormulario {
         errorNombreProducto = stringResource(Res.string.form_error_nombre_producto),
         errorMedicamento = stringResource(Res.string.form_error_medicamento),
         errorMotivo = stringResource(Res.string.form_error_motivo),
-        errorPeso = stringResource(Res.string.form_error_peso),
+        // La unidad y el ejemplo salen de la región: en Estados Unidos el campo va en libras.
+        errorPeso = stringResource(
+            Res.string.form_error_peso,
+            localizacion.unidadPesoSufijo,
+            stringResource(Res.string.form_ejemplo_peso)
+        ),
         errorFecha = stringResource(Res.string.form_error_fecha, pista),
         errorFechas = stringResource(Res.string.form_error_fechas, pista)
     )

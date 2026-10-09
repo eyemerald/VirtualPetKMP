@@ -135,7 +135,7 @@
     <string name="peso_anadir">Add weigh-in</string>
     <string name="peso_mas_opciones">More weight options</string>
     <string name="peso_todavia_no_hay">No weigh-ins yet</string>
-    <string name="peso_formato_fechas">Use the DD/MM/YYYY format for dates</string>
+    <string name="peso_formato_fechas">Use the %1$s format for dates</string>
     <string name="peso_desde">From (%1$s)</string>
     <string name="peso_hasta">To (%1$s)</string>
     <plurals name="peso_en_grafico">
@@ -246,13 +246,12 @@
     <string name="form_peso_kg">Weight in %1$s (e.g. %2$s)</string>
     <string name="form_notas_opcional">Notes (optional)</string>
     <string name="form_ejemplo_peso">12.4</string>
-    <string name="form_doce_coma_cuatro">12.4 kg</string>
 
     <string name="form_error_nombre_vacuna">Enter the vaccine name</string>
     <string name="form_error_nombre_producto">Enter the product name</string>
     <string name="form_error_medicamento">Enter the medication</string>
     <string name="form_error_motivo">Enter the reason for the visit</string>
-    <string name="form_error_peso">Enter the weight in kilos (for example 12.4)</string>
+    <string name="form_error_peso">Enter the weight in %1$s (for example %2$s)</string>
     <string name="form_error_fecha">The date must use the %1$s format</string>
     <string name="form_error_fechas">The dates must use the %1$s format</string>
 

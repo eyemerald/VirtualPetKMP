@@ -121,6 +121,46 @@ cazado**: es la única red de seguridad de un proyecto sin backend.
 
 ---
 
+## 🌍 Idiomas, unidades y fechas
+
+La app está en **español, inglés, portugués, francés, alemán e italiano**, y se adapta sola al
+idioma y a la región del dispositivo.
+
+**Dónde están los textos**
+
+```
+shared/src/commonMain/composeResources/
+├── values/strings.xml      # inglés: idioma por defecto y de respaldo
+├── values-es/strings.xml   # español: idioma original de la app
+├── values-pt/strings.xml
+├── values-fr/strings.xml
+├── values-de/strings.xml
+└── values-it/strings.xml
+```
+
+Todas las claves y su orden son **idénticos** en los seis ficheros; un test lo comprueba
+(`ParidadTraduccionesTest`), porque olvidar un texto en un idioma no rompe la compilación: el
+sistema cae al inglés y el fallo pasaría desapercibido.
+
+**Las tres reglas de adaptación**
+
+| Qué | Regla |
+| --- | --- |
+| **Peso** | Se guarda **siempre en kilos**. Se muestra en **libras solo si la región es Estados Unidos** (`en-US`); Reino Unido y el resto, en kilos. La conversión ocurre al mostrar y al leer el campo, nunca en la base de datos. |
+| **Fecha** | Orden **mes/día solo en inglés**; el resto, día/mes. Al escribir se acepta el orden de la región y, como respaldo, el otro. |
+| **Decimal** | Coma en español y portugués; punto en el resto. |
+
+Los valores que viven en la base de datos (especie, raza, sexo, tipo de preventivo) **se guardan
+en español y se traducen solo al mostrarlos** (`TraduccionesDatos`). Traducir lo guardado
+rompería las mascotas que ya existen: el formulario compara la raza con la lista de su especie
+para rellenar el desplegable.
+
+⚠️ **Traducciones provisionales.** El alemán, francés, portugués e italiano están traducidos sin
+revisión de un hablante nativo. Antes de publicar en esos idiomas hay que repasarlos,
+especialmente los nombres de raza.
+
+---
+
 ## 📚 Documentación
 
 - **[Arquitectura](docs/ARQUITECTURA.md)** — capas, navegación, base de datos y migraciones,
@@ -160,8 +200,12 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 - [x] **Exportar la ficha a PDF**, en versión resumida o completa.
 - [x] **Notificaciones locales** de próximas dosis, con permiso de alarmas exactas en Android 12+.
 - [x] **Tema claro y oscuro**.
+- [x] **Multiidioma (es, en, pt, fr, de, it)**, con unidades y formato de fecha según la región:
+      peso en libras solo en Estados Unidos (siempre guardado en kilos), orden de fecha
+      día/mes salvo en inglés y separador decimal de la región.
 - [x] **Arquitectura offline-first** con base de datos local y migraciones versionadas.
-- [x] **Tests** de repositorios y de los cálculos del resumen de la ficha.
+- [x] **Tests** de repositorios, de los cálculos del resumen de la ficha y de la
+      internacionalización (paridad entre idiomas y resolución real del idioma en ejecución).
 
 ### 🔜 Pendiente antes de la v1.0
 
@@ -185,6 +229,14 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 
 ### 🔍 Revisar (no bloquea la v1.0)
 
+- [ ] **Traducciones de alemán, francés, portugués e italiano sin revisión nativa**: están
+      hechas con cuidado, pero conviene que las repase un hablante antes de publicar. Los
+      nombres de raza son los que más varían de un país a otro
+      (`shared/.../util/TraduccionesDatos.kt` y `values-de|fr|it|pt/strings.xml`).
+- [ ] **Comprobar el diseño en alemán en un dispositivo real**: es el idioma con textos más
+      largos. Las filas de pastillas y de chips ya usan `FlowRow` para saltar de línea, pero
+      no se ha podido ver en pantalla porque el emulador de pruebas tiene la región fija en
+      inglés (Estados Unidos).
 - [ ] **Unificar el menú ⋮ en las tarjetas de veterinario**: hoy conservan sus iconos propios
       (llamada, mapa, editar, borrar) en vez de un único menú, como ya se hizo en las de
       mascota.

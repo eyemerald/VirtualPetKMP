@@ -1039,7 +1039,14 @@ private fun TarjetaPesoHero(
                         text = ultimoPeso?.let {
                             formato.formatearPeso(it, conUnidad = true)
                         } ?: stringResource(Res.string.ficha_sin_datos),
-                        fontSize = if (compacta) 20.sp else 28.sp,
+                        // El hueco "sin datos" es un texto, no un número: con el tamaño grande de
+                        // la cifra no cabe en alemán ("Keine Daten") y se cortaba.
+                        fontSize = when {
+                            ultimoPeso != null && compacta -> 20.sp
+                            ultimoPeso != null -> 28.sp
+                            compacta -> 13.sp
+                            else -> 16.sp
+                        },
                         fontWeight = FontWeight.Bold,
                         // Azul de acento para el dato del peso, que es el color que ya
                         // identifica esta pantalla.

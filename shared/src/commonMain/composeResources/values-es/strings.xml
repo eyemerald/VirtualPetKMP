@@ -131,7 +131,7 @@
     <string name="peso_anadir">Añadir pesaje</string>
     <string name="peso_mas_opciones">Más opciones de peso</string>
     <string name="peso_todavia_no_hay">Todavía no hay pesajes</string>
-    <string name="peso_formato_fechas">Usa el formato DD/MM/AAAA en las fechas</string>
+    <string name="peso_formato_fechas">Usa el formato %1$s en las fechas</string>
     <string name="peso_desde">Desde (%1$s)</string>
     <string name="peso_hasta">Hasta (%1$s)</string>
     <plurals name="peso_en_grafico">
@@ -242,13 +242,12 @@
     <string name="form_peso_kg">Peso en %1$s (ej: %2$s)</string>
     <string name="form_notas_opcional">Notas (opcional)</string>
     <string name="form_ejemplo_peso">12,4</string>
-    <string name="form_doce_coma_cuatro">12,4 kg</string>
 
     <string name="form_error_nombre_vacuna">Indica el nombre de la vacuna</string>
     <string name="form_error_nombre_producto">Indica el nombre del producto</string>
     <string name="form_error_medicamento">Indica el medicamento</string>
     <string name="form_error_motivo">Indica el motivo de la consulta</string>
-    <string name="form_error_peso">Indica el peso en kilos (por ejemplo 12,4)</string>
+    <string name="form_error_peso">Indica el peso en %1$s (por ejemplo %2$s)</string>
     <string name="form_error_fecha">La fecha debe tener el formato %1$s</string>
     <string name="form_error_fechas">Las fechas deben tener el formato %1$s</string>
 

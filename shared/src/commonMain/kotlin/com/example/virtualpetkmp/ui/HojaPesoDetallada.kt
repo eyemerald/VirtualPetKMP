@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -57,9 +59,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.virtualpetkmp.Peso
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
+import com.example.virtualpetkmp.util.Localizacion
 import com.example.virtualpetkmp.util.UnidadPeso
 import com.example.virtualpetkmp.util.localizacion
-import com.example.virtualpetkmp.util.parseFormatoEuropeo
+import com.example.virtualpetkmp.util.parseFechaLocalizada
 import com.example.virtualpetkmp.util.parseKilos
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
@@ -166,8 +169,8 @@ fun HojaPesoDetallada(
             FiltroPeso.TODO -> ordenados
             FiltroPeso.ANIO -> ordenados.filter { it.fecha.year == anioSeleccionado }
             FiltroPeso.FECHAS -> {
-                val desde = desdeTexto.toFechaONull()
-                val hasta = hastaTexto.toFechaONull()
+                val desde = desdeTexto.toFechaONull(formato)
+                val hasta = hastaTexto.toFechaONull(formato)
                 ordenados.filter { registro ->
                     (desde == null || registro.fecha >= desde) &&
                         (hasta == null || registro.fecha <= hasta)
@@ -294,11 +297,13 @@ fun HojaPesoDetallada(
                             onDesde = { desdeTexto = it; errorFechas = null },
                             onHasta = { hastaTexto = it; errorFechas = null }
                         )
-                        if (desdeTexto.isNotBlank() && desdeTexto.toFechaONull() == null ||
-                            hastaTexto.isNotBlank() && hastaTexto.toFechaONull() == null
+                        if (desdeTexto.isNotBlank() && desdeTexto.toFechaONull(formato) == null ||
+                            hastaTexto.isNotBlank() && hastaTexto.toFechaONull(formato) == null
                         ) {
                             Text(
-                                text = stringResource(Res.string.peso_formato_fechas),
+                                // El formato esperado se toma de la región, no se escribe a mano:
+                                // en inglés el mismo aviso tiene que pedir MM/DD/AAAA.
+                                text = stringResource(Res.string.peso_formato_fechas, formato.pistaFormatoFecha),
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -407,9 +412,13 @@ fun HojaPesoDetallada(
 }
 
 /**
- * Fila de filtros en una sola línea: los tres chips y, si toca "Año", los años con datos.
- * Se mantiene compacta para no robar altura al gráfico.
+ * Fila de filtros: los tres chips y, si toca "Año", los años con datos.
+ *
+ * Los chips van en un `FlowRow` y no en un `Row`: en alemán las etiquetas son bastante más
+ * largas ("Zeitraum wählen" en vez de "Pick dates") y en una sola línea se salían de la
+ * pantalla. Con `FlowRow` pasan a una segunda línea solo cuando hace falta.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun FechaFiltroCompacto(
     filtro: FiltroPeso,
@@ -419,9 +428,9 @@ private fun FechaFiltroCompacto(
     onAnio: (Int) -> Unit
 ) {
     Column {
-        Row(
+        FlowRow(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             FiltroPeso.entries.forEach { opcion ->
                 FilterChip(
@@ -446,7 +455,10 @@ private fun FechaFiltroCompacto(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
                     aniosConDatos.forEach { anio ->
                         FilterChip(
                             selected = anioSeleccionado == anio,
@@ -841,12 +853,14 @@ private fun GraficoLineaMeses(
     }
 }
 
-/** Convierte el texto de una fecha del filtro, o null si está vacío o mal formado. */
-private fun String.toFechaONull(): LocalDate? = try {
-    if (isBlank()) null else parseFormatoEuropeo(this)
-} catch (e: Exception) {
-    null
-}
+/**
+ * Convierte el texto de una fecha del filtro, o null si está vacío o mal formado.
+ *
+ * Se lee en el orden de la región (con respaldo al otro), igual que el resto de campos de
+ * fecha: si no, en inglés un "03/04/2026" se interpretaría como 3 de abril.
+ */
+private fun String.toFechaONull(formato: Localizacion): LocalDate? =
+    if (isBlank()) null else parseFechaLocalizada(this, formato.ordenFechaMostrada)
 
 /** Dos campos de fecha para el filtro "elegir fechas". */
 @Composable

@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Italiano: traduzione dell'applicazione. `values/strings.xml` è la fonte strutturale delle chiavi,
+  così che l'ordine e il numero delle voci restino identici in tutte le lingue.
+-->
+<resources>
+    <!-- Schede principali -->
+    <string name="pestana_mascotas">Animali</string>
+    <string name="pestana_veterinarios">Veterinari</string>
+
+    <!-- Elenco degli animali -->
+    <string name="lista_mascotas_vacia">Nessun animale registrato</string>
+    <string name="lista_mascotas_vacia_ayuda">Tocca il pulsante + per aggiungerne uno</string>
+    <string name="lista_mascotas_reintentar">Riprova</string>
+    <string name="lista_peso_ideal">ideale %1$s %2$s</string>
+
+    <!-- Azioni generiche -->
+    <string name="accion_abrir">Apri</string>
+    <string name="accion_editar">Modifica</string>
+    <string name="accion_eliminar">Elimina</string>
+    <string name="accion_cancelar">Annulla</string>
+    <string name="accion_guardar">Salva</string>
+    <string name="accion_anadir">Aggiungi</string>
+    <string name="accion_cerrar">Chiudi</string>
+    <string name="accion_reintentar">Riprova</string>
+    <string name="accion_aceptar">OK</string>
+
+    <!-- Accessibilità (lettori di schermo) -->
+    <string name="a11y_agregar_mascota">Aggiungi animale</string>
+    <string name="a11y_acciones_de">Azioni per %1$s</string>
+    <string name="a11y_volver">Indietro</string>
+    <string name="a11y_compartir">Condividi</string>
+    <string name="a11y_mas_acciones">Altre azioni</string>
+    <string name="a11y_elegir_calendario">Scegli dal calendario</string>
+    <string name="a11y_historial_mostrar">Mostra cronologia</string>
+    <string name="a11y_historial_ocultar">Nascondi cronologia</string>
+    <string name="a11y_foto_mascota">Foto dell\'animale</string>
+    <string name="a11y_foto_de">Foto di %1$s</string>
+    <string name="a11y_foto_de_cambiar">Foto di %1$s. Tocca per cambiarla</string>
+
+    <!-- Dialogo di eliminazione dell'animale -->
+    <string name="borrar_mascota_titulo">Elimina animale</string>
+    <string name="borrar_mascota_mensaje">Eliminare %1$s? Questa azione non può essere annullata.</string>
+    <string name="borrar_mascota_mensaje_sin_nombre">Eliminare questo animale? Questa azione non può essere annullata.</string>
+
+    <!-- Scheda: riquadro del peso -->
+    <string name="ficha_peso_actual">Peso attuale</string>
+    <string name="ficha_sin_datos">Nessun dato</string>
+
+    <!-- Scheda: riquadri delle sezioni -->
+    <string name="ficha_tarjeta_vacunas">Vaccini e preventivi</string>
+    <string name="ficha_tarjeta_salud">Salute e monitoraggio</string>
+    <string name="ficha_tarjeta_notas">Da tenere presente</string>
+    <string name="ficha_tarjeta_notas_detalle">Informazioni importanti sull\'animale</string>
+
+    <!-- Stato delle dosi, usato nelle pastiglie della scheda.
+         ATTENZIONE: nessun "%d" all'interno. `pluralStringResource` sceglie la forma in base alla
+         quantità ma NON sostituisce gli argomenti (verificato), quindi il numero viene composto
+         a parte nel codice. -->
+    <plurals name="ficha_vencidas">
+        <item quantity="one">scaduta</item>
+        <item quantity="other">scadute</item>
+    </plurals>
+    <plurals name="ficha_proximas">
+        <item quantity="one">in scadenza</item>
+        <item quantity="other">in scadenza</item>
+    </plurals>
+    <plurals name="ficha_activos">
+        <item quantity="one">attivo</item>
+        <item quantity="other">attivi</item>
+    </plurals>
+
+    <!-- Scheda: opzioni della foto -->
+    <string name="foto_titulo">Foto di %1$s</string>
+    <string name="foto_hacer">Scatta una foto</string>
+    <string name="foto_elegir">Scegli dai miei file</string>
+    <string name="foto_quitar">Rimuovi la foto</string>
+
+    <!-- Scheda: menu delle azioni -->
+    <string name="ficha_modificar_datos">Modifica dati</string>
+
+    <!-- Dialogo di esportazione in PDF -->
+    <string name="exportar_titulo">Esporta la scheda in PDF</string>
+    <string name="exportar_elegir_version">Scegli la versione da esportare:</string>
+    <string name="exportar_version_resumida">Sintetica</string>
+    <string name="exportar_version_completa">Completa</string>
+    <string name="exportar_en_curso">Esportazione…</string>
+    <string name="exportar_ok_abierto">PDF creato e aperto correttamente.</string>
+    <string name="exportar_ok_guardado">PDF creato e salvato in: %1$s</string>
+    <string name="exportar_error_guardar">Impossibile salvare il PDF nella posizione selezionata.</string>
+    <string name="exportar_error_generar">Errore durante la creazione del PDF: %1$s</string>
+    <string name="exportar_error_desconocido">sconosciuto</string>
+    <string name="exportar_error_no_es_pdf">Il contenuto generato non sembra un PDF valido (%1$s). Non è stato salvato.</string>
+
+    <!--
+      Mesi abbreviati per l'asse del grafico. Sono nelle risorse e non in una lista nel codice
+      perché ogni lingua abbrevia a modo suo: "mar" non è marzo in tedesco ("Mär").
+    -->
+    <string name="mes_corto_1">gen</string>
+    <string name="mes_corto_2">feb</string>
+    <string name="mes_corto_3">mar</string>
+    <string name="mes_corto_4">apr</string>
+    <string name="mes_corto_5">mag</string>
+    <string name="mes_corto_6">giu</string>
+    <string name="mes_corto_7">lug</string>
+    <string name="mes_corto_8">ago</string>
+    <string name="mes_corto_9">set</string>
+    <string name="mes_corto_10">ott</string>
+    <string name="mes_corto_11">nov</string>
+    <string name="mes_corto_12">dic</string>
+
+    <!-- Foglio del peso -->
+    <string name="hoja_peso_titulo">Peso</string>
+    <string name="peso_filtro_todo">Tutto</string>
+    <string name="peso_filtro_anio">Anno</string>
+    <string name="peso_filtro_fechas">Scegli le date</string>
+    <string name="peso_ideal">Peso ideale</string>
+    <string name="peso_ideal_kg">Peso ideale (%1$s)</string>
+    <string name="peso_ideal_fijar">Imposta peso ideale</string>
+    <string name="peso_ideal_cambiar">Cambia peso ideale</string>
+    <string name="peso_ideal_quitar">Rimuovi peso ideale</string>
+    <string name="peso_ideal_ayuda">Verrà disegnato come linea di riferimento sul grafico. Lascialo vuoto per rimuoverlo.</string>
+    <string name="peso_ideal_ejemplo">Es. 12,4</string>
+    <string name="peso_ideal_indicacion">Inserisci il peso in chili (ad esempio 12,4)</string>
+    <string name="peso_resumen_sin_datos">Nessun dato</string>
+    <string name="peso_resumen_ideal"> · Ideale: %1$s</string>
+    <string name="peso_sin_pesajes_en_rango">Nessuna pesata in questo intervallo</string>
+    <string name="peso_historico">Cronologia</string>
+    <string name="peso_historico_vacio">Nessuna pesata ancora registrata</string>
+    <string name="peso_grafico_vacio">Nessun dato per il filtro selezionato</string>
+    <string name="peso_etiqueta_ideal">ideale %1$s</string>
+    <string name="peso_anadir">Aggiungi pesata</string>
+    <string name="peso_mas_opciones">Altre opzioni del peso</string>
+    <string name="peso_todavia_no_hay">Ancora nessuna pesata</string>
+    <string name="peso_formato_fechas">Usa il formato %1$s nelle date</string>
+    <string name="peso_desde">Da (%1$s)</string>
+    <string name="peso_hasta">A (%1$s)</string>
+    <plurals name="peso_en_grafico">
+        <item quantity="one">pesata nel grafico</item>
+        <item quantity="other">pesate nel grafico</item>
+    </plurals>
+    <plurals name="peso_contador">
+        <item quantity="one">pesata</item>
+        <item quantity="other">pesate</item>
+    </plurals>
+
+    <!-- Stato di una dose in sospeso (vaccino o preventivo) -->
+    <string name="estado_vencida">Scaduta</string>
+    <string name="estado_vence_pronto">In scadenza</string>
+    <string name="estado_al_dia">In regola</string>
+
+    <!-- Fogli della scheda: titoli e schede -->
+    <string name="hoja_vacunas_titulo">Vaccini e preventivi</string>
+    <string name="hoja_vacunas_pestana">Vaccini (%1$d)</string>
+    <string name="hoja_preventivos_pestana">Preventivi (%1$d)</string>
+    <string name="hoja_salud_titulo">Salute e monitoraggio</string>
+    <string name="hoja_salud_tratamientos">Trattamenti</string>
+    <string name="hoja_salud_informes">Referti</string>
+    <string name="hoja_salud_visitas">Visite</string>
+    <string name="hoja_notas_titulo">Da tenere presente</string>
+
+    <!-- Fogli della scheda: elenchi -->
+    <string name="hoja_sin_vacunas">Nessun vaccino registrato</string>
+    <string name="hoja_sin_preventivos">Nessun preventivo registrato</string>
+    <string name="hoja_sin_tratamientos">Nessun trattamento attivo</string>
+    <string name="hoja_sin_informes">Nessun referto allegato</string>
+    <string name="hoja_sin_visitas">Nessuna visita registrata</string>
+    <string name="hoja_sin_notas">Nessuna nota registrata</string>
+    <string name="hoja_activos">Attivi (%1$d)</string>
+    <string name="hoja_informes_titulo">Referti (%1$d)</string>
+    <string name="hoja_visitas_titulo">Visite (%1$d)</string>
+    <string name="hoja_historial_ver">Mostra cronologia (%1$d)</string>
+    <string name="hoja_historial_ocultar">Nascondi cronologia (%1$d)</string>
+    <string name="hoja_informe_error_abrir">Impossibile aprire il file del referto</string>
+
+    <!-- Fogli della scheda: azioni -->
+    <string name="hoja_anadir_vacuna">Aggiungi vaccino</string>
+    <string name="hoja_anadir_preventivo">Aggiungi preventivo</string>
+    <string name="hoja_anadir_tratamiento">Aggiungi trattamento</string>
+    <string name="hoja_anadir_informe">Aggiungi referto</string>
+    <string name="hoja_anadir_visita">Aggiungi visita</string>
+    <string name="hoja_anadir_nota">Aggiungi nota</string>
+    <string name="hoja_guardar_cambios">Salva modifiche</string>
+    <string name="hoja_cancelar_edicion">Annulla modifica</string>
+    <string name="hoja_anadir_calendario">Aggiungi al calendario</string>
+
+    <!-- Fogli della scheda: dettagli di ogni voce -->
+    <string name="hoja_proxima_dosis">Prossima dose: %1$s</string>
+    <string name="hoja_tratamiento_cronico">Cronico · dal %1$s</string>
+    <string name="hoja_tratamiento_hasta">Fino al %1$s</string>
+    <string name="hoja_tratamiento_finalizado">Concluso: %1$s</string>
+    <string name="hoja_sin_fecha">senza data</string>
+
+    <!-- Note: campi -->
+    <string name="hoja_nota_nueva">Nuova nota</string>
+    <string name="hoja_nota_editando">Modifica nota</string>
+
+    <!-- Promemoria aggiunti al calendario del telefono.
+         Sono in due parti (prefisso + suffisso) invece che con "%1$s": il nome dell'animale
+         viene aggiunto al volo e non si può chiedere il testo già composto perché l'evento
+         viene creato dentro una lambda che non è composable. -->
+    <string name="calendario_vacuna_titulo">Vaccino: </string>
+    <string name="calendario_vacuna_descripcion">Ricorda di somministrare il vaccino </string>
+    <string name="calendario_vacuna_descripcion_fin"> a </string>
+    <string name="calendario_preventivo_titulo">Preventivo: </string>
+    <string name="calendario_preventivo_descripcion">Ricorda di applicare </string>
+    <string name="calendario_preventivo_descripcion_fin"> a </string>
+
+    <!-- Moduli di inserimento e modifica dentro i fogli -->
+    <string name="form_anadir_vacuna">Aggiungi vaccino</string>
+    <string name="form_editar_vacuna">Modifica vaccino</string>
+    <string name="form_anadir_preventivo">Aggiungi preventivo</string>
+    <string name="form_editar_preventivo">Modifica preventivo</string>
+    <string name="form_anadir_tratamiento">Aggiungi trattamento</string>
+    <string name="form_editar_tratamiento">Modifica trattamento</string>
+    <string name="form_anadir_visita">Aggiungi visita</string>
+    <string name="form_editar_visita">Modifica visita</string>
+    <string name="form_anadir_pesaje">Aggiungi pesata</string>
+    <string name="form_editar_pesaje">Modifica pesata</string>
+
+    <string name="form_nombre_vacuna">Nome del vaccino</string>
+    <string name="form_fecha_aplicacion">Data di somministrazione (%1$s)</string>
+    <string name="form_proxima_dosis">Prossima dose (%1$s)</string>
+    <string name="form_veterinario_opcional">Veterinario (opzionale)</string>
+    <string name="form_lote_opcional">Lotto (opzionale)</string>
+    <string name="form_nombre_producto">Nome del prodotto</string>
+    <string name="form_tipo_preventivo">Tipo</string>
+
+    <string name="form_medicamento">Farmaco</string>
+    <string name="form_dosis">Dose (es. ½ compressa)</string>
+    <string name="form_frecuencia">Frequenza (es. ogni 24h)</string>
+    <string name="form_fecha_inicio">Data di inizio (%1$s)</string>
+    <string name="form_fecha_fin">Data di fine (%1$s)</string>
+    <string name="form_cronico">Cronico</string>
+    <string name="form_con_fecha_fin">Con data di fine</string>
+
+    <string name="form_motivo_consulta">Motivo della visita</string>
+    <string name="form_diagnostico_opcional">Diagnosi (opzionale)</string>
+    <string name="form_notas_consulta_opcional">Note della visita (opzionale)</string>
+
+    <string name="form_fecha">Data (%1$s)</string>
+    <string name="form_campo_tipo">Tipo</string>
+    <string name="form_peso_kg">Peso in %1$s (es. %2$s)</string>
+    <string name="form_notas_opcional">Note (opzionale)</string>
+    <string name="form_ejemplo_peso">12,4</string>
+
+    <string name="form_error_nombre_vacuna">Inserisci il nome del vaccino</string>
+    <string name="form_error_nombre_producto">Inserisci il nome del prodotto</string>
+    <string name="form_error_medicamento">Inserisci il farmaco</string>
+    <string name="form_error_motivo">Inserisci il motivo della visita</string>
+    <string name="form_error_peso">Inserisci il peso in %1$s (ad esempio %2$s)</string>
+    <string name="form_error_fecha">La data deve usare il formato %1$s</string>
+    <string name="form_error_fechas">Le date devono usare il formato %1$s</string>
+
+    <string name="form_eliminar_pesaje">Elimina pesata</string>
+    <string name="form_eliminar_pesaje_mensaje">Eliminare questa pesata? Questa azione non può essere annullata.</string>
+
+    <!-- Modulo dell'animale -->
+    <string name="mascota_nueva">Nuovo animale</string>
+    <string name="mascota_editar">Modifica animale</string>
+    <string name="mascota_guardar">Salva animale</string>
+    <string name="mascota_actualizar">Aggiorna animale</string>
+    <string name="mascota_campo_nombre">Nome *</string>
+    <string name="mascota_campo_especie">Specie *</string>
+    <string name="mascota_campo_raza">Razza *</string>
+    <string name="mascota_campo_sexo">Sesso *</string>
+    <string name="mascota_campo_color">Colore *</string>
+    <string name="mascota_campo_microchip">Microchip (opzionale)</string>
+    <string name="mascota_campo_peso_ideal">Peso ideale (%1$s, opzionale)</string>
+    <string name="mascota_campo_fecha_nacimiento">Data di nascita (%1$s) *</string>
+    <string name="mascota_especifica_especie_raza">Specifica specie e razza *</string>
+    <string name="mascota_especifica_raza">Specifica la razza *</string>
+    <string name="mascota_cambiar_foto">Cambia foto</string>
+    <string name="mascota_anadir_foto">Aggiungi foto (opzionale)</string>
+    <string name="mascota_foto_titulo">Foto dell\'animale</string>
+    <string name="mascota_completar_campos">Compila tutti i campi obbligatori</string>
+    <string name="mascota_error_fecha">La data deve usare il formato %1$s</string>
+
+    <!-- Elenco dei veterinari -->
+    <string name="vet_anadir">Aggiungi veterinario</string>
+    <string name="vet_vacio">Nessun veterinario registrato</string>
+    <string name="vet_vacio_ayuda">Tocca il pulsante + per aggiungerne uno</string>
+    <string name="vet_urgencias_titulo">Emergenze 24h</string>
+    <string name="vet_todos_titulo">Tutti i veterinari</string>
+    <string name="vet_cercanos">Veterinari nelle vicinanze</string>
+    <string name="vet_buscar_cercanos">veterinari vicino a me</string>
+    <string name="vet_llamar_urgencias">Chiama le emergenze</string>
+    <string name="vet_borrar_titulo">Conferma eliminazione</string>
+    <string name="vet_borrar_mensaje">Eliminare questo veterinario? Questa azione non può essere annullata.</string>
+
+    <!-- Modulo del veterinario -->
+    <string name="vet_nuevo">Nuovo veterinario</string>
+    <string name="vet_editar">Modifica veterinario</string>
+    <string name="vet_guardar">Salva veterinario</string>
+    <string name="vet_actualizar">Aggiorna veterinario</string>
+    <string name="vet_campo_clinica">Nome della clinica *</string>
+    <string name="vet_campo_veterinario">Nome del veterinario (opzionale)</string>
+    <string name="vet_campo_telefono">Telefono *</string>
+    <string name="vet_campo_direccion">Indirizzo *</string>
+    <string name="vet_campo_urgencias">È un veterinario di emergenze 24h</string>
+
+    <!-- Accessibilità delle schede del veterinario -->
+    <string name="a11y_llamar">Chiama</string>
+    <string name="a11y_mapa">Mappa</string>
+
+    <!-- Modulo del referto -->
+    <string name="informe_anadir">Aggiungi referto</string>
+    <string name="informe_editar">Modifica referto</string>
+    <string name="informe_campo_tipo">Tipo (es. analisi del sangue, radiografia)</string>
+    <string name="informe_campo_descripcion">Descrizione (opzionale)</string>
+    <string name="informe_seleccionar_archivo">Seleziona file</string>
+    <string name="informe_cambiar_archivo">Cambia file</string>
+    <string name="informe_archivo_elegido">File scelto: %1$s</string>
+    <string name="informe_archivo">File: %1$s</string>
+    <string name="informe_guardar_cambios">Salva modifiche</string>
+
+    <!-- Messaggi di errore dello strato dati (li risolve il ViewModel) -->
+    <string name="error_cargar_mascotas">Errore durante il caricamento degli animali: %1$s</string>
+    <string name="error_cargar_veterinarios">Errore durante il caricamento dei veterinari: %1$s</string>
+    <string name="error_borrar_mascota">Errore durante l\'eliminazione dell\'animale: %1$s</string>
+    <string name="error_borrar_veterinario">Errore durante l\'eliminazione del veterinario: %1$s</string>
+    <string name="error_guardar_foto">Impossibile salvare la foto: %1$s</string>
+    <string name="error_guardar_foto_corto">Impossibile salvare la foto</string>
+    <string name="error_guardar_peso_ideal">Impossibile salvare il peso ideale: %1$s</string>
+    <string name="error_guardar_peso_ideal_corto">Impossibile salvare il peso ideale</string>
+    <string name="error_nombre_duplicado">Esiste già un animale con questo nome</string>
+    <string name="error_id_requerido">Serve un id per aggiornare</string>
+    <string name="error_desconocido">Errore sconosciuto</string>
+
+    <!-- Etichette del PDF esportato (vengono generate fuori dalla composizione, con getString) -->
+    <string name="pdf_ficha_de">Scheda di %1$s</string>
+    <string name="pdf_resumen_cuidador">Riepilogo per il proprietario</string>
+    <string name="pdf_ficha_veterinaria">Scheda veterinaria</string>
+    <string name="pdf_nombre">Nome</string>
+    <string name="pdf_especie">Specie</string>
+    <string name="pdf_raza">Razza</string>
+    <string name="pdf_sexo">Sesso</string>
+    <string name="pdf_edad">Età</string>
+    <string name="pdf_fecha_nacimiento">Data di nascita</string>
+    <string name="pdf_microchip">Microchip</string>
+    <string name="pdf_peso_actual">Peso attuale</string>
+    <string name="pdf_vacunas_proximas">Prossimi vaccini</string>
+    <string name="pdf_no_vacunas_proximas">Nessun vaccino in programma</string>
+    <string name="pdf_vacuna">Vaccino</string>
+    <string name="pdf_proxima_dosis">Prossima dose</string>
+    <string name="pdf_tratamientos_activos">Trattamenti attivi</string>
+    <string name="pdf_no_tratamientos_activos">Nessun trattamento attivo</string>
+    <string name="pdf_medicamento">Farmaco</string>
+    <string name="pdf_frecuencia">Frequenza</string>
+    <string name="pdf_resumen_general">Riepilogo generale</string>
+    <string name="pdf_ultimo_peso">Ultimo peso</string>
+    <string name="pdf_fecha_reporte">Data del referto</string>
+    <string name="pdf_a_tener_en_cuenta">Da tenere presente</string>
+    <string name="pdf_nota">Nota</string>
+    <string name="pdf_vacunas">Vaccini</string>
+    <string name="pdf_aplicada">Somministrato</string>
+    <string name="pdf_proxima">Prossima</string>
+    <string name="pdf_revisiones">Visite veterinarie</string>
+    <string name="pdf_fecha">Data</string>
+    <string name="pdf_motivo">Motivo</string>
+    <string name="pdf_diagnostico">Diagnosi</string>
+    <string name="pdf_inicio">Inizio</string>
+    <string name="pdf_fin">Fine</string>
+    <string name="pdf_informes_notas">Referti e note</string>
+    <string name="pdf_tipo">Tipo</string>
+    <string name="pdf_descripcion">Descrizione</string>
+    <string name="pdf_generado_el">Generato il %1$s</string>
+</resources>

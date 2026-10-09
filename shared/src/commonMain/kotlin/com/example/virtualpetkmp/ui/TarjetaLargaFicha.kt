@@ -5,6 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -122,6 +124,7 @@ private fun PastillaEstado(badge: BadgeEstado) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TarjetaLargaFicha(
     icono: ImageVector,
@@ -208,8 +211,12 @@ fun TarjetaLargaFicha(
                 if (badges.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(6.dp))
                     // Las pastillas se ordenan por severidad (vencidas, próximas, resto)
-                    // y se limitan a tres para que no rompan línea en móviles estrechos.
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // y se limitan a tres. Van en un `FlowRow` para que, si en alemán no caben
+                    // en una línea, salten a la siguiente en vez de salirse de la tarjeta.
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
                         badges
                             .sortedBy { severidadDeBadge(it.estado) }
                             .take(3)
