@@ -74,7 +74,9 @@ data class ExtrasColors(
     val tarjetaAzul: Color,
     val iconoTarjetaAzul: Color,
     /** Azul de la última barra del gráfico de peso. */
-    val barraActual: Color
+    val barraActual: Color,
+    /** Gris azulado de la línea discontinua del peso ideal en el gráfico. */
+    val lineaIdeal: Color
 )
 
 val LocalExtrasColors = staticCompositionLocalOf {
@@ -87,7 +89,8 @@ val LocalExtrasColors = staticCompositionLocalOf {
         iconoTarjetaNaranja = IconoTarjetaNaranja,
         tarjetaAzul = TarjetaAzul,
         iconoTarjetaAzul = IconoTarjetaAzul,
-        barraActual = AzulBarraActual
+        barraActual = AzulBarraActual,
+        lineaIdeal = LineaIdeal
     )
 }
 
@@ -106,7 +109,8 @@ fun VirtualPetTheme(content: @Composable () -> Unit) {
             iconoTarjetaNaranja = IconoTarjetaNaranjaOscuro,
             tarjetaAzul = TarjetaAzulOscuro,
             iconoTarjetaAzul = IconoTarjetaAzulOscuro,
-            barraActual = AzulBarraActualOscuro
+            barraActual = AzulBarraActualOscuro,
+            lineaIdeal = LineaIdealOscuro
         )
     } else {
         ExtrasColors(
@@ -118,7 +122,8 @@ fun VirtualPetTheme(content: @Composable () -> Unit) {
             iconoTarjetaNaranja = IconoTarjetaNaranja,
             tarjetaAzul = TarjetaAzul,
             iconoTarjetaAzul = IconoTarjetaAzul,
-            barraActual = AzulBarraActual
+            barraActual = AzulBarraActual,
+            lineaIdeal = LineaIdeal
         )
     }
 

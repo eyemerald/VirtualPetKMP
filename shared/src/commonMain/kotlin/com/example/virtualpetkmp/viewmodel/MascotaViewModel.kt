@@ -86,6 +86,28 @@ class MascotaViewModel(private val repository: MascotaRepository) {
         }
     }
 
+    /**
+     * Cambia solo el peso ideal de una mascota ya guardada y recarga la lista. Se llama
+     * desde la hoja de Peso, para poder fijarlo o quitarlo sin abrir el formulario entero.
+     * `null` lo deja sin configurar.
+     */
+    fun updatePesoIdeal(id: Long, pesoIdeal: Double?) {
+        scope.launch {
+            _errorMessage.value = null
+            try {
+                val result = repository.updatePesoIdeal(id, pesoIdeal)
+                if (result.isFailure) {
+                    _errorMessage.value = result.exceptionOrNull()?.message
+                        ?: "No se pudo guardar el peso ideal"
+                } else {
+                    loadMascotas()
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "No se pudo guardar el peso ideal: ${e.message}"
+            }
+        }
+    }
+
     fun deleteMascota(id: Long, onSuccess: () -> Unit) {        scope.launch {
             _isLoading.value = true
             _errorMessage.value = null

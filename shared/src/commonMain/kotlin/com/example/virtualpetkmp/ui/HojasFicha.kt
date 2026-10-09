@@ -67,6 +67,8 @@ private val ALTO_MAXIMO_HOJA = 0.86f
 fun HojaFicha(
     titulo: String,
     onCerrar: () -> Unit,
+    /** Acciones opcionales alineadas a la derecha del título (por ejemplo un menú ⋮). */
+    acciones: (@Composable () -> Unit)? = null,
     contenido: @Composable ColumnScope.() -> Unit
 ) {
     ModalBottomSheet(
@@ -78,12 +80,20 @@ fun HojaFicha(
                 .fillMaxWidth()
                 .fillMaxHeight(ALTO_MAXIMO_HOJA)
         ) {
-            Text(
-                text = titulo,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = titulo,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f)
+                )
+                acciones?.invoke()
+            }
             contenido()
         }
     }

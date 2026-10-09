@@ -1,6 +1,7 @@
 package com.example.virtualpetkmp.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,11 +16,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Straighten
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,8 +45,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -43,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import com.example.virtualpetkmp.Peso
 import com.example.virtualpetkmp.util.formatearKilos
 import com.example.virtualpetkmp.util.parseFormatoEuropeo
+import com.example.virtualpetkmp.util.parseKilos
 import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import kotlinx.datetime.Clock
@@ -67,13 +86,19 @@ fun HojaPesoDetallada(
     onCerrar: () -> Unit,
     onAgregar: () -> Unit,
     onEditar: (Peso) -> Unit,
-    onBorrar: (Long) -> Unit
+    onBorrar: (Long) -> Unit,
+    /** Peso ideal configurado de la mascota, o null si no tiene. */
+    pesoIdeal: Double? = null,
+    /** Fija o quita (null) el peso ideal sin salir de esta hoja. */
+    onCambiarPesoIdeal: (Double?) -> Unit = {}
 ) {
     val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
     var filtro by rememberSaveable { mutableStateOf(FiltroPeso.TODO) }
     var desdeTexto by rememberSaveable { mutableStateOf("") }
     var hastaTexto by rememberSaveable { mutableStateOf("") }
     var errorFechas by remember { mutableStateOf<String?>(null) }
+    var menuAbierto by remember { mutableStateOf(false) }
+    var editandoPesoIdeal by remember { mutableStateOf(false) }
 
     // Años que tienen algún pesaje, del más reciente al más antiguo: solo esos se ofrecen.
     val aniosConDatos = remember(pesos) {
@@ -103,13 +128,60 @@ fun HojaPesoDetallada(
 
     val ultimo = filtrados.lastOrNull()
 
-    HojaFicha(titulo = "Peso", onCerrar = onCerrar) {
+    HojaFicha(
+        titulo = "Peso",
+        onCerrar = onCerrar,
+        acciones = {
+            Box {
+                IconButton(onClick = { menuAbierto = true }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "Más opciones de peso"
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuAbierto,
+                    onDismissRequest = { menuAbierto = false }
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                if (pesoIdeal == null) "Fijar peso ideal" else "Cambiar peso ideal"
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Straighten,
+                                contentDescription = null
+                            )
+                        },
+                        onClick = {
+                            menuAbierto = false
+                            editandoPesoIdeal = true
+                        }
+                    )
+                    if (pesoIdeal != null) {
+                        DropdownMenuItem(
+                            text = { Text("Quitar peso ideal") },
+                            leadingIcon = {
+                                Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                            },
+                            onClick = {
+                                menuAbierto = false
+                                onCambiarPesoIdeal(null)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 88.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 96.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item(key = "resumen") {
                 Column {
@@ -119,10 +191,15 @@ fun HojaPesoDetallada(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = if (filtrados.isEmpty()) {
-                            "No hay pesajes en este rango"
-                        } else {
-                            plural(filtrados.size, "pesaje en el gráfico", "pesajes en el gráfico")
+                        text = buildString {
+                            append(
+                                if (filtrados.isEmpty()) {
+                                    "No hay pesajes en este rango"
+                                } else {
+                                    plural(filtrados.size, "pesaje en el gráfico", "pesajes en el gráfico")
+                                }
+                            )
+                            pesoIdeal?.let { append(" · Ideal: ${formatearKilos(it)} kg") }
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -130,53 +207,15 @@ fun HojaPesoDetallada(
                 }
             }
 
+            // Filtros en una sola fila compacta, para dejar el protagonismo al gráfico.
             item(key = "filtro") {
-                Column {
-                    Text(
-                        text = "Filtro",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        FiltroPeso.entries.forEach { opcion ->
-                            FilterChip(
-                                selected = filtro == opcion,
-                                onClick = {
-                                    filtro = opcion
-                                    errorFechas = null
-                                },
-                                label = { Text(opcion.etiqueta) }
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Con el filtro "Año" se ofrecen solo los años que tienen pesajes, del más
-            // reciente al más antiguo.
-            if (filtro == FiltroPeso.ANIO) {
-                item(key = "anios") {
-                    Column {
-                        if (aniosConDatos.isEmpty()) {
-                            Text(
-                                text = "Todavía no hay pesajes",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        } else {
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                aniosConDatos.forEach { anio ->
-                                    FilterChip(
-                                        selected = anioSeleccionado == anio,
-                                        onClick = { anioSeleccionado = anio },
-                                        label = { Text("$anio") }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                FechaFiltroCompacto(
+                    filtro = filtro,
+                    aniosConDatos = aniosConDatos,
+                    anioSeleccionado = anioSeleccionado,
+                    onFiltro = { filtro = it; errorFechas = null },
+                    onAnio = { anioSeleccionado = it }
+                )
             }
 
             if (filtro == FiltroPeso.FECHAS) {
@@ -204,42 +243,247 @@ fun HojaPesoDetallada(
             item(key = "grafico") {
                 GraficoLineaMeses(
                     pesos = filtrados,
+                    pesoIdeal = pesoIdeal,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(210.dp)
+                        .height(220.dp)
                 )
             }
 
-            item(key = "titulo-historico") {
-                Text(
-                    text = "Histórico",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+            // Histórico plegado por defecto: el gráfico es el protagonista de la hoja.
+            item(key = "historico") {
+                var expandido by rememberSaveable { mutableStateOf(false) }
 
-            if (filtrados.isEmpty()) {
-                item(key = "vacio") {
-                    Text(
-                        text = "Aún no hay pesajes registrados",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Column {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { expandido = !expandido },
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Histórico",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = plural(filtrados.size, "pesaje", "pesajes"),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Icon(
+                                imageVector = if (expandido) {
+                                    Icons.Default.ExpandLess
+                                } else {
+                                    Icons.Default.ExpandMore
+                                },
+                                contentDescription = if (expandido) "Ocultar histórico" else "Mostrar histórico"
+                            )
+                        }
+                    }
+
+                    if (expandido) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        if (filtrados.isEmpty()) {
+                            Text(
+                                text = "Aún no hay pesajes registrados",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                filtrados.sortedByDescending { it.fecha }.forEach { registro ->
+                                    FilaPesoHistorico(
+                                        registro = registro,
+                                        onClick = { onEditar(registro) }
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-
-            items(filtrados.sortedByDescending { it.fecha }, key = { it.id ?: 0 }) { registro ->
-                TarjetaContenidoHoja(
-                    titulo = "${formatearKilos(registro.peso)} kg · ${registro.fecha.toFormatoEuropeo()}",
-                    detalle = registro.notas,
-                    onAbrir = { onEditar(registro) },
-                    onBorrar = registro.id?.let { id -> { onBorrar(id) } }
-                )
             }
         }
 
         FilaAccionHoja(etiquetaAccion = "Añadir pesaje", onAccion = onAgregar)
     }
+
+    if (editandoPesoIdeal) {
+        DialogoPesoIdeal(
+            pesoIdealActual = pesoIdeal,
+            onCancelar = { editandoPesoIdeal = false },
+            onGuardar = { nuevo ->
+                onCambiarPesoIdeal(nuevo)
+                editandoPesoIdeal = false
+            }
+        )
+    }
 }
+
+/**
+ * Fila de filtros en una sola línea: los tres chips y, si toca "Año", los años con datos.
+ * Se mantiene compacta para no robar altura al gráfico.
+ */
+@Composable
+private fun FechaFiltroCompacto(
+    filtro: FiltroPeso,
+    aniosConDatos: List<Int>,
+    anioSeleccionado: Int?,
+    onFiltro: (FiltroPeso) -> Unit,
+    onAnio: (Int) -> Unit
+) {
+    Column {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FiltroPeso.entries.forEach { opcion ->
+                FilterChip(
+                    selected = filtro == opcion,
+                    onClick = { onFiltro(opcion) },
+                    label = { Text(opcion.etiqueta, style = MaterialTheme.typography.labelMedium) }
+                )
+            }
+        }
+
+        if (filtro == FiltroPeso.ANIO) {
+            Spacer(modifier = Modifier.height(4.dp))
+            if (aniosConDatos.isEmpty()) {
+                Text(
+                    text = "Todavía no hay pesajes",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    aniosConDatos.forEach { anio ->
+                        FilterChip(
+                            selected = anioSeleccionado == anio,
+                            onClick = { onAnio(anio) },
+                            label = {
+                                Text("$anio", style = MaterialTheme.typography.labelMedium)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Un pesaje del histórico: fecha amigable y peso, sin iconos de acción. Al pulsarlo se abre
+ * el modal para editarlo o borrarlo, que es donde tienen sentido esas acciones.
+ */
+@Composable
+private fun FilaPesoHistorico(
+    registro: Peso,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = formatosFechaAmigable(registro.fecha),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = "${formatearKilos(registro.peso)} kg",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+/**
+ * Diálogo para fijar o cambiar el peso ideal sin salir de la hoja de Peso. Guardar en blanco
+ * lo quita (vuelve a quedar sin configurar).
+ */
+@Composable
+private fun DialogoPesoIdeal(
+    pesoIdealActual: Double?,
+    onCancelar: () -> Unit,
+    onGuardar: (Double?) -> Unit
+) {
+    var texto by remember {
+        mutableStateOf(pesoIdealActual?.let { formatearKilos(it) } ?: "")
+    }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onCancelar,
+        title = { Text("Peso ideal") },
+        text = {
+            Column {
+                Text(
+                    text = "Se dibujará como referencia en el gráfico. Déjalo vacío para quitarlo.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = texto,
+                    onValueChange = { texto = it; error = null },
+                    label = { Text("Peso ideal (kg)") },
+                    placeholder = { Text("Ej: 12,4") },
+                    singleLine = true,
+                    isError = error != null,
+                    supportingText = error?.let { { Text(it) } },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (texto.isBlank()) {
+                        onGuardar(null)
+                    } else {
+                        val valor = parseKilos(texto)
+                        if (valor == null || valor <= 0.0) {
+                            error = "Indica el peso en kilos (por ejemplo 12,4)"
+                        } else {
+                            onGuardar(valor)
+                        }
+                    }
+                }
+            ) {
+                Text("Guardar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancelar) { Text("Cancelar") }
+        }
+    )
+}
+
+/** "7 Oct 2026", más legible que el formato numérico para una lista de lectura rápida. */
+private val MESES_AMIGABLES = listOf(
+    "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+    "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+)
+
+private fun formatosFechaAmigable(fecha: kotlinx.datetime.LocalDate): String =
+    "${fecha.dayOfMonth} ${MESES_AMIGABLES[fecha.monthNumber - 1]} ${fecha.year}"
 
 /** Un mes del gráfico: su posición temporal y el peso medio de ese mes (null si no hay). */
 private data class MesPeso(val anio: Int, val mes: Int, val media: Double?)
@@ -283,7 +527,9 @@ private fun serieMensual(pesos: List<Peso>): List<MesPeso> {
 @Composable
 private fun GraficoLineaMeses(
     pesos: List<Peso>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Peso ideal de la mascota: si existe, se dibuja como referencia discontinua. */
+    pesoIdeal: Double? = null
 ) {
     val meses = remember(pesos) { serieMensual(pesos) }
 
@@ -299,6 +545,7 @@ private fun GraficoLineaMeses(
     }
 
     val colorLinea = LocalExtrasColors.current.barraActual
+    val colorIdeal = LocalExtrasColors.current.lineaIdeal
     val colorReferencia = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
     val colorTexto = MaterialTheme.colorScheme.onSurfaceVariant
     val textMeasurer = rememberTextMeasurer()
@@ -358,8 +605,13 @@ private fun GraficoLineaMeses(
             // puntos, pero la línea sí los atraviesa para que la evolución se vea entera.
             val conDatos = meses.indices.filter { meses[it].media != null }
             val valores = conDatos.map { meses[it].media!! }
-            val minPeso = valores.minOrNull() ?: 0.0
-            val maxPeso = valores.maxOrNull() ?: 0.0
+            val minDatos = valores.minOrNull() ?: 0.0
+            val maxDatos = valores.maxOrNull() ?: 0.0
+
+            // El peso ideal entra en la escala: si queda fuera del rango de los datos, la
+            // referencia se vería pegada al borde (o fuera) y no se entendería.
+            val minPeso = if (pesoIdeal != null) minOf(minDatos, pesoIdeal) else minDatos
+            val maxPeso = if (pesoIdeal != null) maxOf(maxDatos, pesoIdeal) else maxDatos
             val rango = (maxPeso - minPeso).toFloat()
 
             fun y(peso: Double): Float {
@@ -377,6 +629,36 @@ private fun GraficoLineaMeses(
                     start = Offset(0f, lineaY),
                     end = Offset(size.width, lineaY),
                     strokeWidth = 1.dp.toPx()
+                )
+            }
+
+            // Línea del PESO IDEAL: discontinua y en tono neutro, para que se lea como una
+            // referencia y no como un dato medido. Lleva su valor rotulado a la izquierda.
+            if (pesoIdeal != null) {
+                val yIdeal = y(pesoIdeal)
+                val etiquetaIdeal = "ideal ${formatearKilos(pesoIdeal)}"
+                val medidaIdeal = textMeasurer.measure(etiquetaIdeal, style = estiloEtiqueta)
+                // Encima de la línea si hay sitio, debajo si está muy arriba.
+                val yEtiqueta = if (yIdeal - medidaIdeal.size.height - 2.dp.toPx() >= 0f) {
+                    yIdeal - medidaIdeal.size.height - 2.dp.toPx()
+                } else {
+                    yIdeal + 2.dp.toPx()
+                }
+                // Se reserva el ancho de la etiqueta para que la línea no la atraviese.
+                drawLine(
+                    color = colorIdeal,
+                    start = Offset(medidaIdeal.size.width + 8.dp.toPx(), yIdeal),
+                    end = Offset(size.width, yIdeal),
+                    strokeWidth = 1.5.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(
+                        floatArrayOf(6.dp.toPx(), 5.dp.toPx())
+                    )
+                )
+                drawText(
+                    textMeasurer = textMeasurer,
+                    text = etiquetaIdeal,
+                    topLeft = Offset(2.dp.toPx(), yEtiqueta),
+                    style = TextStyle(fontSize = 9.sp, color = colorIdeal)
                 )
             }
 

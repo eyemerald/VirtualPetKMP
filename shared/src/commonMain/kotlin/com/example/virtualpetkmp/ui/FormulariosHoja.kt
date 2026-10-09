@@ -4,11 +4,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -482,7 +484,12 @@ fun FormularioRevision(
 fun FormularioPeso(
     peso: com.example.virtualpetkmp.Peso? = null,
     onCancelar: () -> Unit,
-    onGuardar: (fecha: LocalDate, kilos: Double, notas: String?) -> Unit
+    onGuardar: (fecha: LocalDate, kilos: Double, notas: String?) -> Unit,
+    /**
+     * Solo se usa al EDITAR un pesaje ya guardado: permite borrarlo desde este mismo modal,
+     * que es donde el usuario espera encontrarlo al pulsar el registro en el histórico.
+     */
+    onBorrar: (() -> Unit)? = null
 ) {
     var fecha by rememberSaveable {
         mutableStateOf(peso?.fecha?.toFormatoEuropeo() ?: hoyTexto())
@@ -492,6 +499,7 @@ fun FormularioPeso(
     }
     var notas by rememberSaveable { mutableStateOf(peso?.notas ?: "") }
     var error by remember { mutableStateOf<String?>(null) }
+    var confirmandoBorrado by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onCancelar,
@@ -547,8 +555,41 @@ fun FormularioPeso(
             }
         },
         dismissButton = {
-            TextButton(onClick = onCancelar) { Text("Cancelar") }
+            Row {
+                if (onBorrar != null) {
+                    TextButton(
+                        onClick = { confirmandoBorrado = true },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = androidx.compose.material3.MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Eliminar")
+                    }
+                }
+                TextButton(onClick = onCancelar) { Text("Cancelar") }
+            }
         }
     )
+
+    if (confirmandoBorrado && onBorrar != null) {
+        AlertDialog(
+            onDismissRequest = { confirmandoBorrado = false },
+            title = { Text("Eliminar pesaje") },
+            text = { Text("¿Seguro que quieres eliminar este pesaje? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmandoBorrado = false
+                        onBorrar()
+                    }
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmandoBorrado = false }) { Text("Cancelar") }
+            }
+        )
+    }
 }
 

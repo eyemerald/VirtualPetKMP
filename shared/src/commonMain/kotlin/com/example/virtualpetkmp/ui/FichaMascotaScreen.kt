@@ -511,6 +511,10 @@ fun FichaMascotaScreen(
 
         is ActiveSheet.Weight -> HojaPesoDetallada(
             pesos = pesos,
+            pesoIdeal = mascota.pesoIdeal,
+            onCambiarPesoIdeal = { nuevo ->
+                mascota.id?.let { id -> mascotaViewModel.updatePesoIdeal(id, nuevo) }
+            },
             onCerrar = { activeSheet = ActiveSheet.None },
             onAgregar = { formularioActivo = FormularioHoja.Peso },
             onEditar = { registro -> edicionActiva = EdicionHoja.Peso(registro) },
@@ -642,6 +646,12 @@ fun FichaMascotaScreen(
                     viewModel.actualizarPeso(id, fecha, kilos, notas)
                 }
                 edicionActiva = EdicionHoja.Ninguna
+            },
+            onBorrar = edicion.peso.id?.let { id ->
+                {
+                    viewModel.borrarPeso(id)
+                    edicionActiva = EdicionHoja.Ninguna
+                }
             }
         )
 

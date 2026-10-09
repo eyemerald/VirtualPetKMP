@@ -87,3 +87,8 @@ val IconoTarjetaAzulOscuro = Color(0xFFAEC2E8)
 // recurrir al verde ni al rojo, que en esta pantalla ya significan estado.
 val AzulBarraActual = Color(0xFF3F5C93)
 val AzulBarraActualOscuro = Color(0xFFAEC2E8)
+
+// Gris azulado de la línea de PESO IDEAL. Es una referencia, no un dato medido: por eso va
+// discontinua y en un tono neutro, para que no compita con la línea real del peso.
+val LineaIdeal = Color(0xFF5A6478)
+val LineaIdealOscuro = Color(0xFFB6BECD)
