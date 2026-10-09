@@ -249,4 +249,62 @@
 
     <string name="form_eliminar_pesaje">Eliminar pesaje</string>
     <string name="form_eliminar_pesaje_mensaje">¿Seguro que quieres eliminar este pesaje? Esta acción no se puede deshacer.</string>
+
+    <!-- Formulario de mascota -->
+    <string name="mascota_nueva">Nueva Mascota</string>
+    <string name="mascota_editar">Editar Mascota</string>
+    <string name="mascota_guardar">Guardar Mascota</string>
+    <string name="mascota_actualizar">Actualizar Mascota</string>
+    <string name="mascota_campo_nombre">Nombre *</string>
+    <string name="mascota_campo_especie">Especie *</string>
+    <string name="mascota_campo_raza">Raza *</string>
+    <string name="mascota_campo_sexo">Sexo *</string>
+    <string name="mascota_campo_color">Color *</string>
+    <string name="mascota_campo_microchip">Microchip (opcional)</string>
+    <string name="mascota_campo_peso_ideal">Peso Ideal (%1$s, opcional)</string>
+    <string name="mascota_campo_fecha_nacimiento">Fecha de Nacimiento (%1$s) *</string>
+    <string name="mascota_especifica_especie_raza">Especifica especie y raza *</string>
+    <string name="mascota_especifica_raza">Especifica la raza *</string>
+    <string name="mascota_cambiar_foto">Cambiar foto</string>
+    <string name="mascota_anadir_foto">Añadir foto (opcional)</string>
+    <string name="mascota_foto_titulo">Foto de la mascota</string>
+    <string name="mascota_completar_campos">Completa todos los campos obligatorios</string>
+    <string name="mascota_error_fecha">La fecha debe tener el formato %1$s</string>
+
+    <!-- Lista de veterinarios -->
+    <string name="vet_anadir">Agregar veterinario</string>
+    <string name="vet_vacio">No hay veterinarios registrados</string>
+    <string name="vet_vacio_ayuda">Toca el botón + para agregar uno</string>
+    <string name="vet_urgencias_titulo">Urgencias 24h</string>
+    <string name="vet_todos_titulo">Todos los veterinarios</string>
+    <string name="vet_cercanos">Veterinarios cercanos</string>
+    <string name="vet_buscar_cercanos">veterinarios cerca de mí</string>
+    <string name="vet_llamar_urgencias">Llamar a urgencias</string>
+    <string name="vet_borrar_titulo">Confirmar eliminación</string>
+    <string name="vet_borrar_mensaje">¿Seguro que quieres eliminar este veterinario? Esta acción no se puede deshacer.</string>
+
+    <!-- Formulario de veterinario -->
+    <string name="vet_nuevo">Nuevo Veterinario</string>
+    <string name="vet_editar">Editar Veterinario</string>
+    <string name="vet_guardar">Guardar Veterinario</string>
+    <string name="vet_actualizar">Actualizar Veterinario</string>
+    <string name="vet_campo_clinica">Nombre de la clínica *</string>
+    <string name="vet_campo_veterinario">Nombre del veterinario (opcional)</string>
+    <string name="vet_campo_telefono">Teléfono *</string>
+    <string name="vet_campo_direccion">Dirección *</string>
+    <string name="vet_campo_urgencias">Es veterinario de urgencias 24h</string>
+
+    <!-- Accesibilidad de las tarjetas de veterinario -->
+    <string name="a11y_llamar">Llamar</string>
+    <string name="a11y_mapa">Mapa</string>
+
+    <!-- Formulario de informe -->
+    <string name="informe_anadir">Añadir informe</string>
+    <string name="informe_editar">Editar informe</string>
+    <string name="informe_campo_tipo">Tipo (ej: analítica, radiografía)</string>
+    <string name="informe_campo_descripcion">Descripción (opcional)</string>
+    <string name="informe_seleccionar_archivo">Seleccionar archivo</string>
+    <string name="informe_cambiar_archivo">Cambiar archivo</string>
+    <string name="informe_archivo_elegido">Archivo elegido: %1$s</string>
+    <string name="informe_archivo">Archivo: %1$s</string>
 </resources>

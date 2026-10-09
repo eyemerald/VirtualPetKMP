@@ -18,15 +18,43 @@ import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.util.ESPECIES
 import com.example.virtualpetkmp.util.RAZAS_POR_ESPECIE
-import com.example.virtualpetkmp.util.formatearKilos
-import com.example.virtualpetkmp.util.parseFormatoEuropeo
+import com.example.virtualpetkmp.util.TraduccionesDatos
+import com.example.virtualpetkmp.util.UnidadPeso
+import com.example.virtualpetkmp.util.localizacion
+import com.example.virtualpetkmp.util.parseFechaLocalizada
 import com.example.virtualpetkmp.util.parseKilos
 import com.example.virtualpetkmp.util.rememberFotoMascota
-import com.example.virtualpetkmp.util.toFormatoEuropeo
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.stringResource
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.a11y_volver
+import virtualpetkmp.shared.generated.resources.form_ejemplo_peso
+import virtualpetkmp.shared.generated.resources.form_error_peso
+import virtualpetkmp.shared.generated.resources.foto_elegir
+import virtualpetkmp.shared.generated.resources.foto_hacer
+import virtualpetkmp.shared.generated.resources.foto_quitar
+import virtualpetkmp.shared.generated.resources.mascota_actualizar
+import virtualpetkmp.shared.generated.resources.mascota_anadir_foto
+import virtualpetkmp.shared.generated.resources.mascota_cambiar_foto
+import virtualpetkmp.shared.generated.resources.mascota_campo_color
+import virtualpetkmp.shared.generated.resources.mascota_campo_especie
+import virtualpetkmp.shared.generated.resources.mascota_campo_fecha_nacimiento
+import virtualpetkmp.shared.generated.resources.mascota_campo_microchip
+import virtualpetkmp.shared.generated.resources.mascota_campo_nombre
+import virtualpetkmp.shared.generated.resources.mascota_campo_peso_ideal
+import virtualpetkmp.shared.generated.resources.mascota_campo_raza
+import virtualpetkmp.shared.generated.resources.mascota_campo_sexo
+import virtualpetkmp.shared.generated.resources.mascota_completar_campos
+import virtualpetkmp.shared.generated.resources.mascota_editar
+import virtualpetkmp.shared.generated.resources.mascota_error_fecha
+import virtualpetkmp.shared.generated.resources.mascota_especifica_especie_raza
+import virtualpetkmp.shared.generated.resources.mascota_especifica_raza
+import virtualpetkmp.shared.generated.resources.mascota_foto_titulo
+import virtualpetkmp.shared.generated.resources.mascota_guardar
+import virtualpetkmp.shared.generated.resources.mascota_nueva
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,6 +63,14 @@ fun MascotaFormScreen(
     mascotaId: Long? = null,
     onBack: () -> Unit
 ) {
+    // Unidad de peso, orden de fecha y separador decimal del usuario.
+    val formato = localizacion
+    val pistaFecha = formato.pistaFormatoFecha
+    // Textos de error resueltos fuera del onClick: dentro no hay contexto composable.
+    val textoCamposObligatorios = stringResource(Res.string.mascota_completar_campos)
+    val textoErrorFecha = stringResource(Res.string.mascota_error_fecha, pistaFecha)
+    val textoErrorPeso = stringResource(Res.string.form_error_peso)
+
     var nombre by rememberSaveable { mutableStateOf("") }
 
     var especieSeleccionada by rememberSaveable { mutableStateOf(ESPECIES.first()) }
@@ -47,7 +83,9 @@ fun MascotaFormScreen(
 
     var fechaNacimientoStr by rememberSaveable {
         mutableStateOf(
-            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toFormatoEuropeo()
+            formato.formatearFecha(
+                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+            )
         )
     }
     var color by rememberSaveable { mutableStateOf("") }
@@ -86,11 +124,11 @@ fun MascotaFormScreen(
         if (mascotaId != null && !yaCargado) {
             mascotas.find { it.id == mascotaId }?.let { mascota ->
                 nombre = mascota.nombre
-                fechaNacimientoStr = mascota.fechaNacimiento.toFormatoEuropeo()
+                fechaNacimientoStr = formato.formatearFecha(mascota.fechaNacimiento)
                 sexo = mascota.sexo
                 color = mascota.color
                 microchip = mascota.microchip ?: ""
-                pesoIdealTexto = mascota.pesoIdeal?.let { formatearKilos(it) } ?: ""
+                pesoIdealTexto = mascota.pesoIdeal?.let { formato.formatearPeso(it) } ?: ""
                 rutaFoto = mascota.foto
 
                 if (mascota.especie in ESPECIES && mascota.especie != "Otro") {
@@ -126,10 +164,20 @@ fun MascotaFormScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (mascotaId == null) "Nueva Mascota" else "Editar Mascota") },
+                title = {
+                    Text(
+                        stringResource(
+                            if (mascotaId == null) {
+                                Res.string.mascota_nueva
+                            } else {
+                                Res.string.mascota_editar
+                            }
+                        )
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.a11y_volver))
                     }
                 }
             )
@@ -146,7 +194,7 @@ fun MascotaFormScreen(
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
-                label = { Text("Nombre *") },
+                label = { Text(stringResource(Res.string.mascota_campo_nombre)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 isError = nombre.isBlank()
@@ -165,7 +213,13 @@ fun MascotaFormScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = if (rutaFoto.isNullOrBlank()) "Añadir foto (opcional)" else "Cambiar foto",
+                    text = stringResource(
+                    if (rutaFoto.isNullOrBlank()) {
+                        Res.string.mascota_anadir_foto
+                    } else {
+                        Res.string.mascota_cambiar_foto
+                    }
+                ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
@@ -186,10 +240,10 @@ fun MascotaFormScreen(
                 onExpandedChange = { expandedEspecie = it }
             ) {
                 OutlinedTextField(
-                    value = especieSeleccionada,
+                    value = TraduccionesDatos.etiqueta(especieSeleccionada, formato.idioma),
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Especie *") },
+                    label = { Text(stringResource(Res.string.mascota_campo_especie)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedEspecie) },
                     modifier = Modifier.menuAnchor().fillMaxWidth()
                 )
@@ -199,7 +253,7 @@ fun MascotaFormScreen(
                 ) {
                     ESPECIES.forEach { especie ->
                         DropdownMenuItem(
-                            text = { Text(especie) },
+                            text = { Text(TraduccionesDatos.etiqueta(especie, formato.idioma)) },
                             onClick = {
                                 especieSeleccionada = especie
                                 expandedEspecie = false
@@ -213,7 +267,7 @@ fun MascotaFormScreen(
                 OutlinedTextField(
                     value = especieRazaOtroTexto,
                     onValueChange = { especieRazaOtroTexto = it },
-                    label = { Text("Especifica especie y raza *") },
+                    label = { Text(stringResource(Res.string.mascota_especifica_especie_raza)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     isError = especieRazaOtroTexto.isBlank()
@@ -228,10 +282,10 @@ fun MascotaFormScreen(
                     onExpandedChange = { expandedRaza = it }
                 ) {
                     OutlinedTextField(
-                        value = razaSeleccionada,
+                        value = TraduccionesDatos.etiqueta(razaSeleccionada, formato.idioma),
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Raza *") },
+                        label = { Text(stringResource(Res.string.mascota_campo_raza)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRaza) },
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
@@ -241,7 +295,7 @@ fun MascotaFormScreen(
                     ) {
                         razasDisponibles.forEach { raza ->
                             DropdownMenuItem(
-                                text = { Text(raza) },
+                                text = { Text(TraduccionesDatos.etiqueta(raza, formato.idioma)) },
                                 onClick = {
                                     razaSeleccionada = raza
                                     expandedRaza = false
@@ -255,7 +309,7 @@ fun MascotaFormScreen(
                     OutlinedTextField(
                         value = razaPersonalizadaTexto,
                         onValueChange = { razaPersonalizadaTexto = it },
-                        label = { Text("Especifica la raza *") },
+                        label = { Text(stringResource(Res.string.mascota_especifica_raza)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         isError = razaPersonalizadaTexto.isBlank()
@@ -265,14 +319,15 @@ fun MascotaFormScreen(
 
             // Sexo
             Column {
-                Text("Sexo *", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(Res.string.mascota_campo_sexo), style = MaterialTheme.typography.bodySmall)
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // El valor guardado sigue siendo "Macho"/"Hembra": solo se traduce al pintar.
                     listOf("Macho", "Hembra").forEach { opcion ->
                         FilterChip(
                             selected = sexo == opcion,
                             onClick = { sexo = opcion },
-                            label = { Text(opcion) }
+                            label = { Text(TraduccionesDatos.etiqueta(opcion, formato.idioma)) }
                         )
                     }
                 }
@@ -281,7 +336,7 @@ fun MascotaFormScreen(
             CampoFecha(
                 valor = fechaNacimientoStr,
                 onValorCambia = { fechaNacimientoStr = it },
-                etiqueta = "Fecha de Nacimiento (DD/MM/AAAA) *",
+                etiqueta = stringResource(Res.string.mascota_campo_fecha_nacimiento, pistaFecha),
                 modifier = Modifier.fillMaxWidth(),
                 esError = fechaNacimientoStr.isBlank()
             )
@@ -289,7 +344,7 @@ fun MascotaFormScreen(
             OutlinedTextField(
                 value = color,
                 onValueChange = { color = it },
-                label = { Text("Color *") },
+                label = { Text(stringResource(Res.string.mascota_campo_color)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 isError = color.isBlank()
@@ -298,7 +353,7 @@ fun MascotaFormScreen(
             OutlinedTextField(
                 value = microchip,
                 onValueChange = { microchip = it },
-                label = { Text("Microchip (opcional)") },
+                label = { Text(stringResource(Res.string.mascota_campo_microchip)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -308,8 +363,8 @@ fun MascotaFormScreen(
             OutlinedTextField(
                 value = pesoIdealTexto,
                 onValueChange = { pesoIdealTexto = it; errorPesoIdeal = null },
-                label = { Text("Peso Ideal (kg, opcional)") },
-                placeholder = { Text("Ej: 12,4") },
+                label = { Text(stringResource(Res.string.mascota_campo_peso_ideal, formato.unidadPesoSufijo)) },
+                placeholder = { Text(stringResource(Res.string.form_ejemplo_peso)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 isError = errorPesoIdeal != null,
@@ -337,14 +392,14 @@ fun MascotaFormScreen(
                     val razaPersonalizadaValida = razaSeleccionada != "Otra" || razaPersonalizadaTexto.isNotBlank()
 
                     if (nombre.isBlank() || color.isBlank() || !especieRazaOtroValida || !razaPersonalizadaValida) {
-                        viewModel.setError("Completa todos los campos obligatorios")
+                        viewModel.setError(textoCamposObligatorios)
                         return@Button
                     }
 
-                    val fecha = try {
-                        parseFormatoEuropeo(fechaNacimientoStr)
-                    } catch (e: Exception) {
-                        viewModel.setError("La fecha debe tener el formato DD/MM/AAAA")
+                    // La fecha se lee en el orden de la región, con respaldo al otro formato.
+                    val fecha = parseFechaLocalizada(fechaNacimientoStr, formato.ordenFechaMostrada)
+                    if (fecha == null) {
+                        viewModel.setError(textoErrorFecha)
                         return@Button
                     }
 
@@ -352,13 +407,13 @@ fun MascotaFormScreen(
                     val pesoIdeal = if (pesoIdealTexto.isBlank()) {
                         null
                     } else {
-                        val valor = parseKilos(pesoIdealTexto)
-                        if (valor == null || valor <= 0.0) {
-                            errorPesoIdeal = "Indica el peso en kilos (por ejemplo 12,4)"
+                        val valorMostrado = parseKilos(pesoIdealTexto)
+                        if (valorMostrado == null || valorMostrado <= 0.0) {
+                            errorPesoIdeal = textoErrorPeso
                             return@Button
                         }
                         errorPesoIdeal = null
-                        valor
+                        UnidadPeso.aKilos(valorMostrado, formato.unidadPeso)
                     }
 
                     val especieFinal: String
@@ -397,7 +452,7 @@ fun MascotaFormScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text(if (mascotaId == null) "Guardar Mascota" else "Actualizar Mascota")
+                    Text(stringResource(if (mascotaId == null) Res.string.mascota_guardar else Res.string.mascota_actualizar))
                 }
             }
         }
@@ -414,7 +469,7 @@ fun MascotaFormScreen(
                     .padding(bottom = 24.dp)
             ) {
                 Text(
-                    text = "Foto de la mascota",
+                    text = stringResource(Res.string.mascota_foto_titulo),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                 )
@@ -422,21 +477,21 @@ fun MascotaFormScreen(
                 if (accionesFoto.soportaCamara) {
                     OpcionFotoFormulario(
                         icono = Icons.Default.PhotoCamera,
-                        texto = "Hacer una foto",
+                        texto = stringResource(Res.string.foto_hacer),
                         onClick = { accionesFoto.hacerFoto?.invoke() }
                     )
                 }
 
                 OpcionFotoFormulario(
                     icono = Icons.Default.PhotoLibrary,
-                    texto = "Elegir de mis archivos",
+                    texto = stringResource(Res.string.foto_elegir),
                     onClick = accionesFoto.elegirDeArchivos
                 )
 
                 if (!rutaFoto.isNullOrBlank()) {
                     OpcionFotoFormulario(
                         icono = Icons.Default.Delete,
-                        texto = "Quitar la foto",
+                        texto = stringResource(Res.string.foto_quitar),
                         color = MaterialTheme.colorScheme.error,
                         onClick = {
                             mostrarOpcionesFoto = false

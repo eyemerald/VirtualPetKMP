@@ -253,4 +253,62 @@
 
     <string name="form_eliminar_pesaje">Delete weigh-in</string>
     <string name="form_eliminar_pesaje_mensaje">Delete this weigh-in? This cannot be undone.</string>
+
+    <!-- Formulario de mascota -->
+    <string name="mascota_nueva">New pet</string>
+    <string name="mascota_editar">Edit pet</string>
+    <string name="mascota_guardar">Save pet</string>
+    <string name="mascota_actualizar">Update pet</string>
+    <string name="mascota_campo_nombre">Name *</string>
+    <string name="mascota_campo_especie">Species *</string>
+    <string name="mascota_campo_raza">Breed *</string>
+    <string name="mascota_campo_sexo">Sex *</string>
+    <string name="mascota_campo_color">Colour *</string>
+    <string name="mascota_campo_microchip">Microchip (optional)</string>
+    <string name="mascota_campo_peso_ideal">Ideal weight (%1$s, optional)</string>
+    <string name="mascota_campo_fecha_nacimiento">Date of birth (%1$s) *</string>
+    <string name="mascota_especifica_especie_raza">Specify species and breed *</string>
+    <string name="mascota_especifica_raza">Specify the breed *</string>
+    <string name="mascota_cambiar_foto">Change photo</string>
+    <string name="mascota_anadir_foto">Add photo (optional)</string>
+    <string name="mascota_foto_titulo">Pet photo</string>
+    <string name="mascota_completar_campos">Fill in all required fields</string>
+    <string name="mascota_error_fecha">The date must use the %1$s format</string>
+
+    <!-- Lista de veterinarios -->
+    <string name="vet_anadir">Add vet</string>
+    <string name="vet_vacio">No vets registered</string>
+    <string name="vet_vacio_ayuda">Tap the + button to add one</string>
+    <string name="vet_urgencias_titulo">24h emergencies</string>
+    <string name="vet_todos_titulo">All vets</string>
+    <string name="vet_cercanos">Vets nearby</string>
+    <string name="vet_buscar_cercanos">vets near me</string>
+    <string name="vet_llamar_urgencias">Call emergencies</string>
+    <string name="vet_borrar_titulo">Confirm deletion</string>
+    <string name="vet_borrar_mensaje">Delete this vet? This cannot be undone.</string>
+
+    <!-- Formulario de veterinario -->
+    <string name="vet_nuevo">New vet</string>
+    <string name="vet_editar">Edit vet</string>
+    <string name="vet_guardar">Save vet</string>
+    <string name="vet_actualizar">Update vet</string>
+    <string name="vet_campo_clinica">Clinic name *</string>
+    <string name="vet_campo_veterinario">Vet name (optional)</string>
+    <string name="vet_campo_telefono">Phone *</string>
+    <string name="vet_campo_direccion">Address *</string>
+    <string name="vet_campo_urgencias">This vet works 24h emergencies</string>
+
+    <!-- Accesibilidad de las tarjetas de veterinario -->
+    <string name="a11y_llamar">Call</string>
+    <string name="a11y_mapa">Map</string>
+
+    <!-- Formulario de informe -->
+    <string name="informe_anadir">Add report</string>
+    <string name="informe_editar">Edit report</string>
+    <string name="informe_campo_tipo">Type (e.g. blood test, X-ray)</string>
+    <string name="informe_campo_descripcion">Description (optional)</string>
+    <string name="informe_seleccionar_archivo">Select file</string>
+    <string name="informe_cambiar_archivo">Change file</string>
+    <string name="informe_archivo_elegido">Chosen file: %1$s</string>
+    <string name="informe_archivo">File: %1$s</string>
 </resources>
