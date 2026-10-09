@@ -2,6 +2,8 @@ package com.example.virtualpetkmp.data
 
 import com.example.virtualpetkmp.Veterinario
 import com.example.virtualpetkmp.db.VirtualPetDatabase
+import com.example.virtualpetkmp.util.ErrorApp
+import com.example.virtualpetkmp.util.ErrorAppException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -53,7 +55,7 @@ class VeterinarioRepository(private val database: VirtualPetDatabase) {
     suspend fun updateVeterinario(veterinario: Veterinario): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             if (veterinario.id == null) {
-                return@withContext Result.failure(Exception("ID es requerido para actualizar"))
+                return@withContext Result.failure(ErrorAppException(ErrorApp.ID_REQUERIDO))
             }
 
             database.veterinariosQueries.update(

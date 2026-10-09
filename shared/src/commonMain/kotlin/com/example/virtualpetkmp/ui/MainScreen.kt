@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.a11y_compartir
+import virtualpetkmp.shared.generated.resources.a11y_volver
 import virtualpetkmp.shared.generated.resources.logo
 import virtualpetkmp.shared.generated.resources.pestana_mascotas
 import virtualpetkmp.shared.generated.resources.pestana_veterinarios
@@ -122,7 +124,7 @@ fun MainScreen(
                         if (onVolver != null) {
                             IconoFlotante(
                                 icono = Icons.AutoMirrored.Filled.ArrowBack,
-                                descripcion = "Volver",
+                                descripcion = stringResource(Res.string.a11y_volver),
                                 onClick = onVolver,
                                 modifier = Modifier.align(Alignment.TopStart)
                             )
@@ -130,7 +132,7 @@ fun MainScreen(
                         if (onCompartir != null) {
                             IconoFlotante(
                                 icono = Icons.Default.Share,
-                                descripcion = "Compartir",
+                                descripcion = stringResource(Res.string.a11y_compartir),
                                 onClick = onCompartir,
                                 modifier = Modifier.align(Alignment.TopEnd)
                             )

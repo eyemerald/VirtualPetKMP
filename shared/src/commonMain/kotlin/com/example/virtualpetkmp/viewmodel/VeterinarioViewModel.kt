@@ -2,6 +2,8 @@ package com.example.virtualpetkmp.viewmodel
 
 import com.example.virtualpetkmp.Veterinario
 import com.example.virtualpetkmp.data.VeterinarioRepository
+import com.example.virtualpetkmp.util.ErrorAppException
+import com.example.virtualpetkmp.util.textoErrorApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -9,6 +11,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.error_borrar_veterinario
+import virtualpetkmp.shared.generated.resources.error_cargar_veterinarios
+import virtualpetkmp.shared.generated.resources.error_desconocido
+
+/** Traduce el fallo del repositorio al idioma activo (mismo criterio que MascotaViewModel). */
+private suspend fun textoDeFallo(e: Throwable?): String = when (e) {
+    is ErrorAppException -> textoErrorApp(e.error)
+    else -> e?.message ?: getString(Res.string.error_desconocido)
+}
+
+/** Detalle técnico del fallo para los mensajes "Error al hacer X: <detalle>". */
+private fun detalleDe(e: Throwable): String = e.message ?: e::class.simpleName ?: "?"
 
 /**
  * Estado de la agenda de veterinarios (lista, carga y error).
@@ -39,7 +55,7 @@ class VeterinarioViewModel(private val repository: VeterinarioRepository) {
             try {
                 _veterinarios.value = repository.getAllVeterinarios()
             } catch (e: Exception) {
-                _errorMessage.value = "Error al cargar veterinarios: ${e.message}"
+                _errorMessage.value = getString(Res.string.error_cargar_veterinarios, detalleDe(e))
             } finally {
                 _isLoading.value = false
             }
@@ -58,13 +74,13 @@ class VeterinarioViewModel(private val repository: VeterinarioRepository) {
                 }
 
                 if (result.isFailure) {
-                    _errorMessage.value = result.exceptionOrNull()?.message
+                    _errorMessage.value = textoDeFallo(result.exceptionOrNull())
                 } else {
                     loadVeterinarios()
                     onSuccess()
                 }
             } catch (e: Exception) {
-                _errorMessage.value = e.message
+                _errorMessage.value = textoDeFallo(e)
             } finally {
                 _isLoading.value = false
             }
@@ -80,7 +96,7 @@ class VeterinarioViewModel(private val repository: VeterinarioRepository) {
                 loadVeterinarios()
                 onSuccess()
             } catch (e: Exception) {
-                _errorMessage.value = "Error al borrar veterinario: ${e.message}"
+                _errorMessage.value = getString(Res.string.error_borrar_veterinario, detalleDe(e))
             } finally {
                 _isLoading.value = false
             }

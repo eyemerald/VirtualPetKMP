@@ -3,6 +3,8 @@ package com.example.virtualpetkmp.viewmodel
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.data.MascotaRepository
 import com.example.virtualpetkmp.data.PesoRepository
+import com.example.virtualpetkmp.util.ErrorAppException
+import com.example.virtualpetkmp.util.textoErrorApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -10,6 +12,27 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.error_borrar_mascota
+import virtualpetkmp.shared.generated.resources.error_cargar_mascotas
+import virtualpetkmp.shared.generated.resources.error_desconocido
+import virtualpetkmp.shared.generated.resources.error_guardar_foto
+import virtualpetkmp.shared.generated.resources.error_guardar_foto_corto
+import virtualpetkmp.shared.generated.resources.error_guardar_peso_ideal
+import virtualpetkmp.shared.generated.resources.error_guardar_peso_ideal_corto
+
+/**
+ * Traduce el fallo de un repositorio al idioma activo.
+ *
+ * Los repositorios devuelven [ErrorAppException] con un motivo (`ErrorApp`) cuando el fallo es
+ * de negocio, y cualquier otra excepción cuando es técnico. Aquí se decide el texto: por eso
+ * este ViewModel no guarda mensajes en español.
+ */
+private suspend fun textoDeFallo(e: Throwable?): String = when (e) {
+    is ErrorAppException -> textoErrorApp(e.error)
+    else -> e?.message ?: getString(Res.string.error_desconocido)
+}
 
 /**
  * Estado de la lista de mascotas: los datos, si está cargando y el último error.
@@ -62,7 +85,7 @@ class MascotaViewModel(
                     emptyMap()
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Error al cargar mascotas: ${e.message}"
+                _errorMessage.value = getString(Res.string.error_cargar_mascotas, detalleDe(e))
             } finally {
                 _isLoading.value = false
             }
@@ -81,13 +104,13 @@ class MascotaViewModel(
                 }
 
                 if (result.isFailure) {
-                    _errorMessage.value = result.exceptionOrNull()?.message
+                    _errorMessage.value = textoDeFallo(result.exceptionOrNull())
                 } else {
                     loadMascotas()
                     onSuccess()
                 }
             } catch (e: Exception) {
-                _errorMessage.value = e.message
+                _errorMessage.value = textoDeFallo(e)
             } finally {
                 _isLoading.value = false
             }
@@ -104,13 +127,13 @@ class MascotaViewModel(
             try {
                 val result = repository.updateFoto(id, rutaFoto)
                 if (result.isFailure) {
-                    _errorMessage.value = result.exceptionOrNull()?.message
-                        ?: "No se pudo guardar la foto"
+                    _errorMessage.value = result.exceptionOrNull()?.let { textoDeFallo(it) }
+                        ?: getString(Res.string.error_guardar_foto_corto)
                 } else {
                     loadMascotas()
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "No se pudo guardar la foto: ${e.message}"
+                _errorMessage.value = getString(Res.string.error_guardar_foto, detalleDe(e))
             }
         }
     }
@@ -126,13 +149,13 @@ class MascotaViewModel(
             try {
                 val result = repository.updatePesoIdeal(id, pesoIdeal)
                 if (result.isFailure) {
-                    _errorMessage.value = result.exceptionOrNull()?.message
-                        ?: "No se pudo guardar el peso ideal"
+                    _errorMessage.value = result.exceptionOrNull()?.let { textoDeFallo(it) }
+                        ?: getString(Res.string.error_guardar_peso_ideal_corto)
                 } else {
                     loadMascotas()
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "No se pudo guardar el peso ideal: ${e.message}"
+                _errorMessage.value = getString(Res.string.error_guardar_peso_ideal, detalleDe(e))
             }
         }
     }
@@ -145,7 +168,7 @@ class MascotaViewModel(
                 loadMascotas()
                 onSuccess()
             } catch (e: Exception) {
-                _errorMessage.value = "Error al borrar mascota: ${e.message}"
+                _errorMessage.value = getString(Res.string.error_borrar_mascota, detalleDe(e))
             } finally {
                 _isLoading.value = false
             }
@@ -160,3 +183,6 @@ class MascotaViewModel(
         _errorMessage.value = message
     }
 }
+
+/** Detalle técnico del fallo para los mensajes "No se pudo hacer X: <detalle>". */
+private fun detalleDe(e: Throwable): String = e.message ?: e::class.simpleName ?: "?"

@@ -59,6 +59,9 @@ import com.example.virtualpetkmp.util.rememberAgregadorCalendario
 import com.example.virtualpetkmp.util.textoEstadoDosis
 import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.accion_abrir
+import virtualpetkmp.shared.generated.resources.accion_editar
+import virtualpetkmp.shared.generated.resources.accion_eliminar
 import virtualpetkmp.shared.generated.resources.calendario_preventivo_descripcion
 import virtualpetkmp.shared.generated.resources.calendario_preventivo_descripcion_fin
 import virtualpetkmp.shared.generated.resources.calendario_preventivo_titulo
@@ -66,9 +69,12 @@ import virtualpetkmp.shared.generated.resources.calendario_vacuna_descripcion
 import virtualpetkmp.shared.generated.resources.calendario_vacuna_descripcion_fin
 import virtualpetkmp.shared.generated.resources.calendario_vacuna_titulo
 import virtualpetkmp.shared.generated.resources.hoja_activos
+import virtualpetkmp.shared.generated.resources.hoja_anadir_calendario
 import virtualpetkmp.shared.generated.resources.hoja_anadir_informe
 import virtualpetkmp.shared.generated.resources.hoja_anadir_nota
+import virtualpetkmp.shared.generated.resources.hoja_anadir_preventivo
 import virtualpetkmp.shared.generated.resources.hoja_anadir_tratamiento
+import virtualpetkmp.shared.generated.resources.hoja_anadir_vacuna
 import virtualpetkmp.shared.generated.resources.hoja_anadir_visita
 import virtualpetkmp.shared.generated.resources.hoja_cancelar_edicion
 import virtualpetkmp.shared.generated.resources.hoja_guardar_cambios
@@ -216,7 +222,7 @@ fun TarjetaContenidoHoja(
             if (onAbrir != null) {
                 Icon(
                     imageVector = Icons.Default.OpenInNew,
-                    contentDescription = "Abrir",
+                    contentDescription = stringResource(Res.string.accion_abrir),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -224,7 +230,7 @@ fun TarjetaContenidoHoja(
                 IconButton(onClick = onCalendario) {
                     Icon(
                         imageVector = Icons.Default.Event,
-                        contentDescription = "Añadir al calendario",
+                        contentDescription = stringResource(Res.string.hoja_anadir_calendario),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -233,7 +239,7 @@ fun TarjetaContenidoHoja(
                 IconButton(onClick = onEditar) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Editar",
+                        contentDescription = stringResource(Res.string.accion_editar),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -242,7 +248,7 @@ fun TarjetaContenidoHoja(
                 IconButton(onClick = onBorrar) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Eliminar",
+                        contentDescription = stringResource(Res.string.accion_eliminar),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -363,7 +369,9 @@ fun HojaVacunasPreventivos(
         }
 
         FilaAccionHoja(
-            etiquetaAccion = if (pestana == 0) "Añadir vacuna" else "Añadir preventivo",
+            etiquetaAccion = stringResource(
+                if (pestana == 0) Res.string.hoja_anadir_vacuna else Res.string.hoja_anadir_preventivo
+            ),
             onAccion = { onAgregar(pestana == 0) }
         )
     }

@@ -2,6 +2,8 @@ package com.example.virtualpetkmp.data
 
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.db.VirtualPetDatabase
+import com.example.virtualpetkmp.util.ErrorApp
+import com.example.virtualpetkmp.util.ErrorAppException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
@@ -12,7 +14,7 @@ import kotlinx.datetime.LocalDate
  * Además del CRUD, aquí vive la única regla de negocio de este nivel: **el nombre no se puede
  * repetir** (comparando sin distinguir mayúsculas). La comprobación se hace antes de escribir
  * y excluyendo el propio id al editar, y devuelve el error como `Result.failure` con un
- * mensaje ya listo para enseñar.
+ * **motivo traducible** ([ErrorApp]): el texto final lo pone la interfaz en el idioma activo.
  *
  * Todas las consultas van a [Dispatchers.IO].
  */
@@ -38,7 +40,7 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
                 .firstOrNull()
 
             if (existente != null) {
-                return@withContext Result.failure(Exception("Ya existe una mascota con ese nombre"))
+                return@withContext Result.failure(ErrorAppException(ErrorApp.NOMBRE_DUPLICADO))
             }
 
             database.mascotasQueries.insert(
@@ -66,7 +68,7 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
     suspend fun updateMascota(mascota: Mascota): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             if (mascota.id == null) {
-                return@withContext Result.failure(Exception("ID es requerido para actualizar"))
+                return@withContext Result.failure(ErrorAppException(ErrorApp.ID_REQUERIDO))
             }
 
             // Comprobar si el nombre ya existe (sin distinguir mayúsculas/minúsculas), excluyendo el id actual
@@ -75,7 +77,7 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
                 .firstOrNull()
 
             if (existente != null && existente != mascota.id) {
-                return@withContext Result.failure(Exception("Ya existe una mascota con ese nombre"))
+                return@withContext Result.failure(ErrorAppException(ErrorApp.NOMBRE_DUPLICADO))
             }
 
             database.mascotasQueries.update(

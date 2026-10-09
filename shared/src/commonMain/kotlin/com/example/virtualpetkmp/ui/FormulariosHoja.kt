@@ -46,6 +46,7 @@ import virtualpetkmp.shared.generated.resources.form_anadir_preventivo
 import virtualpetkmp.shared.generated.resources.form_anadir_tratamiento
 import virtualpetkmp.shared.generated.resources.form_anadir_vacuna
 import virtualpetkmp.shared.generated.resources.form_anadir_visita
+import virtualpetkmp.shared.generated.resources.form_campo_tipo
 import virtualpetkmp.shared.generated.resources.form_con_fecha_fin
 import virtualpetkmp.shared.generated.resources.form_cronico
 import virtualpetkmp.shared.generated.resources.form_diagnostico_opcional
@@ -297,7 +298,7 @@ fun FormularioPreventivo(
                 // menú desplegable no se desplegaba de forma fiable, y los chips son además
                 // más rápidos (se ve la opción elegida sin abrir nada).
                 Text(
-                    text = "Tipo",
+                    text = stringResource(Res.string.form_campo_tipo),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

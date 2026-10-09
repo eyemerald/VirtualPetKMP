@@ -35,6 +35,12 @@ import androidx.compose.ui.unit.sp
 import com.example.virtualpetkmp.util.cargarImagenDesdeRuta
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.stringResource
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.a11y_foto_de
+import virtualpetkmp.shared.generated.resources.a11y_foto_de_cambiar
+import virtualpetkmp.shared.generated.resources.a11y_foto_mascota
+import virtualpetkmp.shared.generated.resources.mascota_cambiar_foto
 
 /** Tamaño por defecto del avatar (ficha y formulario). */
 val TAMANO_AVATAR_FICHA: Dp = 80.dp
@@ -69,11 +75,13 @@ fun AvatarMascota(
 
     val tieneFoto = !rutaFoto.isNullOrBlank()
     val puedeCambiar = onCambiarFoto != null
+    // Descripción para lectores de pantalla: cambia según haya foto y se pueda cambiar.
     val descripcionFoto = when {
-        nombre.isBlank() -> "Foto de la mascota"
-        puedeCambiar -> "Foto de $nombre. Pulsa para cambiarla"
-        else -> "Foto de $nombre"
+        nombre.isBlank() -> stringResource(Res.string.a11y_foto_mascota)
+        puedeCambiar -> stringResource(Res.string.a11y_foto_de_cambiar, nombre)
+        else -> stringResource(Res.string.a11y_foto_de, nombre)
     }
+    val etiquetaCambiarFoto = stringResource(Res.string.mascota_cambiar_foto)
     val forma = RoundedCornerShape(percent = 28)
 
     Box(
@@ -88,7 +96,7 @@ fun AvatarMascota(
             )
             .let { base ->
                 if (onCambiarFoto != null) {
-                    base.clickable(onClickLabel = "Cambiar foto", role = Role.Button, onClick = onCambiarFoto)
+                    base.clickable(onClickLabel = etiquetaCambiarFoto, role = Role.Button, onClick = onCambiarFoto)
                 } else {
                     base
                 }

@@ -61,6 +61,7 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
 import virtualpetkmp.shared.generated.resources.accion_aceptar
+import virtualpetkmp.shared.generated.resources.a11y_mas_acciones
 import virtualpetkmp.shared.generated.resources.exportar_elegir_version
 import virtualpetkmp.shared.generated.resources.exportar_en_curso
 import virtualpetkmp.shared.generated.resources.exportar_error_desconocido
@@ -838,7 +839,7 @@ private fun MenuAccionesFicha(
         IconButton(onClick = { abierto = true }) {
             Icon(
                 imageVector = Icons.Default.MoreVert,
-                contentDescription = "Más acciones"
+                contentDescription = stringResource(Res.string.a11y_mas_acciones)
             )
         }
 

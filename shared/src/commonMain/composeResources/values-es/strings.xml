@@ -15,6 +15,7 @@
     <string name="lista_peso_ideal">ideal %1$s %2$s</string>
 
     <!-- Acciones genéricas -->
+    <string name="accion_abrir">Abrir</string>
     <string name="accion_editar">Editar</string>
     <string name="accion_eliminar">Eliminar</string>
     <string name="accion_cancelar">Cancelar</string>
@@ -33,6 +34,9 @@
     <string name="a11y_elegir_calendario">Elegir del calendario</string>
     <string name="a11y_historial_mostrar">Mostrar histórico</string>
     <string name="a11y_historial_ocultar">Ocultar histórico</string>
+    <string name="a11y_foto_mascota">Foto de la mascota</string>
+    <string name="a11y_foto_de">Foto de %1$s</string>
+    <string name="a11y_foto_de_cambiar">Foto de %1$s. Pulsa para cambiarla</string>
 
     <!-- Diálogo de borrado de mascota -->
     <string name="borrar_mascota_titulo">Eliminar mascota</string>
@@ -234,6 +238,7 @@
     <string name="form_notas_consulta_opcional">Notas de la consulta (opcional)</string>
 
     <string name="form_fecha">Fecha (%1$s)</string>
+    <string name="form_campo_tipo">Tipo</string>
     <string name="form_peso_kg">Peso en %1$s (ej: %2$s)</string>
     <string name="form_notas_opcional">Notas (opcional)</string>
     <string name="form_ejemplo_peso">12,4</string>
@@ -308,4 +313,56 @@
     <string name="informe_archivo_elegido">Archivo elegido: %1$s</string>
     <string name="informe_archivo">Archivo: %1$s</string>
     <string name="informe_guardar_cambios">Guardar cambios</string>
+
+    <!-- Mensajes de error de la capa de datos (los resuelve el ViewModel) -->
+    <string name="error_cargar_mascotas">Error al cargar mascotas: %1$s</string>
+    <string name="error_cargar_veterinarios">Error al cargar veterinarios: %1$s</string>
+    <string name="error_borrar_mascota">Error al borrar mascota: %1$s</string>
+    <string name="error_borrar_veterinario">Error al borrar veterinario: %1$s</string>
+    <string name="error_guardar_foto">No se pudo guardar la foto: %1$s</string>
+    <string name="error_guardar_foto_corto">No se pudo guardar la foto</string>
+    <string name="error_guardar_peso_ideal">No se pudo guardar el peso ideal: %1$s</string>
+    <string name="error_guardar_peso_ideal_corto">No se pudo guardar el peso ideal</string>
+    <string name="error_nombre_duplicado">Ya existe una mascota con ese nombre</string>
+    <string name="error_id_requerido">Se necesita un id para actualizar</string>
+    <string name="error_desconocido">Error desconocido</string>
+
+    <!-- Etiquetas del PDF exportado (se generan fuera de la composición, con getString) -->
+    <string name="pdf_ficha_de">Ficha de %1$s</string>
+    <string name="pdf_resumen_cuidador">Resumen para cuidador</string>
+    <string name="pdf_ficha_veterinaria">Ficha veterinaria</string>
+    <string name="pdf_nombre">Nombre</string>
+    <string name="pdf_especie">Especie</string>
+    <string name="pdf_raza">Raza</string>
+    <string name="pdf_sexo">Sexo</string>
+    <string name="pdf_edad">Edad</string>
+    <string name="pdf_fecha_nacimiento">Fecha nacimiento</string>
+    <string name="pdf_microchip">Microchip</string>
+    <string name="pdf_peso_actual">Peso actual</string>
+    <string name="pdf_vacunas_proximas">Vacunas próximas</string>
+    <string name="pdf_no_vacunas_proximas">No hay vacunas próximas programadas</string>
+    <string name="pdf_vacuna">Vacuna</string>
+    <string name="pdf_proxima_dosis">Próxima dosis</string>
+    <string name="pdf_tratamientos_activos">Tratamientos activos</string>
+    <string name="pdf_no_tratamientos_activos">No hay tratamientos activos</string>
+    <string name="pdf_medicamento">Medicamento</string>
+    <string name="pdf_frecuencia">Frecuencia</string>
+    <string name="pdf_resumen_general">Resumen general</string>
+    <string name="pdf_ultimo_peso">Último peso</string>
+    <string name="pdf_fecha_reporte">Fecha del reporte</string>
+    <string name="pdf_a_tener_en_cuenta">A tener en cuenta</string>
+    <string name="pdf_nota">Nota</string>
+    <string name="pdf_vacunas">Vacunas</string>
+    <string name="pdf_aplicada">Aplicada</string>
+    <string name="pdf_proxima">Próxima</string>
+    <string name="pdf_revisiones">Revisiones veterinarias</string>
+    <string name="pdf_fecha">Fecha</string>
+    <string name="pdf_motivo">Motivo</string>
+    <string name="pdf_diagnostico">Diagnóstico</string>
+    <string name="pdf_inicio">Inicio</string>
+    <string name="pdf_fin">Fin</string>
+    <string name="pdf_informes_notas">Informes y notas</string>
+    <string name="pdf_tipo">Tipo</string>
+    <string name="pdf_descripcion">Descripción</string>
+    <string name="pdf_generado_el">Generado el %1$s</string>
 </resources>

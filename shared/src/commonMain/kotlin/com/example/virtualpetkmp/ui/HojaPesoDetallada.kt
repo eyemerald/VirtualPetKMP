@@ -107,6 +107,7 @@ import virtualpetkmp.shared.generated.resources.peso_ideal_fijar
 import virtualpetkmp.shared.generated.resources.peso_ideal_indicacion
 import virtualpetkmp.shared.generated.resources.peso_ideal_kg
 import virtualpetkmp.shared.generated.resources.peso_ideal_quitar
+import virtualpetkmp.shared.generated.resources.peso_mas_opciones
 import virtualpetkmp.shared.generated.resources.peso_resumen_ideal
 import virtualpetkmp.shared.generated.resources.peso_resumen_sin_datos
 import virtualpetkmp.shared.generated.resources.peso_sin_pesajes_en_rango
@@ -185,7 +186,7 @@ fun HojaPesoDetallada(
                 IconButton(onClick = { menuAbierto = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Más opciones de peso"
+                        contentDescription = stringResource(Res.string.peso_mas_opciones)
                     )
                 }
                 DropdownMenu(
