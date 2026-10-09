@@ -311,4 +311,5 @@
     <string name="informe_cambiar_archivo">Change file</string>
     <string name="informe_archivo_elegido">Chosen file: %1$s</string>
     <string name="informe_archivo">File: %1$s</string>
+    <string name="informe_guardar_cambios">Save changes</string>
 </resources>

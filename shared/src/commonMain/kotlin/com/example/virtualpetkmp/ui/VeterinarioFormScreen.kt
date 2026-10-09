@@ -40,6 +40,19 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Veterinario
 import com.example.virtualpetkmp.viewmodel.VeterinarioViewModel
+import org.jetbrains.compose.resources.stringResource
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.a11y_volver
+import virtualpetkmp.shared.generated.resources.mascota_completar_campos
+import virtualpetkmp.shared.generated.resources.vet_actualizar
+import virtualpetkmp.shared.generated.resources.vet_campo_clinica
+import virtualpetkmp.shared.generated.resources.vet_campo_direccion
+import virtualpetkmp.shared.generated.resources.vet_campo_telefono
+import virtualpetkmp.shared.generated.resources.vet_campo_urgencias
+import virtualpetkmp.shared.generated.resources.vet_campo_veterinario
+import virtualpetkmp.shared.generated.resources.vet_editar
+import virtualpetkmp.shared.generated.resources.vet_guardar
+import virtualpetkmp.shared.generated.resources.vet_nuevo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +66,9 @@ fun VeterinarioFormScreen(
     var telefono by rememberSaveable { mutableStateOf("") }
     var direccion by rememberSaveable { mutableStateOf("") }
     var esUrgencias by rememberSaveable { mutableStateOf(false) }
+
+    // Texto resuelto aquí porque dentro del onClick no hay contexto composable.
+    val textoCamposObligatorios = stringResource(Res.string.mascota_completar_campos)
 
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -73,10 +89,16 @@ fun VeterinarioFormScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (veterinarioId == null) "Nuevo Veterinario" else "Editar Veterinario") },
+                title = {
+                    Text(
+                        stringResource(
+                            if (veterinarioId == null) Res.string.vet_nuevo else Res.string.vet_editar
+                        )
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.a11y_volver))
                     }
                 }
             )
@@ -93,7 +115,7 @@ fun VeterinarioFormScreen(
             OutlinedTextField(
                 value = nombreClinica,
                 onValueChange = { nombreClinica = it },
-                label = { Text("Nombre de la clínica *") },
+                label = { Text(stringResource(Res.string.vet_campo_clinica)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 isError = nombreClinica.isBlank()
@@ -102,7 +124,7 @@ fun VeterinarioFormScreen(
             OutlinedTextField(
                 value = nombreVeterinario,
                 onValueChange = { nombreVeterinario = it },
-                label = { Text("Nombre del veterinario (opcional)") },
+                label = { Text(stringResource(Res.string.vet_campo_veterinario)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -110,7 +132,7 @@ fun VeterinarioFormScreen(
             OutlinedTextField(
                 value = telefono,
                 onValueChange = { telefono = it },
-                label = { Text("Teléfono *") },
+                label = { Text(stringResource(Res.string.vet_campo_telefono)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -120,7 +142,7 @@ fun VeterinarioFormScreen(
             OutlinedTextField(
                 value = direccion,
                 onValueChange = { direccion = it },
-                label = { Text("Dirección *") },
+                label = { Text(stringResource(Res.string.vet_campo_direccion)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
                 isError = direccion.isBlank()
@@ -134,7 +156,7 @@ fun VeterinarioFormScreen(
                     checked = esUrgencias,
                     onCheckedChange = { esUrgencias = it }
                 )
-                Text("Es veterinario de urgencias 24h")
+                Text(stringResource(Res.string.vet_campo_urgencias))
             }
 
             if (errorMessage != null) {
@@ -155,7 +177,7 @@ fun VeterinarioFormScreen(
             Button(
                 onClick = {
                     if (nombreClinica.isBlank() || telefono.isBlank() || direccion.isBlank()) {
-                        viewModel.setError("Completa todos los campos obligatorios")
+                        viewModel.setError(textoCamposObligatorios)
                         return@Button
                     }
 
@@ -181,7 +203,11 @@ fun VeterinarioFormScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text(if (veterinarioId == null) "Guardar Veterinario" else "Actualizar Veterinario")
+                    Text(
+                        stringResource(
+                            if (veterinarioId == null) Res.string.vet_guardar else Res.string.vet_actualizar
+                        )
+                    )
                 }
             }
         }

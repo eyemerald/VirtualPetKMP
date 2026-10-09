@@ -307,4 +307,5 @@
     <string name="informe_cambiar_archivo">Cambiar archivo</string>
     <string name="informe_archivo_elegido">Archivo elegido: %1$s</string>
     <string name="informe_archivo">Archivo: %1$s</string>
+    <string name="informe_guardar_cambios">Guardar cambios</string>
 </resources>

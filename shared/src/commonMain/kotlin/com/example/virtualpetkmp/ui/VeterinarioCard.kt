@@ -25,6 +25,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Veterinario
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
+import org.jetbrains.compose.resources.stringResource
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.accion_editar
+import virtualpetkmp.shared.generated.resources.accion_eliminar
+import virtualpetkmp.shared.generated.resources.a11y_llamar
+import virtualpetkmp.shared.generated.resources.a11y_mapa
 
 @Composable
 fun VeterinarioCard(
@@ -88,18 +94,18 @@ fun VeterinarioCard(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 IconButton(onClick = onLlamar) {
-                    Icon(Icons.Default.Phone, contentDescription = "Llamar")
+                    Icon(Icons.Default.Phone, contentDescription = stringResource(Res.string.a11y_llamar))
                 }
                 IconButton(onClick = onAbrirMapa) {
-                    Icon(Icons.Default.Place, contentDescription = "Mapa")
+                    Icon(Icons.Default.Place, contentDescription = stringResource(Res.string.a11y_mapa))
                 }
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Editar")
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.accion_editar))
                 }
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Eliminar",
+                        contentDescription = stringResource(Res.string.accion_eliminar),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }

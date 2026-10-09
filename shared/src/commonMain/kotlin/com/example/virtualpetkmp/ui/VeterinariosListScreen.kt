@@ -53,6 +53,24 @@ import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import com.example.virtualpetkmp.util.rememberAbridorMapa
 import com.example.virtualpetkmp.util.rememberLlamador
 import com.example.virtualpetkmp.viewmodel.VeterinarioViewModel
+import org.jetbrains.compose.resources.stringResource
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.accion_cancelar
+import virtualpetkmp.shared.generated.resources.accion_editar
+import virtualpetkmp.shared.generated.resources.accion_eliminar
+import virtualpetkmp.shared.generated.resources.accion_reintentar
+import virtualpetkmp.shared.generated.resources.a11y_llamar
+import virtualpetkmp.shared.generated.resources.a11y_mapa
+import virtualpetkmp.shared.generated.resources.vet_anadir
+import virtualpetkmp.shared.generated.resources.vet_borrar_mensaje
+import virtualpetkmp.shared.generated.resources.vet_borrar_titulo
+import virtualpetkmp.shared.generated.resources.vet_buscar_cercanos
+import virtualpetkmp.shared.generated.resources.vet_cercanos
+import virtualpetkmp.shared.generated.resources.vet_llamar_urgencias
+import virtualpetkmp.shared.generated.resources.vet_todos_titulo
+import virtualpetkmp.shared.generated.resources.vet_urgencias_titulo
+import virtualpetkmp.shared.generated.resources.vet_vacio
+import virtualpetkmp.shared.generated.resources.vet_vacio_ayuda
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,6 +87,10 @@ fun VeterinariosListScreen(
     val llamar = rememberLlamador()
     val abrirMapa = rememberAbridorMapa()
 
+    // Textos usados dentro de lambdas (onClick): se resuelven aquí, que sí es composable.
+    val textoAgregarVeterinario = stringResource(Res.string.vet_anadir)
+    val textoBuscarCercanos = stringResource(Res.string.vet_buscar_cercanos)
+
     val veterinariosUrgencias = veterinarios.filter { it.esUrgencias }
     val veterinariosNormales = veterinarios.filter { !it.esUrgencias }
 
@@ -82,7 +104,7 @@ fun VeterinariosListScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             FloatingActionButton(onClick = onAddVeterinario) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar veterinario")
+                Icon(Icons.Default.Add, contentDescription = textoAgregarVeterinario)
             }
         },
         // Hueco FIJO del banner de publicidad: el Scaffold lo coloca fuera del área de
@@ -124,7 +146,7 @@ fun VeterinariosListScreen(
                             viewModel.clearError()
                             viewModel.loadVeterinarios()
                         }) {
-                            Text("Reintentar")
+                            Text(stringResource(Res.string.accion_reintentar))
                         }
                     }
                 }
@@ -137,19 +159,19 @@ fun VeterinariosListScreen(
                         verticalArrangement = Arrangement.Center
                     ) {
                         OutlinedButton(
-                            onClick = { abrirMapa("veterinarios cerca de mí") },
+                            onClick = { abrirMapa(textoBuscarCercanos) },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Veterinarios cercanos")
+                            Text(stringResource(Res.string.vet_cercanos))
                         }
                         Spacer(modifier = Modifier.height(24.dp))
                         Text(
-                            text = "No hay veterinarios registrados",
+                            text = stringResource(Res.string.vet_vacio),
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Toca el botón + para agregar uno",
+                            text = stringResource(Res.string.vet_vacio_ayuda),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
@@ -170,17 +192,17 @@ fun VeterinariosListScreen(
                     ) {
                         item {
                             OutlinedButton(
-                                onClick = { abrirMapa("veterinarios cerca de mí") },
+                                onClick = { abrirMapa(textoBuscarCercanos) },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Veterinarios cercanos")
+                                Text(stringResource(Res.string.vet_cercanos))
                             }
                         }
 
                         if (veterinariosUrgencias.isNotEmpty()) {
                             item {
                                 Text(
-                                    text = "Urgencias 24h",
+                                    text = stringResource(Res.string.vet_urgencias_titulo),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.error,
                                     fontWeight = FontWeight.Bold
@@ -199,7 +221,7 @@ fun VeterinariosListScreen(
                         if (veterinariosNormales.isNotEmpty()) {
                             item {
                                 Text(
-                                    text = "Todos los veterinarios",
+                                    text = stringResource(Res.string.vet_todos_titulo),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -224,8 +246,8 @@ fun VeterinariosListScreen(
     showDeleteDialog?.let { id ->
         AlertDialog(
             onDismissRequest = { showDeleteDialog = null },
-            title = { Text("Confirmar eliminación") },
-            text = { Text("¿Estás seguro de que quieres eliminar este veterinario? Esta acción no se puede deshacer.") },
+            title = { Text(stringResource(Res.string.vet_borrar_titulo)) },
+            text = { Text(stringResource(Res.string.vet_borrar_mensaje)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -234,12 +256,12 @@ fun VeterinariosListScreen(
                         }
                     }
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(Res.string.accion_eliminar))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(Res.string.accion_cancelar))
                 }
             }
         )
@@ -319,10 +341,10 @@ fun VeterinarioUrgenciaCard(
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     IconButton(onClick = onAbrirMapa) {
-                        Icon(Icons.Default.Place, contentDescription = "Mapa")
+                        Icon(Icons.Default.Place, contentDescription = stringResource(Res.string.a11y_mapa))
                     }
                     IconButton(onClick = onEditar) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar")
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.accion_editar))
                     }
                 }
             }
@@ -340,7 +362,7 @@ fun VeterinarioUrgenciaCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Phone,
-                    contentDescription = "Llamar a urgencias",
+                    contentDescription = stringResource(Res.string.vet_llamar_urgencias),
                     tint = MaterialTheme.colorScheme.onError,
                     modifier = Modifier.size(26.dp)
                 )
