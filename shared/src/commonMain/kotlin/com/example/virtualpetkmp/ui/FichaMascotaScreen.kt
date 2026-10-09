@@ -1016,7 +1016,14 @@ private fun SparklinePeso(
 
     val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
     val estiloEtiqueta = androidx.compose.ui.text.TextStyle(fontSize = 9.sp, color = colorTexto)
-    val margenDerechoPx = with(androidx.compose.ui.platform.LocalDensity.current) { 36.dp.toPx() }
+    val densidad = androidx.compose.ui.platform.LocalDensity.current
+    // Tope a cada lado del gráfico: el primero y el último punto quedan con aire respecto a
+    // su borde, así la línea no arranca pegada a la esquina de la tarjeta.
+    val topeIzquierdoPx = with(densidad) { 8.dp.toPx() }
+    // Banda reservada a la derecha para rotular el peso máximo y el mínimo, con un hueco de
+    // separación respecto al último punto para que el número no se monte encima.
+    val bandaDerechaPx = with(densidad) { 32.dp.toPx() }
+    val separacionEtiquetaPx = with(densidad) { 6.dp.toPx() }
 
     androidx.compose.foundation.Canvas(modifier = modifier) {
         if (puntos.size < 2) return@Canvas
@@ -1025,23 +1032,27 @@ private fun SparklinePeso(
         val maxPeso = puntos.maxOf { it.peso }
         val rango = (maxPeso - minPeso).toFloat()
         val padV = 4.dp.toPx()
-        val anchoGrafico = (size.width - margenDerechoPx).coerceAtLeast(1f)
+        // El eje X va del tope izquierdo al arranque de la banda de etiquetas: el primer
+        // punto queda con aire a su izquierda y el último con la banda a su derecha.
+        val inicioGrafico = topeIzquierdoPx.coerceAtMost(size.width / 4f)
+        val anchoGrafico = (size.width - bandaDerechaPx - inicioGrafico).coerceAtLeast(1f)
         val altoUtil = (size.height - padV * 2).coerceAtLeast(1f)
         val grosorLinea = 1.dp.toPx()
 
-        // Tres referencias horizontales muy sutiles, para dar sensación de escala.
+        // Tres referencias horizontales muy sutiles, para dar sensación de escala. Ocupan
+        // todo el ancho para que se lean como la escala del gráfico.
         listOf(0f, 0.5f, 1f).forEach { fraccionY ->
             val y = padV + altoUtil * fraccionY
             drawLine(
                 color = colorReferencia,
                 start = Offset(0f, y),
-                end = Offset(anchoGrafico, y),
+                end = Offset(size.width, y),
                 strokeWidth = grosorLinea
             )
         }
 
         fun x(indice: Int): Float =
-            (indice.toFloat() / (puntos.size - 1)) * anchoGrafico
+            inicioGrafico + (indice.toFloat() / (puntos.size - 1)) * anchoGrafico
 
         fun y(peso: Double): Float {
             val normalizado = if (rango <= 0.0001f) 0.5f else ((peso - minPeso) / rango).toFloat()
@@ -1072,11 +1083,13 @@ private fun SparklinePeso(
         }
         drawPath(path = path, color = colorLinea, style = Stroke(width = 2.dp.toPx()))
 
-        // Pesos máximo y mínimo a la derecha, a la altura de su propio punto.
+        // Pesos máximo y mínimo en la banda de la derecha, a la altura de su propio punto
+        // pero sin pisarlo: van a partir del final del eje más un huequito.
         val etiquetaMax = formatearPesoDosDecimales(maxPeso)
         val etiquetaMin = formatearPesoDosDecimales(minPeso)
         val medidaMax = textMeasurer.measure(etiquetaMax, style = estiloEtiqueta)
         val medidaMin = textMeasurer.measure(etiquetaMin, style = estiloEtiqueta)
+        val xEtiquetas = inicioGrafico + anchoGrafico + separacionEtiquetaPx
         val yMaxEtiqueta = (coordenadas[indiceMax].y - medidaMax.size.height / 2f)
             .coerceIn(0f, (size.height - medidaMax.size.height).coerceAtLeast(0f))
         val yMinEtiqueta = (coordenadas[indiceMin].y - medidaMin.size.height / 2f)
@@ -1084,13 +1097,13 @@ private fun SparklinePeso(
         drawText(
             textMeasurer = textMeasurer,
             text = etiquetaMax,
-            topLeft = Offset(anchoGrafico + 4.dp.toPx(), yMaxEtiqueta),
+            topLeft = Offset(xEtiquetas, yMaxEtiqueta),
             style = estiloEtiqueta
         )
         drawText(
             textMeasurer = textMeasurer,
             text = etiquetaMin,
-            topLeft = Offset(anchoGrafico + 4.dp.toPx(), yMinEtiqueta),
+            topLeft = Offset(xEtiquetas, yMinEtiqueta),
             style = estiloEtiqueta
         )
 

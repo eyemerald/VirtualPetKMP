@@ -571,7 +571,14 @@ private fun GraficoLineaMeses(
         val pasoDp = pasoTeoricoDp.coerceIn(pasoMinimoDp, pasoMaximoDp)
         val pasoPx = with(densidad) { pasoDp.toPx() }
         val anchoContenidoPx = pasoPx * (meses.size - 1).coerceAtLeast(1)
-        val maxDesplazamiento = (anchoContenidoPx - anchoPx).coerceAtLeast(0f)
+
+        // Tope a cada lado, igual que en el gráfico de la ficha: el recorrido del arrastre se
+        // recorta para que el primer y el último punto nunca lleguen al borde de la hoja, ni
+        // siquiera al llevar el gráfico de punta a punta.
+        val topeLadosPx = with(densidad) { 14.dp.toPx() }
+        val maxDesplazamiento =
+            (anchoContenidoPx - anchoPx + topeLadosPx).coerceAtLeast(0f)
+        val desplazamientoMinimo = (topeLadosPx * 2 - anchoPx).coerceAtMost(0f)
 
         // Al abrir, se enseña el final del histórico, que es el peso más reciente.
         LaunchedEffect(anchoPx, maxDesplazamiento) {
@@ -580,16 +587,16 @@ private fun GraficoLineaMeses(
 
         // Las etiquetas se adelgazan si hay muchísimos meses, para que no se solapen.
         val saltoEtiquetas = (meses.size / 12 + 1).coerceAtLeast(1)
-        val desplazamientoPx = desplazamiento.coerceIn(0f, maxDesplazamiento)
+        val desplazamientoPx = desplazamiento.coerceIn(desplazamientoMinimo, maxDesplazamiento)
 
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(anchoPx, maxDesplazamiento) {
+                .pointerInput(anchoPx, maxDesplazamiento, desplazamientoMinimo) {
                     detectDragGestures { cambio, arrastre ->
                         cambio.consume()
-                        desplazamiento =
-                            (desplazamiento - arrastre.x).coerceIn(0f, maxDesplazamiento)
+                        desplazamiento = (desplazamiento - arrastre.x)
+                            .coerceIn(desplazamientoMinimo, maxDesplazamiento)
                     }
                 }
         ) {
