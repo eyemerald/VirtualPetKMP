@@ -1,6 +1,6 @@
 # 🐾 VirtualPetKMP
 
-**VirtualPetKMP** es una aplicación multiplataforma (Android y Escritorio) para llevar un registro completo de la salud y los cuidados de tus mascotas: vacunas, desparasitaciones, pesos, revisiones veterinarias, tratamientos e informes, todo en un solo lugar.
+**VirtualPetKMP** es una aplicación multiplataforma (Android y Escritorio) para llevar un registro completo de la salud y los cuidados de tus mascotas: vacunas, desparasitaciones, peso, revisiones veterinarias, tratamientos e informes, todo en un solo lugar.
 
 Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartiendo toda la lógica y la interfaz de usuario entre Android y escritorio. **El código es privado**; si estás interesado en él, puedes contactar con el autor.
 
@@ -8,25 +8,25 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 
 ## ✨ Características
 
-- 🐶 **Gestión de mascotas**: fichas con datos básicos (nombre, especie, raza, fecha de nacimiento, sexo, color, microchip).
+- 🐶 **Gestión de mascotas**: fichas con datos básicos (nombre, especie, raza, fecha de nacimiento, sexo, color, microchip) y **peso ideal** opcional.
 - 📷 **Foto de la mascota**: se puede elegir de los archivos o **hacer con la cámara** (Android); se ve en la ficha y en la lista de mascotas.
-- 🏠 **Ficha como panel**: cabecera con la foto, el nombre y la edad, y tarjetas por bloque (peso, vacunas y preventivos, salud y seguimiento, notas) con el estado de un vistazo: en ámbar lo que vence pronto y en rojo lo vencido.
+- 🏠 **Ficha como panel**: cabecera con la foto, el nombre y la edad, y tarjetas por bloque (peso, vacunas y preventivos, salud y seguimiento, notas) que muestran **un solo aviso** cada una: en ámbar lo que vence pronto y en rojo lo vencido. Las acciones de la mascota (modificar datos) van en un menú **⋮** en la propia cabecera.
+- ⚖️ **Pesos**: registro y evolución en un **gráfico de línea arrastrable** en la ficha, y una vista detallada con el histórico mes a mes, filtros (todo, por año o por rango de fechas) y el **histórico plegable**: al pulsar un pesaje se abre un modal para editarlo o borrarlo.
+- 🎯 **Peso ideal**: se puede fijar en la ficha de la mascota o desde la propia hoja de peso. Se dibuja como **línea discontinua** de referencia en el gráfico y, en la lista, el último peso lleva un indicador **▲ verde** si está por encima o **▼ rojo** si está por debajo.
 - 💉 **Vacunas**: registro con próxima dosis, **notificaciones locales** 15 días antes y **añadir el recordatorio al calendario** del teléfono.
-- 💊 **Preventivos**: pipetas, desparasitaciones y otros tratamientos preventivos, con aviso 1 día antes y también añadibles al calendario.
-- ⚖️ **Pesos**: registro y evolución en **gráfico de barras** en la ficha, y una vista detallada por meses con filtro (todo, último año o un rango de fechas).
+- 💊 **Preventivos**: pipetas, desparasitaciones y otros tratamientos preventivos, con aviso 5 días antes y también añadibles al calendario.
 - 🩺 **Revisiones veterinarias**: historial con motivo, diagnóstico, notas y veterinario.
-- 💊 **Tratamientos**: medicamentos con dosis, frecuencia y fechas.
-- 📄 **Informes**: adjuntar informes veterinarios con tipo, descripción y archivo.
+- 💊 **Tratamientos**: medicamentos con dosis, frecuencia y fechas, con los activos separados del historial.
+- 📄 **Informes**: adjuntar informes veterinarios con tipo, descripción y archivo, y abrirlos desde la app.
 - 📝 **Notas**: apuntes rápidos de interés sobre cada mascota.
 - 🏥 **Veterinarios**: agenda con urgencias (botón directo de llamada), llamada normal y navegación con Google Maps.
 - 📤 **Exportar ficha a PDF**: genera un PDF completo o resumido de la ficha de la mascota.
 - 🔔 **Notificaciones locales**: para no olvidar las próximas dosis.
 - 🌓 **Tema claro / oscuro**: se adapta a la configuración del sistema.
 - 📱 **Multiplataforma**: misma experiencia en Android y Escritorio.
+- 🔌 **Funciona sin conexión**: todos los datos viven en una base de datos SQLite local del dispositivo, con migraciones versionadas, así que nada depende de un servidor.
 
 ---
-
-## 📸 Capturas
 
 ## 📸 Capturas
 
@@ -36,17 +36,23 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 |-------------------|------------------|---------------|
 | ![Mascotas](screenshots/01-mascotas.jpg) | ![Ficha](screenshots/02-ficha-mascota.jpg) | ![Nueva mascota](screenshots/03-nueva-mascota.jpg) |
 
+### Peso
+
+| Evolución y peso ideal | Histórico |
+|------------------------|-----------|
+| ![Peso](screenshots/04-peso.jpg) | ![Histórico](screenshots/05-peso-historico.jpg) |
+
 ### Salud y cuidados
 
-| Vacunas | Preventivos | Evolución del peso |
-|---------|-------------|-------------------|
-| ![Vacunas](screenshots/04-vacunas.jpg) | ![Preventivos](screenshots/05-preventivos.jpg) | ![Peso](screenshots/07-registro-peso.jpg) |
+| Vacunas | Preventivos | Visitas y revisiones |
+|---------|-------------|----------------------|
+| ![Vacunas](screenshots/06-vacunas.jpg) | ![Preventivos](screenshots/07-preventivos.jpg) | ![Visitas](screenshots/08-salud-visitas.jpg) |
 
 ### Veterinarios
 
-| Urgencias 24h | Veterinarios cercanos |
-|---------------|----------------------|
-| ![Urgencias](screenshots/06-veterinarios-urgencias.jpg) | ![Mapa](screenshots/08-mapa-veterinarios.jpg) |
+| Urgencias 24h y agenda |
+|------------------------|
+| ![Veterinarios](screenshots/09-veterinarios.jpg) |
 
 ---
 
@@ -107,6 +113,22 @@ Con **hot reload** durante el desarrollo:
 ```bash
 ./gradlew :shared:jvmTest         # Tests de JVM
 ./gradlew :shared:allTests        # Todos los tests
+```
+
+---
+
+## 🖼️ Capturas para la documentación
+
+Las imágenes de este README se generan a partir de una base de datos de ejemplo, para que
+muestren siempre el mismo aspecto (una vacuna vencida, una próxima, un tratamiento activo…):
+
+```bash
+# 1. Genera una base de datos con datos de ejemplo
+./gradlew :shared:generarDatosEjemplo -PejemploSalida=C:/ruta/datos-ejemplo.db
+
+# 2. Cópiala al dispositivo y abre la app
+adb push datos-ejemplo.db /data/local/tmp/datos-ejemplo.db
+adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-ejemplo.db > /data/data/com.example.virtualpetkmp/databases/virtualpet.db'"
 ```
 
 ---

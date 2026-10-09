@@ -67,3 +67,22 @@ sqldelight {
         }
     }
 }
+
+/**
+ * Herramienta de desarrollo: genera una base de datos con datos de ejemplo (mascota, vacunas,
+ * pesos, tratamientos, notas y veterinarios) para preparar las capturas del README.
+ *
+ * No forma parte de la app. Uso:
+ *   ./gradlew :shared:generarDatosEjemplo -PejemploSalida=C:/ruta/datos-ejemplo.db
+ */
+tasks.register<JavaExec>("generarDatosEjemplo") {
+    group = "documentación"
+    description = "Genera una base de datos de ejemplo para las capturas del README"
+    val fuente = kotlin.jvm().compilations.getByName("main")
+    classpath = fuente.runtimeDependencyFiles + fuente.output.allOutputs
+    mainClass.set("com.example.virtualpetkmp.tools.GenerarDatosEjemploKt")
+    args = listOf(
+        (project.findProperty("ejemploSalida") as String?)
+            ?: layout.buildDirectory.file("datos-ejemplo.db").get().asFile.absolutePath
+    )
+}
