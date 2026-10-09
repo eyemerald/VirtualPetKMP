@@ -24,4 +24,17 @@
     <string name="accion_cancelar">Cancel</string>
     <string name="accion_guardar">Save</string>
     <string name="accion_anadir">Add</string>
+    <string name="accion_cerrar">Close</string>
+    <string name="accion_reintentar">Retry</string>
+
+    <!-- Accesibilidad (lectores de pantalla) -->
+    <string name="a11y_agregar_mascota">Add pet</string>
+    <string name="a11y_acciones_de">Actions for %1$s</string>
+    <string name="a11y_volver">Back</string>
+    <string name="a11y_compartir">Share</string>
+
+    <!-- Diálogo de borrado de mascota -->
+    <string name="borrar_mascota_titulo">Delete pet</string>
+    <string name="borrar_mascota_mensaje">Delete %1$s? This cannot be undone.</string>
+    <string name="borrar_mascota_mensaje_sin_nombre">Delete this pet? This cannot be undone.</string>
 </resources>

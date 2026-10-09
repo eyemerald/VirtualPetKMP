@@ -18,12 +18,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
+import com.example.virtualpetkmp.util.TraduccionesDatos
 import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
 import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.a11y_acciones_de
+import virtualpetkmp.shared.generated.resources.a11y_agregar_mascota
+import virtualpetkmp.shared.generated.resources.accion_cancelar
 import virtualpetkmp.shared.generated.resources.accion_editar
 import virtualpetkmp.shared.generated.resources.accion_eliminar
+import virtualpetkmp.shared.generated.resources.borrar_mascota_mensaje
+import virtualpetkmp.shared.generated.resources.borrar_mascota_mensaje_sin_nombre
+import virtualpetkmp.shared.generated.resources.borrar_mascota_titulo
 import virtualpetkmp.shared.generated.resources.lista_mascotas_reintentar
 import virtualpetkmp.shared.generated.resources.lista_mascotas_vacia
 import virtualpetkmp.shared.generated.resources.lista_mascotas_vacia_ayuda
@@ -53,7 +60,10 @@ fun MascotaListScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             FloatingActionButton(onClick = onAddMascota) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar mascota")
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(Res.string.a11y_agregar_mascota)
+                )
             }
         },
         // Hueco FIJO del banner de publicidad: el Scaffold lo coloca fuera del área de
@@ -154,11 +164,12 @@ fun MascotaListScreen(
     showDeleteDialog?.let { id ->
         AlertDialog(
             onDismissRequest = { showDeleteDialog = null },
-            title = { Text("Eliminar mascota") },
+            title = { Text(stringResource(Res.string.borrar_mascota_titulo)) },
             text = {
                 Text(
-                    nombreAEliminar?.let { "¿Seguro que quieres eliminar a $it? Esta acción no se puede deshacer." }
-                        ?: "¿Seguro que quieres eliminar esta mascota? Esta acción no se puede deshacer."
+                    nombreAEliminar?.let {
+                        stringResource(Res.string.borrar_mascota_mensaje, it)
+                    } ?: stringResource(Res.string.borrar_mascota_mensaje_sin_nombre)
                 )
             },
             confirmButton = {
@@ -173,7 +184,7 @@ fun MascotaListScreen(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(Res.string.accion_eliminar))
                 }
             },
             dismissButton = {
@@ -181,7 +192,7 @@ fun MascotaListScreen(
                     showDeleteDialog = null
                     nombreAEliminar = null
                 }) {
-                    Text("Cancelar")
+                    Text(stringResource(Res.string.accion_cancelar))
                 }
             }
         )
@@ -240,13 +251,19 @@ fun MascotaCard(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "${mascota.especie} - ${mascota.raza}",
+                    // Especie y raza se guardan en español en la base de datos; se traducen
+                    // solo aquí, al mostrarlas.
+                    text = TraduccionesDatos.especieYRaza(
+                        mascota.especie,
+                        mascota.raza,
+                        localizacion.idioma
+                    ),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = mascota.sexo,
+                    text = TraduccionesDatos.etiqueta(mascota.sexo, localizacion.idioma),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
                 )
@@ -267,7 +284,10 @@ fun MascotaCard(
                 IconButton(onClick = { menuAbierto = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Acciones de ${mascota.nombre}"
+                        contentDescription = stringResource(
+                            Res.string.a11y_acciones_de,
+                            mascota.nombre
+                        )
                     )
                 }
 

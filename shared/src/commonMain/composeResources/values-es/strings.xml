@@ -20,4 +20,17 @@
     <string name="accion_cancelar">Cancelar</string>
     <string name="accion_guardar">Guardar</string>
     <string name="accion_anadir">Añadir</string>
+    <string name="accion_cerrar">Cerrar</string>
+    <string name="accion_reintentar">Reintentar</string>
+
+    <!-- Accesibilidad (lectores de pantalla) -->
+    <string name="a11y_agregar_mascota">Agregar mascota</string>
+    <string name="a11y_acciones_de">Acciones de %1$s</string>
+    <string name="a11y_volver">Volver</string>
+    <string name="a11y_compartir">Compartir</string>
+
+    <!-- Diálogo de borrado de mascota -->
+    <string name="borrar_mascota_titulo">Eliminar mascota</string>
+    <string name="borrar_mascota_mensaje">¿Seguro que quieres eliminar a %1$s? Esta acción no se puede deshacer.</string>
+    <string name="borrar_mascota_mensaje_sin_nombre">¿Seguro que quieres eliminar esta mascota? Esta acción no se puede deshacer.</string>
 </resources>
