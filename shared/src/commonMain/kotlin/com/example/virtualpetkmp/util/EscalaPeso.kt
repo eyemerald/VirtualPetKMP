@@ -1,16 +1,22 @@
 package com.example.virtualpetkmp.util
 
 /**
- * Margen que se deja por encima del peso más alto y por debajo del más bajo del eje vertical.
+ * Margen de seguridad del eje vertical: un **10 % del rango de los datos**, por encima del valor
+ * más alto y por debajo del más bajo.
  *
- * Va **en kilos** y se convierte a la unidad que ve el usuario antes de aplicarlo, porque el
- * kilo es la unidad en la que se guarda todo: así el aire del gráfico es el mismo para un
- * usuario que ve kilos y para uno que ve libras.
- *
- * Sirve para dos cosas: que la línea no toque nunca los bordes del gráfico, y que la referencia
- * del peso ideal se lea aunque coincida con el máximo o el mínimo de los datos.
+ * Es relativo y no una cantidad fija a propósito. Un margen fijo de medio kilo arreglaba el caso
+ * de un perro (26 kg) pero destrozaba el de un conejo: con pesajes de 1,60 a 1,70 el eje se iba a
+ * 1,10–2,20 y la línea quedaba aplastada en el centro, "plana". Con el 10 %, 1,60–1,70 da
+ * 1,59–1,71, y la línea ocupa el 83 % del alto esté la mascota en kilos o en libras.
  */
-const val MARGEN_ESCALA_KILOS = 0.5
+const val MARGEN_RELATIVO_ESCALA = 0.10
+
+/**
+ * Margen que se usa cuando **todos los pesajes valen lo mismo**, es decir cuando el rango de los
+ * datos es cero y el 10 % de cero no daría eje ninguno. En ese caso la línea es una recta
+ * horizontal centrada, que es lo que de verdad dicen los datos.
+ */
+const val MARGEN_ESCALA_PLANO_KILOS = 0.5
 
 /**
  * Rango vertical de un gráfico de peso.
@@ -34,6 +40,9 @@ data class EscalaPeso(
     /**
      * Posición de un peso **en kilos** dentro del rango, de 0 (abajo) a 1 (arriba).
      *
+     * Con el margen del 10 %, el pesaje más bajo cae en 0,083 y el más alto en 0,917: nunca en
+     * los extremos.
+     *
      * Si no hay rango (no hay nada que dibujar), se devuelve 0.5 para que un punto suelto quede
      * centrado en lugar de pegado a un borde.
      */
@@ -47,13 +56,13 @@ data class EscalaPeso(
 /**
  * Calcula el eje vertical de un gráfico de peso.
  *
- * El rango **incluye el peso ideal además de los datos**, y es la corrección del fallo que hacía
- * que la línea del ideal apareciera pegada al borde (o directamente fuera del gráfico) cuando el
- * ideal quedaba por encima del pesaje más alto o por debajo del más bajo: si el ideal es 1,60 y
- * los pesajes van de 1,50 a 1,80, la referencia se dibuja exactamente a la altura de 1,60 y el
- * eje sigue cubriendo los 1,80.
+ * El rango **incluye el peso ideal además de los datos**: si el ideal es 1,60 y los pesajes van
+ * de 1,50 a 1,80, la referencia se dibuja exactamente a la altura de 1,60 y el eje sigue
+ * cubriendo los 1,80. Si el ideal queda fuera del rango de los datos, el eje se estira para
+ * meterlo, porque una referencia que no se ve no sirve de nada.
  *
- * Los dos extremos llevan [margenKilos] de aire, así que ningún trazo toca el borde.
+ * Los dos extremos llevan un margen de seguridad del [margenRelativo] (10 % por defecto) para
+ * que ningún trazo toque el borde de arriba ni el de abajo.
  *
  * @param pesosKilos pesajes **en kilos**, como están guardados.
  * @param pesoIdealKilos ideal **en kilos**, o `null` si el usuario no lo ha configurado.
@@ -63,17 +72,28 @@ fun escalaDePeso(
     pesosKilos: List<Double>,
     pesoIdealKilos: Double?,
     unidad: UnidadPeso,
-    margenKilos: Double = MARGEN_ESCALA_KILOS
+    margenRelativo: Double = MARGEN_RELATIVO_ESCALA
 ): EscalaPeso {
     val valores = pesosKilos.map { UnidadPeso.desdeKilos(it, unidad) } +
         listOfNotNull(pesoIdealKilos?.let { UnidadPeso.desdeKilos(it, unidad) })
 
     if (valores.isEmpty()) return EscalaPeso(0.0, 0.0, unidad)
 
-    val margen = UnidadPeso.desdeKilos(margenKilos, unidad)
+    val minimo = valores.min()
+    val maximo = valores.max()
+    val rangoDatos = maximo - minimo
+
+    // Con todos los pesos iguales (o con un solo pesaje) el 10 % de cero no da margen, así que
+    // se usa una cantidad fija: la línea sale centrada en lugar de pegada al borde.
+    val margen = if (rangoDatos <= 0.0) {
+        UnidadPeso.desdeKilos(MARGEN_ESCALA_PLANO_KILOS, unidad)
+    } else {
+        rangoDatos * margenRelativo
+    }
+
     return EscalaPeso(
-        min = valores.min() - margen,
-        max = valores.max() + margen,
+        min = minimo - margen,
+        max = maximo + margen,
         unidad = unidad
     )
 }

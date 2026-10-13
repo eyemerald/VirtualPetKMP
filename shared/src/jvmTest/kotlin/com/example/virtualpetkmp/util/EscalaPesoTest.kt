@@ -7,43 +7,83 @@ import kotlin.test.assertTrue
 /**
  * Reglas del eje vertical de los gráficos de peso.
  *
- * Es la parte que provocaba el fallo que reportó el usuario: la línea del peso ideal se veía
- * pegada a un borde (o directamente fuera de la escala) cuando el ideal quedaba por encima del
- * pesaje más alto o por debajo del más bajo. Aquí se fija que el rango **incluye el ideal** y
- * que los extremos llevan margen, así que ningún trazo puede tocar el borde.
+ * Fija lo que pedía el usuario: el eje **no** se calcula con el mínimo y el máximo pelados,
+ * sino que deja un **10 % de margen** por arriba y por abajo para que la línea no choque con
+ * los bordes. El margen es relativo a propósito: con una cantidad fija, una mascota pequeña
+ * (1,60 a 1,70 kg) quedaba dibujada como una raya aplastada en mitad del gráfico.
+ *
+ * También se comprueba que el peso ideal entra en el rango: si el ideal queda fuera de los
+ * datos, el eje se estira para que la referencia se vea a su altura exacta.
  */
 class EscalaPesoTest {
 
     @Test
+    fun `el eje deja un diez por ciento por encima y por debajo`() {
+        // El ejemplo exacto del usuario: 1,60 y 1,70 dan 1,59 y 1,71.
+        val escala = escalaDePeso(
+            pesosKilos = listOf(1.60, 1.70),
+            pesoIdealKilos = null,
+            unidad = UnidadPeso.KILOS
+        )
+
+        assertEquals(1.59, escala.min, 0.000001)
+        assertEquals(1.71, escala.max, 0.000001)
+    }
+
+    @Test
+    fun `ni el peso mas alto ni el mas bajo caen en un borde`() {
+        val escala = escalaDePeso(listOf(1.60, 1.70), null, UnidadPeso.KILOS)
+
+        // Con el 10 % de margen a cada lado, el eje total es 1,2 veces el rango de los datos:
+        // el pesaje más bajo se queda en el 8,3 % del alto y el más alto en el 91,7 %.
+        assertEquals(0.0833f, escala.normalizarKilos(1.60), 0.001f)
+        assertEquals(0.9167f, escala.normalizarKilos(1.70), 0.001f)
+    }
+
+    @Test
+    fun `el margen es proporcional, no una cantidad fija`() {
+        // Un perro de 26 kg tiene que ocupar el mismo alto del gráfico que un conejo de 1,6 kg:
+        // eso es justo lo que no pasaba con el margen fijo de medio kilo.
+        val pequeno = escalaDePeso(listOf(1.60, 1.70), null, UnidadPeso.KILOS)
+        val grande = escalaDePeso(listOf(25.0, 26.0), null, UnidadPeso.KILOS)
+
+        // Los dos ejes miden 1,2 veces el recorrido de sus datos.
+        assertEquals(1.20, pequeno.rango / 0.10, 0.000001)
+        assertEquals(1.20, grande.rango / 1.00, 0.000001)
+
+        // Y el aire de arriba es una décima parte del recorrido, en cada caso el suyo.
+        assertEquals(0.01, pequeno.max - 1.70, 0.000001)
+        assertEquals(0.10, grande.max - 26.0, 0.000001)
+
+        // La línea ocupa el mismo 83,3 % del alto en las dos.
+        val ocupacionPequeno = pequeno.normalizarKilos(1.70) - pequeno.normalizarKilos(1.60)
+        val ocupacionGrande = grande.normalizarKilos(26.0) - grande.normalizarKilos(25.0)
+        assertEquals(0.8333f, ocupacionPequeno, 0.001f)
+        assertEquals(0.8333f, ocupacionGrande, 0.001f)
+    }
+
+    @Test
     fun `el rango incluye el peso ideal aunque quede dentro de los datos`() {
-        // El caso que puso el usuario: 1,50 a 1,80 con ideal 1,60. El ideal tiene que caer
-        // dentro del eje y por encima del mínimo.
+        // El caso que puso el usuario en su día: 1,50 a 1,80 con ideal 1,60. El ideal tiene
+        // que caer dentro del eje y por encima del mínimo.
         val escala = escalaDePeso(
             pesosKilos = listOf(1.50, 1.80, 1.65),
             pesoIdealKilos = 1.60,
             unidad = UnidadPeso.KILOS
         )
 
-        // El extremo bajo es el del dato (1,50) menos el margen, no el del ideal.
-        assertEquals(1.50 - MARGEN_ESCALA_KILOS, escala.min, 0.000001)
-        assertEquals(1.80 + MARGEN_ESCALA_KILOS, escala.max, 0.000001)
-
         val posicionIdeal = escala.normalizarKilos(1.60)
         assertTrue(posicionIdeal > 0f && posicionIdeal < 1f, "el ideal quedó en un borde: $posicionIdeal")
-        // 1,60 está a un tercio del recorrido entre 1,50 y 1,80.
         assertTrue(posicionIdeal < 0.5f, "el ideal debería quedar por debajo de la mitad: $posicionIdeal")
     }
 
     @Test
     fun `un ideal por encima de todos los pesajes entra en el eje`() {
-        // Antes esto dejaba la línea del ideal fuera del gráfico: el eje solo miraba los datos.
-        val escala = escalaDePeso(
-            pesosKilos = listOf(25.0, 26.0),
-            pesoIdealKilos = 30.0,
-            unidad = UnidadPeso.KILOS
-        )
+        val escala = escalaDePeso(listOf(25.0, 26.0), 30.0, UnidadPeso.KILOS)
 
-        assertEquals(30.0 + MARGEN_ESCALA_KILOS, escala.max, 0.000001)
+        // El rango son los datos MÁS el ideal (25 a 30), y el 10 % se calcula sobre ese conjunto.
+        assertEquals(24.5, escala.min, 0.000001)
+        assertEquals(30.5, escala.max, 0.000001)
         assertTrue(escala.normalizarKilos(30.0) < 1f, "el ideal tocó el borde de arriba")
         assertTrue(
             escala.normalizarKilos(30.0) > escala.normalizarKilos(26.0),
@@ -53,13 +93,11 @@ class EscalaPesoTest {
 
     @Test
     fun `un ideal por debajo de todos los pesajes entra en el eje`() {
-        val escala = escalaDePeso(
-            pesosKilos = listOf(25.0, 26.0),
-            pesoIdealKilos = 18.0,
-            unidad = UnidadPeso.KILOS
-        )
+        val escala = escalaDePeso(listOf(25.0, 26.0), 18.0, UnidadPeso.KILOS)
 
-        assertEquals(18.0 - MARGEN_ESCALA_KILOS, escala.min, 0.000001)
+        // De 18 a 26, con el 10 % (0,8) a cada lado.
+        assertEquals(17.2, escala.min, 0.000001)
+        assertEquals(26.8, escala.max, 0.000001)
         assertTrue(escala.normalizarKilos(18.0) > 0f, "el ideal tocó el borde de abajo")
         assertTrue(
             escala.normalizarKilos(18.0) < escala.normalizarKilos(25.0),
@@ -84,31 +122,27 @@ class EscalaPesoTest {
     }
 
     @Test
-    fun `el margen es medio kilo tambien cuando se muestran libras`() {
-        // El margen se define en kilos (la unidad en la que se guarda) y se convierte, así que
-        // en libras es algo más de una libra. Lo importante: sigue habiendo aire.
-        val escala = escalaDePeso(
-            pesosKilos = listOf(10.0),
-            pesoIdealKilos = null,
-            unidad = UnidadPeso.LIBRAS
-        )
+    fun `el margen se calcula en la unidad que se muestra`() {
+        // En libras el margen también es el 10 % del rango (2 kg son 4,41 lb y el 10 % son
+        // 0,44 lb), así que la proporción del gráfico es la misma que en kilos.
+        val librasPorKilo = UnidadPeso.LIBRAS_POR_KILO
+        val enKilos = escalaDePeso(listOf(10.0, 12.0), null, UnidadPeso.KILOS)
+        val enLibras = escalaDePeso(listOf(10.0, 12.0), null, UnidadPeso.LIBRAS)
 
-        val margenEsperado = UnidadPeso.desdeKilos(MARGEN_ESCALA_KILOS, UnidadPeso.LIBRAS)
-        val diezKilosEnLibras = UnidadPeso.desdeKilos(10.0, UnidadPeso.LIBRAS)
-        assertEquals(diezKilosEnLibras - margenEsperado, escala.min, 0.000001)
-        assertEquals(diezKilosEnLibras + margenEsperado, escala.max, 0.000001)
+        assertEquals(2.4, enKilos.rango, 0.000001)
+        assertEquals(2.4 * librasPorKilo, enLibras.rango, 0.000001)
 
         // Y `normalizarKilos` recibe kilos aunque el eje esté en libras: la conversión es suya.
-        assertEquals(0.5f, escala.normalizarKilos(10.0), 0.0001f)
+        assertEquals(enKilos.normalizarKilos(11.0), enLibras.normalizarKilos(11.0), 0.0001f)
     }
 
     @Test
-    fun `con un unico valor el punto queda centrado`() {
-        // Sin datos de sobra, el margen es lo único que da rango: el punto no puede quedar
-        // pegado ni arriba ni abajo.
-        val escala = escalaDePeso(listOf(7.0), 7.0, UnidadPeso.KILOS)
+    fun `con todos los pesos iguales la linea queda centrada`() {
+        // El 10 % de cero no es nada, así que aquí sí hace falta una cantidad fija: si no, el
+        // rango sería cero y la línea se pegaría a un borde (o se dividiría entre cero).
+        val escala = escalaDePeso(listOf(7.0, 7.0, 7.0), null, UnidadPeso.KILOS)
 
-        assertEquals(1.0, escala.rango, 0.000001)
+        assertEquals(2 * MARGEN_ESCALA_PLANO_KILOS, escala.rango, 0.000001)
         assertEquals(0.5f, escala.normalizarKilos(7.0), 0.0001f)
     }
 
@@ -126,7 +160,7 @@ class EscalaPesoTest {
         // no debe quedar degenerada por si algún día se dibuja un punto único.
         val escala = escalaDePeso(emptyList(), 9.0, UnidadPeso.KILOS)
 
-        assertEquals(9.0 - MARGEN_ESCALA_KILOS, escala.min, 0.000001)
-        assertEquals(9.0 + MARGEN_ESCALA_KILOS, escala.max, 0.000001)
+        assertEquals(9.0 - MARGEN_ESCALA_PLANO_KILOS, escala.min, 0.000001)
+        assertEquals(9.0 + MARGEN_ESCALA_PLANO_KILOS, escala.max, 0.000001)
     }
 }

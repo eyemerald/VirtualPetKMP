@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -1189,8 +1188,7 @@ private fun SparklinePeso(
     val formato = localizacion
     // La línea del gráfico es el acento azul de esta pantalla; las referencias y el texto,
     // neutros, para que solo el dato medido tenga color.
-    val colorLinea = LocalExtrasColors.current.barraActual.copy(alpha = 0.75f)
-    val colorPunto = LocalExtrasColors.current.barraActual
+    val colorLinea = LocalExtrasColors.current.barraActual
     val colorReferencia = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
     val colorIdeal = LocalExtrasColors.current.lineaIdeal
     val colorTexto = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1198,16 +1196,25 @@ private fun SparklinePeso(
     val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
     val estiloEtiqueta = androidx.compose.ui.text.TextStyle(fontSize = 9.sp, color = colorTexto)
     val densidad = androidx.compose.ui.platform.LocalDensity.current
-    // Tope a cada lado del gráfico: el primero y el último punto quedan con aire respecto a
-    // su borde, así la línea no arranca pegada a la esquina de la tarjeta.
-    val topeIzquierdoPx = with(densidad) { 8.dp.toPx() }
-    // Banda reservada a la derecha para rotular el peso máximo y el mínimo, con un hueco de
-    // separación respecto al último punto para que el número no se monte encima.
-    val bandaDerechaPx = with(densidad) { 32.dp.toPx() }
-    val separacionEtiquetaPx = with(densidad) { 6.dp.toPx() }
+    // Banda de la derecha: es donde van los números de peso máximo y mínimo. Hace de margen
+    // derecho del gráfico, y por eso es más ancha que los 16 dp del resto de lados.
+    val bandaEtiquetasPx = with(densidad) { 34.dp.toPx() }
+    val huecoEtiquetaPx = with(densidad) { 4.dp.toPx() }
 
     androidx.compose.foundation.Canvas(modifier = modifier) {
         if (puntos.size < 2) return@Canvas
+
+        // Márgenes internos del área de dibujo. Se recortan en un lienzo pequeño (la tarjeta en
+        // apaisado es muy baja) para que los márgenes no se coman el gráfico: nunca se llevan
+        // más de un quinto del lado que toca.
+        val margenIzq = MARGENES_GRAFICO_PESO.izquierda.toPx().coerceAtMost(size.width / 5f)
+        val margenDer = bandaEtiquetasPx.coerceAtMost(size.width / 3f)
+        val margenArriba = MARGENES_GRAFICO_PESO.arriba.toPx().coerceAtMost(size.height / 5f)
+        val margenAbajo = MARGENES_GRAFICO_PESO.abajo.toPx().coerceAtMost(size.height / 5f)
+
+        val anchoUtil = (size.width - margenIzq - margenDer).coerceAtLeast(1f)
+        val altoUtil = (size.height - margenArriba - margenAbajo).coerceAtLeast(1f)
+        val baseY = margenArriba + altoUtil
 
         // El eje Y se mide en la UNIDAD QUE VE EL USUARIO, no en kilos: los números de la
         // derecha son los del eje, y si el gráfico se escalara en kilos pero las etiquetas
@@ -1215,45 +1222,38 @@ private fun SparklinePeso(
         // `escalaDePeso`, que recibe kilos y devuelve el rango ya convertido.
         val unidad = formato.unidadPeso
         val valoresMostrados = puntos.map { UnidadPeso.desdeKilos(it.peso, unidad) }
-        // El eje lo decide `escalaDePeso`: incluye el peso ideal además de los datos y deja
-        // margen arriba y abajo, así que ni la línea ni la referencia del ideal tocan un borde.
+        // El eje lo decide `escalaDePeso`: incluye el peso ideal además de los datos y deja un
+        // 10 % de margen arriba y abajo, así que ningún trazo toca un borde.
         val escala = escalaDePeso(
             pesosKilos = puntos.map { it.peso },
             pesoIdealKilos = pesoIdeal,
             unidad = unidad
         )
-        val padV = 4.dp.toPx()
-        // El eje X va del tope izquierdo al arranque de la banda de etiquetas: el primer
-        // punto queda con aire a su izquierda y el último con la banda a su derecha.
-        val inicioGrafico = topeIzquierdoPx.coerceAtMost(size.width / 4f)
-        val anchoGrafico = (size.width - bandaDerechaPx - inicioGrafico).coerceAtLeast(1f)
-        // Se dibujan como mucho 14 pesadas, y siempre caben: si algún día hubiera más datos
-        // que ancho, se recortan por el principio en vez de salirse del lienzo.
-        val anchoVisible = (size.width - bandaDerechaPx).coerceAtLeast(1f)
-        val anchoContenido = (puntos.size - 1) * (anchoGrafico / 6f)
-        val recorteIzquierdo = (anchoContenido - anchoVisible).coerceAtLeast(0f)
-        val altoUtil = (size.height - padV * 2).coerceAtLeast(1f)
-        val grosorLinea = 1.dp.toPx()
 
-        // Tres referencias horizontales muy sutiles, para dar sensación de escala. Ocupan
-        // todo el ancho para que se lean como la escala del gráfico.
-        listOf(0f, 0.5f, 1f).forEach { fraccionY ->
-            val y = padV + altoUtil * fraccionY
-            drawLine(
-                color = colorReferencia,
-                start = Offset(0f, y),
-                end = Offset(size.width, y),
-                strokeWidth = grosorLinea
-            )
-        }
-
-        fun x(indice: Int): Float =
-            inicioGrafico + (indice.toFloat() / (puntos.size - 1)) * anchoGrafico - recorteIzquierdo
+        // Los puntos se reparten por igual en TODO el ancho útil (ver `posicionesX`). Antes se
+        // separaban a un sexto del ancho y luego se "recortaba" lo que sobraba por la
+        // izquierda, con el resultado de que a partir de ocho pesajes los primeros puntos se
+        // dibujaban fuera del lienzo. Ahora el primero cae siempre en el margen izquierdo.
+        val xPuntos = posicionesX(puntos.size, margenIzq, anchoUtil)
 
         // La escala recibe kilos: la conversión a la unidad mostrada la hace ella. Así no hay
         // forma de colocar un punto con la unidad equivocada.
         fun y(pesoKilos: Double): Float =
-            padV + altoUtil * (1f - escala.normalizarKilos(pesoKilos))
+            margenArriba + altoUtil * (1f - escala.normalizarKilos(pesoKilos))
+
+        // Tres referencias horizontales muy sutiles, para dar sensación de escala. Se quedan
+        // dentro del área de dibujo, sin llegar a los bordes del lienzo.
+        listOf(0f, 0.5f, 1f).forEach { fraccionY ->
+            val lineaY = margenArriba + altoUtil * fraccionY
+            drawLine(
+                color = colorReferencia,
+                start = Offset(margenIzq, lineaY),
+                end = Offset(margenIzq + anchoUtil, lineaY),
+                strokeWidth = 1.dp.toPx()
+            )
+        }
+
+        val coordenadas = puntos.indices.map { Offset(xPuntos[it], y(puntos[it].peso)) }
 
         // Referencia del PESO IDEAL: discontinua y en tono neutro, como en la hoja de peso,
         // para que se lea como una referencia y no como un dato medido. Va antes que la línea
@@ -1262,8 +1262,8 @@ private fun SparklinePeso(
             val yIdeal = y(pesoIdeal)
             drawLine(
                 color = colorIdeal,
-                start = Offset(inicioGrafico, yIdeal),
-                end = Offset(inicioGrafico + anchoGrafico, yIdeal),
+                start = Offset(margenIzq, yIdeal),
+                end = Offset(margenIzq + anchoUtil, yIdeal),
                 strokeWidth = 1.5.dp.toPx(),
                 pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
                     floatArrayOf(5.dp.toPx(), 4.dp.toPx())
@@ -1271,40 +1271,25 @@ private fun SparklinePeso(
             )
         }
 
-        val coordenadas = puntos.indices.map { Offset(x(it), y(puntos[it].peso)) }
-
-        // Índices del peso máximo y mínimo: sus etiquetas se alinean con su punto real.
-        val indiceMax = valoresMostrados.indices.maxBy { valoresMostrados[it] }
-        val indiceMin = valoresMostrados.indices.minBy { valoresMostrados[it] }
-
-        // Curva suave entre los puntos, con los controles acotados al alto del gráfico.
-        val path = Path()
-        path.moveTo(coordenadas[0].x, coordenadas[0].y)
-        val factor = 0.18f
-        for (i in 0 until coordenadas.size - 1) {
-            val p0 = if (i == 0) coordenadas[i] else coordenadas[i - 1]
-            val p1 = coordenadas[i]
-            val p2 = coordenadas[i + 1]
-            val p3 = if (i + 2 < coordenadas.size) coordenadas[i + 2] else coordenadas[i + 1]
-            val c1x = p1.x + (p2.x - p0.x) * factor
-            val c1y = (p1.y + (p2.y - p0.y) * factor).coerceIn(padV, padV + altoUtil)
-            val c2x = p2.x - (p3.x - p1.x) * factor
-            val c2y = (p2.y - (p3.y - p1.y) * factor).coerceIn(padV, padV + altoUtil)
-            path.cubicTo(c1x, c1y, c2x, c2y, p2.x, p2.y)
-        }
-        drawPath(path = path, color = colorLinea, style = Stroke(width = 2.dp.toPx()))
+        // Degradado bajo la curva: da volumen al gráfico. Va antes de la línea para que el
+        // trazo quede por encima del relleno.
+        rellenarBajoLaCurva(puntos = coordenadas, baseY = baseY, color = colorLinea)
+        drawPath(
+            path = pathCurvaSuave(coordenadas),
+            color = colorLinea,
+            style = Stroke(width = 2.dp.toPx())
+        )
 
         // Pesos máximo y mínimo **medidos** (no los del eje, que llevan margen y pueden incluir
-        // el ideal) en la banda de la derecha, a la altura de su propio punto pero sin pisarlo:
-        // van a partir del final del eje más un huequito. En la unidad del usuario y con su
-        // separador decimal.
-        val maxDato = valoresMostrados.max()
-        val minDato = valoresMostrados.min()
-        val etiquetaMax = formato.formatearConDecimales(maxDato, 2)
-        val etiquetaMin = formato.formatearConDecimales(minDato, 2)
+        // el ideal) en la banda de la derecha, a la altura de su propio punto pero sin pisarlo.
+        // En la unidad del usuario y con su separador decimal.
+        val indiceMax = valoresMostrados.indices.maxBy { valoresMostrados[it] }
+        val indiceMin = valoresMostrados.indices.minBy { valoresMostrados[it] }
+        val etiquetaMax = formato.formatearConDecimales(valoresMostrados[indiceMax], 2)
+        val etiquetaMin = formato.formatearConDecimales(valoresMostrados[indiceMin], 2)
         val medidaMax = textMeasurer.measure(etiquetaMax, style = estiloEtiqueta)
         val medidaMin = textMeasurer.measure(etiquetaMin, style = estiloEtiqueta)
-        val xEtiquetas = inicioGrafico + anchoGrafico + separacionEtiquetaPx
+        val xEtiquetas = margenIzq + anchoUtil + huecoEtiquetaPx
         // El alto del texto se lee de la medida; ojo con llamar `size` a nada de aquí dentro,
         // porque taparía el `size` del lienzo.
         val altoMaxEtiqueta = medidaMax.size.height
@@ -1327,8 +1312,7 @@ private fun SparklinePeso(
         )
 
         // Punto destacado en el último peso
-        val ultimo = coordenadas.last()
-        drawCircle(color = colorPunto, radius = 4.5.dp.toPx(), center = ultimo)
+        drawCircle(color = colorLinea, radius = 4.5.dp.toPx(), center = coordenadas.last())
     }
 }
 

@@ -47,7 +47,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
@@ -703,29 +702,35 @@ private fun GraficoLineaMeses(
         // Todo el histórico se ajusta al ancho disponible: no hay desplazamiento, así que la
         // línea nunca puede quedar cortada contra los bordes. Con muchos meses los puntos
         // quedan más juntos, y por eso las etiquetas se van saltando para no solaparse.
-        val topeLadosPx = with(densidad) { 14.dp.toPx() }
         val saltoEtiquetas = (meses.size / 8 + 1).coerceAtLeast(1)
 
         Canvas(
             modifier = Modifier.fillMaxSize()
         ) {
+            // Márgenes internos del área de dibujo: la línea flota dentro del lienzo y no toca
+            // ningún borde. Van en píxeles porque el lienzo trabaja en píxeles.
+            val margenIzq = MARGENES_GRAFICO_PESO.izquierda.toPx()
+            val margenDer = MARGENES_GRAFICO_PESO.derecha.toPx()
+            val margenArriba = MARGENES_GRAFICO_PESO.arriba.toPx()
+            val margenAbajo = MARGENES_GRAFICO_PESO.abajo.toPx()
+
+            // El alto útil descuenta la franja de las etiquetas de mes (que va debajo del todo)
+            // y los márgenes de arriba y abajo.
             val altoGrafico = (size.height - altoEtiquetas).coerceAtLeast(1f)
-            val margenInterno = topeLadosPx.coerceAtMost(size.width / 6f)
-            val altoUtil = (altoGrafico - margenInterno * 2).coerceAtLeast(1f)
-            val anchoVisible = size.width
-            val anchoUtil = (size.width - margenInterno * 2).coerceAtLeast(1f)
+            val altoUtil = (altoGrafico - margenArriba - margenAbajo).coerceAtLeast(1f)
+            val anchoUtil = (size.width - margenIzq - margenDer).coerceAtLeast(1f)
+            val baseY = margenArriba + altoUtil
 
             fun x(indice: Int): Float =
-                margenInterno + (indice.toFloat() / (meses.size - 1).coerceAtLeast(1)) * anchoUtil
+                margenIzq + (indice.toFloat() / (meses.size - 1).coerceAtLeast(1)) * anchoUtil
 
             // Solo los meses con pesaje: los huecos (meses sin datos) no se dibujan como
             // puntos, pero la línea sí los atraviesa para que la evolución se vea entera.
             val conDatos = meses.indices.filter { meses[it].media != null }
 
             // El eje lo calcula `escalaDePeso`, que **incluye el peso ideal además de los
-            // datos** y deja margen arriba y abajo. Es lo que hace que la línea del ideal se
-            // dibuje a su altura exacta en vez de quedar pegada a un borde cuando el ideal
-            // está por encima del pesaje más alto (o por debajo del más bajo).
+            // datos** y deja un 10 % de margen arriba y abajo. Es lo que hace que la línea del
+            // ideal se dibuje a su altura exacta y que ningún trazo toque los bordes.
             val escala = escalaDePeso(
                 pesosKilos = meses.mapNotNull { it.media },
                 pesoIdealKilos = pesoIdeal,
@@ -734,19 +739,33 @@ private fun GraficoLineaMeses(
 
             // La escala recibe kilos y devuelve la posición ya convertida a la unidad mostrada.
             fun y(pesoKilos: Double): Float =
-                margenInterno + altoUtil * (1f - escala.normalizarKilos(pesoKilos))
+                margenArriba + altoUtil * (1f - escala.normalizarKilos(pesoKilos))
 
             val puntos = conDatos.map { Offset(x(it), y(meses[it].media!!)) }
 
-            // Referencias horizontales sutiles, como en la tarjeta de la ficha.
+            // Referencias horizontales sutiles, como en la tarjeta de la ficha. Se quedan
+            // dentro del área de dibujo, sin llegar a los bordes del lienzo.
             listOf(0f, 0.5f, 1f).forEach { fraccion ->
-                val lineaY = margenInterno + altoUtil * fraccion
+                val lineaY = margenArriba + altoUtil * fraccion
                 drawLine(
                     color = colorReferencia,
-                    start = Offset(margenInterno, lineaY),
-                    end = Offset(size.width - margenInterno, lineaY),
+                    start = Offset(margenIzq, lineaY),
+                    end = Offset(size.width - margenDer, lineaY),
                     strokeWidth = 1.dp.toPx()
                 )
+            }
+
+            // Retícula vertical muy tenue: ayuda a seguir el eje sin ensuciar el gráfico.
+            meses.forEachIndexed { indice, _ ->
+                val lineaX = x(indice)
+                if (lineaX >= margenIzq && lineaX <= size.width - margenDer) {
+                    drawLine(
+                        color = colorReferencia,
+                        start = Offset(lineaX, margenArriba),
+                        end = Offset(lineaX, baseY),
+                        strokeWidth = 1.dp.toPx()
+                    )
+                }
             }
 
             // Línea del PESO IDEAL: discontinua y en tono neutro, para que se lea como una
@@ -755,53 +774,38 @@ private fun GraficoLineaMeses(
                 val yIdeal = y(pesoIdeal)
                 val etiquetaIdeal = etiquetaIdealTexto
                 val medidaIdeal = textMeasurer.measure(etiquetaIdeal, style = estiloEtiqueta)
-                // Encima de la línea si hay sitio, debajo si está muy arriba.
-                val yEtiqueta = if (yIdeal - medidaIdeal.size.height - 2.dp.toPx() >= 0f) {
-                    yIdeal - medidaIdeal.size.height - 2.dp.toPx()
-                } else {
-                    yIdeal + 2.dp.toPx()
-                }
-                // Se reserva el ancho de la etiqueta para que la línea no la atraviese.
+                // La etiqueta va en el margen izquierdo, centrada en la línea pero sin salirse
+                // del lienzo; la línea arranca después para no atravesarla.
+                val inicioLineaIdeal = (margenIzq + medidaIdeal.size.width + 8.dp.toPx())
+                    .coerceAtMost(size.width - margenDer)
                 drawLine(
                     color = colorIdeal,
-                    start = Offset(medidaIdeal.size.width + 8.dp.toPx(), yIdeal),
-                    end = Offset(size.width - margenInterno, yIdeal),
+                    start = Offset(inicioLineaIdeal, yIdeal),
+                    end = Offset(size.width - margenDer, yIdeal),
                     strokeWidth = 1.5.dp.toPx(),
                     pathEffect = PathEffect.dashPathEffect(
                         floatArrayOf(6.dp.toPx(), 5.dp.toPx())
                     )
                 )
+                val yEtiquetaIdeal = (yIdeal - medidaIdeal.size.height / 2f)
+                    .coerceIn(0f, (size.height - medidaIdeal.size.height).coerceAtLeast(0f))
                 drawText(
                     textMeasurer = textMeasurer,
                     text = etiquetaIdeal,
-                    topLeft = Offset(2.dp.toPx(), yEtiqueta),
+                    topLeft = Offset(margenIzq, yEtiquetaIdeal),
                     style = TextStyle(fontSize = 9.sp, color = colorIdeal)
                 )
             }
 
-            // Retícula vertical muy tenue: ayuda a seguir el eje sin ensuciar el gráfico.
-            meses.forEachIndexed { indice, _ ->
-                val lineaX = x(indice)
-                if (lineaX >= 0f && lineaX <= size.width) {
-                    drawLine(
-                        color = colorReferencia,
-                        start = Offset(lineaX, margenInterno),
-                        end = Offset(lineaX, margenInterno + altoUtil),
-                        strokeWidth = 1.dp.toPx()
-                    )
-                }
-            }
-
             if (puntos.size >= 2) {
-                val path = Path()
-                path.moveTo(puntos.first().x, puntos.first().y)
-                for (i in 0 until puntos.size - 1) {
-                    val p1 = puntos[i]
-                    val p2 = puntos[i + 1]
-                    val medio = (p1.x + p2.x) / 2f
-                    path.cubicTo(medio, p1.y, medio, p2.y, p2.x, p2.y)
-                }
-                drawPath(path = path, color = colorLinea, style = Stroke(width = 2.dp.toPx()))
+                // Degradado bajo la curva: da volumen al gráfico. Va ANTES de la línea para
+                // que el trazo quede por encima del relleno.
+                rellenarBajoLaCurva(puntos = puntos, baseY = baseY, color = colorLinea)
+                drawPath(
+                    path = pathCurvaSuave(puntos),
+                    color = colorLinea,
+                    style = Stroke(width = 2.dp.toPx())
+                )
             }
 
             // Cada pesaje de verdad lleva su marca: se ve de un vistazo cuándo se pesó.
@@ -824,8 +828,8 @@ private fun GraficoLineaMeses(
                 val medida = textMeasurer.measure(etiqueta, style = estiloEtiqueta)
                 // Se centra en el mes, se mete dentro del margen y, si quedaría pegada a la
                 // etiqueta anterior, se salta: mejor un mes sin rótulo que dos montados.
-                val idealX = (x(indice) - medida.size.width / 2f)
-                    .coerceIn(margenInterno, (anchoVisible - margenInterno - medida.size.width).coerceAtLeast(margenInterno))
+                val limiteDerecho = (size.width - margenDer - medida.size.width).coerceAtLeast(margenIzq)
+                val idealX = (x(indice) - medida.size.width / 2f).coerceIn(margenIzq, limiteDerecho)
                 if (idealX < bordeDerecho + 6.dp.toPx()) return@forEachIndexed
                 datosEtiquetas.add(etiqueta to idealX)
                 bordeDerecho = idealX + medida.size.width

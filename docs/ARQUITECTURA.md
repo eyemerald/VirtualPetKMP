@@ -199,11 +199,24 @@ No hay servicio en segundo plano: es un equilibrio consciente entre simplicidad 
   cuando hay muchos meses para que no se solapen. El peso ideal se dibuja como referencia
   **discontinua**, para que se distinga de los datos medidos.
 - **El eje del peso tiene un único cálculo, en `util/EscalaPeso.kt`.** El rango incluye **el
-  peso ideal además de los pesajes** y deja `MARGEN_ESCALA_KILOS` (medio kilo) de aire arriba y
-  abajo. Sin eso, un ideal por encima del pesaje más alto se dibujaba pegado al borde y no se
-  entendía. `EscalaPeso` recibe y devuelve kilos, y es ella la que convierte a la unidad
-  mostrada: fuera de ahí no se manejan valores "en libras", que es como un punto acaba en el
-  sitio equivocado sin que nada avise.
+  peso ideal además de los pesajes** y deja un **10 % de margen** (`MARGEN_RELATIVO_ESCALA`) por
+  encima del máximo y por debajo del mínimo. El margen es *relativo* a propósito: con una
+  cantidad fija (medio kilo, que es lo que hubo antes), un perro de 26 kg se veía bien pero un
+  conejo de 1,6 kg salía como una raya aplastada en mitad del gráfico. Con el 10 %, los dos
+  ocupan el mismo 83 % del alto. `EscalaPeso` recibe y devuelve kilos, y es ella la que convierte
+  a la unidad mostrada: fuera de ahí no se manejan valores "en libras", que es como un punto
+  acaba en el sitio equivocado sin que nada avise.
+- **Los dos gráficos comparten márgenes y adornos (`ui/GraficoPeso.kt`).** `MARGENES_GRAFICO_PESO`
+  son los 16 dp laterales y 10 dp de arriba y abajo **del área de dibujo** (no del contenedor):
+  la línea flota dentro del recuadro. El degradado bajo la curva y la curva suave salen de ahí
+  también, para que la tarjeta de la ficha y la hoja de peso no se vean distintas.
+- **El suavizado es un bezier de puntos medios, no un Catmull-Rom.** Los puntos de control
+  comparten la `y` de los extremos, así que la curva **no puede sobrepasar** el valor máximo ni
+  el mínimo del tramo. Un suavizado que sobrepase se saldría justo por el margen que estamos
+  protegiendo.
+- **`posicionesX` reparte los puntos por igual dentro del área de dibujo, y tiene test.** Antes
+  el sparkline los separaba a un sexto del ancho y "recortaba" por la izquierda lo que sobraba:
+  con siete pesajes no se notaba, pero a partir de ocho la línea arrancaba fuera de la pantalla.
 - **Orientación.** En horizontal la ficha se parte en dos columnas: identidad a la izquierda,
   tarjetas a la derecha. El hueco reservado al banner de publicidad va anclado **abajo**, fuera
   del área de desplazamiento.
