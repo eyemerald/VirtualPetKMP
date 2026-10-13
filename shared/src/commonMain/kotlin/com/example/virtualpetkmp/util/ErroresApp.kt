@@ -2,6 +2,7 @@ package com.example.virtualpetkmp.util
 
 import org.jetbrains.compose.resources.getString
 import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.error_desconocido
 import virtualpetkmp.shared.generated.resources.error_id_requerido
 import virtualpetkmp.shared.generated.resources.error_nombre_duplicado
 
@@ -41,3 +42,26 @@ suspend fun textoErrorApp(error: ErrorApp): String = when (error) {
     ErrorApp.NOMBRE_DUPLICADO -> getString(Res.string.error_nombre_duplicado)
     ErrorApp.ID_REQUERIDO -> getString(Res.string.error_id_requerido)
 }
+
+/**
+ * Mensaje de un fallo cualquiera, en el idioma activo.
+ *
+ * Los motivos de dominio ([ErrorAppException]) se traducen; cualquier otra excepción se enseña
+ * con su mensaje técnico, que es lo más útil para diagnosticar, y con "error desconocido" si ni
+ * siquiera trae uno.
+ */
+suspend fun textoDeFallo(e: Throwable?): String = when (e) {
+    is ErrorAppException -> textoErrorApp(e.error)
+    else -> e?.message ?: getString(Res.string.error_desconocido)
+}
+
+/**
+ * Detalle técnico para los mensajes del tipo "No se pudo guardar el cambio: <detalle>".
+ *
+ * Nunca devuelve una cadena vacía: si la excepción no trae mensaje se usa el nombre de su clase
+ * y, si tampoco, un interrogante. Un hueco detrás de los dos puntos se lee como un fallo del
+ * programa, no como un error de la base de datos.
+ */
+fun detalleDeError(e: Throwable?): String =
+    e?.message ?: e?.let { it::class.simpleName } ?: "?"
+

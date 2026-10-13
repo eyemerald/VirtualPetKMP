@@ -337,6 +337,9 @@
     <string name="error_nombre_duplicado">Un animal portant ce nom existe déjà</string>
     <string name="error_id_requerido">Un identifiant est nécessaire pour la mise à jour</string>
     <string name="error_desconocido">Erreur inconnue</string>
+    <string name="error_cargar_ficha">Impossible de charger la fiche : %1$s</string>
+    <string name="error_guardar_dato">Échec de l\'enregistrement : %1$s</string>
+    <string name="error_borrar_dato">Échec de la suppression : %1$s</string>
 
     <!-- Libellés du PDF exporté (générés hors composition, avec getString) -->
     <string name="pdf_ficha_de">Fiche de %1$s</string>

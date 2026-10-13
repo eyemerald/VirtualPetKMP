@@ -17,9 +17,13 @@ import com.example.virtualpetkmp.data.VacunaRepository
 import com.example.virtualpetkmp.util.Localizacion
 import com.example.virtualpetkmp.util.ProgramadorNotificaciones
 import com.example.virtualpetkmp.util.ReprogramadorNotificaciones
+import com.example.virtualpetkmp.util.detalleDeError
+import com.example.virtualpetkmp.util.ErrorAppException
+import com.example.virtualpetkmp.util.textoDeFallo
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,6 +32,12 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.error_borrar_dato
+import virtualpetkmp.shared.generated.resources.error_cargar_ficha
+import virtualpetkmp.shared.generated.resources.error_guardar_dato
 
 /**
  * Resumen de una mascota para la pantalla de ficha: los contadores y avisos ya calculados.
@@ -114,15 +124,35 @@ class FichaMascotaViewModel(
      * Configuración regional activa. La necesita el texto de las **notificaciones**, que se
      * monta fuera de la composición y tiene que escribir la fecha como la espera el usuario.
      */
-    private val localizacion: Localizacion = Localizacion.desdeRegion("es-ES")
+    private val localizacion: Localizacion = Localizacion.desdeRegion("es-ES"),
+    /**
+     * Hilo en el que corre el estado. Se puede cambiar solo para los tests: `Dispatchers.Main`
+     * no existe en jvmTest. En la app se deja el valor por defecto.
+     */
+    dispatcher: CoroutineDispatcher = Dispatchers.Main
 ) {
-    private val scope = CoroutineScope(Dispatchers.Main + Job())
+    /**
+     * `SupervisorJob` y no `Job` a propósito: con un `Job` normal, una sola excepción sin
+     * capturar cancela el scope entero y **todas** las operaciones siguientes se vuelven
+     * invisibles —la ficha deja de guardar nada y no dice por qué—. Con un supervisor, un fallo
+     * se queda en su corrutina y las demás siguen funcionando.
+     */
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     private val _resumen = MutableStateFlow(ResumenFicha())
     val resumen: StateFlow<ResumenFicha> = _resumen.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    /**
+     * Último error de una operación, ya traducido, para que la ficha lo enseñe.
+     *
+     * Antes no existía: las escrituras llamaban al repositorio, tiraban el `Result` y recargaban
+     * como si todo hubiera ido bien, así que un fallo no se veía por ninguna parte.
+     */
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     // Listas completas de la mascota, expuestas para las hojas modales del dashboard.
     private val _tratamientos = MutableStateFlow<List<Tratamiento>>(emptyList())
@@ -150,28 +180,46 @@ class FichaMascotaViewModel(
         cargarResumen()
     }
 
+    /**
+     * Relee todo lo de esta mascota y recalcula el resumen.
+     *
+     * Va envuelto en `try`/`catch` porque las lecturas no devuelven `Result`: si una consulta
+     * falla, la excepción subiría hasta el scope y —con el `Job` que había antes— lo dejaría
+     * cancelado, de modo que la ficha entera dejaría de responder sin decir nada.
+     */
     fun cargarResumen() {
         scope.launch {
             _isLoading.value = true
-            val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
-            val hoyMas15 = kotlinx.datetime.LocalDate.fromEpochDays(hoy.toEpochDays() + 15)
-            val hoyMas5 = kotlinx.datetime.LocalDate.fromEpochDays(hoy.toEpochDays() + 5)
-
-            val vacunas = vacunaRepository.getVacunasByMascotaId(mascotaId)
-            val revisiones = revisionRepository.getRevisionesByMascotaId(mascotaId)
-            val tratamientos = tratamientoRepository.getTratamientosByMascotaId(mascotaId)
-            val pesos = pesoRepository.getPesosByMascotaId(mascotaId)
-            val informes = informeRepository.getInformesByMascotaId(mascotaId)
-            val notas = notaRepository.getNotasByMascotaId(mascotaId)
-            val preventivos = preventivoRepository.getPreventivosByMascotaId(mascotaId)
-
-            val pesosOrdenados = pesos.sortedByDescending { it.fecha }
-
-            val tratamientoActivoActual = tratamientos.firstOrNull {
-                it.fechaInicio <= hoy && (it.fechaFin == null || it.fechaFin >= hoy)
+            try {
+                leerYRecalcular()
+            } catch (e: Exception) {
+                _errorMessage.value = getString(Res.string.error_cargar_ficha, detalleDeError(e))
+            } finally {
+                _isLoading.value = false
             }
+        }
+    }
 
-            _resumen.value = ResumenFicha(
+    private suspend fun leerYRecalcular() {
+        val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val hoyMas15 = kotlinx.datetime.LocalDate.fromEpochDays(hoy.toEpochDays() + 15)
+        val hoyMas5 = kotlinx.datetime.LocalDate.fromEpochDays(hoy.toEpochDays() + 5)
+
+        val vacunas = vacunaRepository.getVacunasByMascotaId(mascotaId)
+        val revisiones = revisionRepository.getRevisionesByMascotaId(mascotaId)
+        val tratamientos = tratamientoRepository.getTratamientosByMascotaId(mascotaId)
+        val pesos = pesoRepository.getPesosByMascotaId(mascotaId)
+        val informes = informeRepository.getInformesByMascotaId(mascotaId)
+        val notas = notaRepository.getNotasByMascotaId(mascotaId)
+        val preventivos = preventivoRepository.getPreventivosByMascotaId(mascotaId)
+
+        val pesosOrdenados = pesos.sortedByDescending { it.fecha }
+
+        val tratamientoActivoActual = tratamientos.firstOrNull {
+            it.fechaInicio <= hoy && (it.fechaFin == null || it.fechaFin >= hoy)
+        }
+
+        _resumen.value = ResumenFicha(
                 vacunasVencidas = vacunas.count { it.fechaProximaDosis < hoy },
                 vacunasProximas = vacunas.count { it.fechaProximaDosis >= hoy && it.fechaProximaDosis <= hoyMas15 },
                 totalVacunas = vacunas.size,
@@ -224,10 +272,53 @@ class FichaMascotaViewModel(
                     }
                 }
             }
+    }
 
-            _isLoading.value = false
+    /** Quita el aviso de error de la pantalla. */
+    fun clearError() {
+        _errorMessage.value = null
+    }
+
+    /**
+     * Ejecuta una escritura del repositorio convirtiendo en `Result` cualquier excepción.
+     *
+     * Los repositorios ya devuelven `Result`, pero envolverlos aquí evita que una excepción
+     * inesperada (por ejemplo, cerrar la app a mitad) se escape y tumbe el scope.
+     */
+    private suspend fun <T> conResultado(operacion: suspend () -> Result<T>): Result<T> =
+        try {
+            operacion()
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    /**
+     * Cierra una operación de escritura: si fue bien recarga la ficha y, si no, publica el error
+     * para que se vea.
+     *
+     * Es el arreglo del fallo que tenía esta pantalla: antes se llamaba al repositorio, se
+     * ignoraba el `Result` y se recargaba igual, así que un fallo al guardar una vacuna o un
+     * tratamiento no se veía por ningún lado y el usuario creía que se había guardado.
+     */
+    private suspend fun cerrarOperacion(resultado: Result<*>, claveError: StringResource) {
+        val fallo = resultado.exceptionOrNull()
+        if (fallo != null) {
+            _errorMessage.value = textoDeError(claveError, fallo)
+        } else {
+            cargarResumen()
         }
     }
+
+    /**
+     * Texto del error: los motivos de dominio ya saben traducirse solos; para el resto se usa el
+     * mensaje de la pantalla más el detalle técnico, que es lo que permite diagnosticar.
+     */
+    private suspend fun textoDeError(clave: StringResource, fallo: Throwable): String =
+        if (fallo is ErrorAppException) {
+            textoDeFallo(fallo)
+        } else {
+            getString(clave, detalleDeError(fallo))
+        }
 
     suspend fun obtenerDatosPdf(): DatosFichaPdf {
         val vacunas = vacunaRepository.getVacunasByMascotaId(mascotaId)
@@ -253,16 +344,18 @@ class FichaMascotaViewModel(
     fun agregarNota(texto: String) {
         if (texto.isBlank()) return
         scope.launch {
-            notaRepository.insertNota(mascotaId = mascotaId, texto = texto)
-            cargarResumen()
+            val resultado = conResultado {
+                notaRepository.insertNota(mascotaId = mascotaId, texto = texto)
+            }
+            cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
     /** Elimina una nota desde la hoja modal y recarga el resumen. */
     fun borrarNota(id: Long) {
         scope.launch {
-            notaRepository.deleteNota(id)
-            cargarResumen()
+            val resultado = conResultado { notaRepository.deleteNota(id) }
+            cerrarOperacion(resultado, Res.string.error_borrar_dato)
         }
     }
 
@@ -276,14 +369,18 @@ class FichaMascotaViewModel(
     ) {
         if (nombre.isBlank()) return
         scope.launch {
-            val resultado = vacunaRepository.insertVacuna(
-                mascotaId = mascotaId,
-                nombre = nombre,
-                fechaAplicacion = fechaAplicacion,
-                fechaProximaDosis = fechaProximaDosis,
-                veterinario = veterinario,
-                lote = lote
-            )
+            val resultado = conResultado {
+                vacunaRepository.insertVacuna(
+                    mascotaId = mascotaId,
+                    nombre = nombre,
+                    fechaAplicacion = fechaAplicacion,
+                    fechaProximaDosis = fechaProximaDosis,
+                    veterinario = veterinario,
+                    lote = lote
+                )
+            }
+            // El aviso solo se programa si la vacuna llegó a guardarse: si falló, el id no
+            // existe y programar una notificación para una vacuna fantasma sería peor.
             programador?.let { prog ->
                 resultado.getOrNull()?.let { id ->
                     ReprogramadorNotificaciones.programarVacuna(
@@ -301,7 +398,7 @@ class FichaMascotaViewModel(
                     )
                 }
             }
-            cargarResumen()
+            cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
@@ -314,15 +411,17 @@ class FichaMascotaViewModel(
     ) {
         if (nombre.isBlank()) return
         scope.launch {
-            val resultado = preventivoRepository.insertPreventivo(
-                mascotaId = mascotaId,
-                tipo = tipo,
-                nombre = nombre,
-                fechaAplicacion = fechaAplicacion,
-                fechaProximaDosis = fechaProximaDosis,
-                veterinario = null,
-                lote = null
-            )
+            val resultado = conResultado {
+                preventivoRepository.insertPreventivo(
+                    mascotaId = mascotaId,
+                    tipo = tipo,
+                    nombre = nombre,
+                    fechaAplicacion = fechaAplicacion,
+                    fechaProximaDosis = fechaProximaDosis,
+                    veterinario = null,
+                    lote = null
+                )
+            }
             programador?.let { prog ->
                 resultado.getOrNull()?.let { id ->
                     ReprogramadorNotificaciones.programarPreventivo(
@@ -341,7 +440,7 @@ class FichaMascotaViewModel(
                     )
                 }
             }
-            cargarResumen()
+            cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
@@ -355,41 +454,45 @@ class FichaMascotaViewModel(
     ) {
         if (nombreMedicamento.isBlank()) return
         scope.launch {
-            tratamientoRepository.insertTratamiento(
-                mascotaId = mascotaId,
-                nombreMedicamento = nombreMedicamento,
-                dosis = dosis,
-                frecuencia = frecuencia,
-                fechaInicio = fechaInicio,
-                fechaFin = fechaFin
-            )
-            cargarResumen()
+            val resultado = conResultado {
+                tratamientoRepository.insertTratamiento(
+                    mascotaId = mascotaId,
+                    nombreMedicamento = nombreMedicamento,
+                    dosis = dosis,
+                    frecuencia = frecuencia,
+                    fechaInicio = fechaInicio,
+                    fechaFin = fechaFin
+                )
+            }
+            cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
     /** Borra una vacuna desde la hoja de la ficha y cancela su aviso. */
     fun borrarVacuna(id: Long) {
         scope.launch {
-            vacunaRepository.deleteVacuna(id)
+            // El aviso se cancela pase lo que pase: si el borrado falló, la vacuna sigue ahí y
+            // su notificación también debe seguir; si funcionó, ya no tiene sentido.
+            val resultado = conResultado { vacunaRepository.deleteVacuna(id) }
             programador?.let { prog -> ReprogramadorNotificaciones.cancelar(prog, id) }
-            cargarResumen()
+            cerrarOperacion(resultado, Res.string.error_borrar_dato)
         }
     }
 
     /** Borra un preventivo desde la hoja de la ficha y cancela su aviso. */
     fun borrarPreventivo(id: Long) {
         scope.launch {
-            preventivoRepository.deletePreventivo(id)
+            val resultado = conResultado { preventivoRepository.deletePreventivo(id) }
             programador?.let { prog -> ReprogramadorNotificaciones.cancelarPreventivo(prog, id) }
-            cargarResumen()
+            cerrarOperacion(resultado, Res.string.error_borrar_dato)
         }
     }
 
     /** Borra un tratamiento desde la hoja de la ficha. */
     fun borrarTratamiento(id: Long) {
         scope.launch {
-            tratamientoRepository.deleteTratamiento(id)
-            cargarResumen()
+            val resultado = conResultado { tratamientoRepository.deleteTratamiento(id) }
+            cerrarOperacion(resultado, Res.string.error_borrar_dato)
         }
     }
 
@@ -404,31 +507,37 @@ class FichaMascotaViewModel(
     ) {
         if (nombre.isBlank()) return
         scope.launch {
-            vacunaRepository.updateVacuna(
-                id = id,
-                nombre = nombre,
-                fechaAplicacion = fechaAplicacion,
-                fechaProximaDosis = fechaProximaDosis,
-                veterinario = veterinario,
-                lote = lote
-            )
-            programador?.let { prog ->
-                ReprogramadorNotificaciones.cancelar(prog, id)
-                ReprogramadorNotificaciones.programarVacuna(
-                    prog,
-                    Vacuna(
-                        id = id,
-                        mascotaId = mascotaId,
-                        nombre = nombre,
-                        fechaAplicacion = fechaAplicacion,
-                        fechaProximaDosis = fechaProximaDosis,
-                        veterinario = veterinario,
-                        lote = lote
-                    ),
-                    localizacion
+            val resultado = conResultado {
+                vacunaRepository.updateVacuna(
+                    id = id,
+                    nombre = nombre,
+                    fechaAplicacion = fechaAplicacion,
+                    fechaProximaDosis = fechaProximaDosis,
+                    veterinario = veterinario,
+                    lote = lote
                 )
             }
-            cargarResumen()
+            // Solo se reprograma el aviso si el cambio llegó a guardarse: si no, la notificación
+            // estaría avisando de una fecha que la base de datos no tiene.
+            if (resultado.isSuccess) {
+                programador?.let { prog ->
+                    ReprogramadorNotificaciones.cancelar(prog, id)
+                    ReprogramadorNotificaciones.programarVacuna(
+                        prog,
+                        Vacuna(
+                            id = id,
+                            mascotaId = mascotaId,
+                            nombre = nombre,
+                            fechaAplicacion = fechaAplicacion,
+                            fechaProximaDosis = fechaProximaDosis,
+                            veterinario = veterinario,
+                            lote = lote
+                        ),
+                        localizacion
+                    )
+                }
+            }
+            cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
@@ -442,33 +551,37 @@ class FichaMascotaViewModel(
     ) {
         if (nombre.isBlank()) return
         scope.launch {
-            preventivoRepository.updatePreventivo(
-                id = id,
-                tipo = tipo,
-                nombre = nombre,
-                fechaAplicacion = fechaAplicacion,
-                fechaProximaDosis = fechaProximaDosis,
-                veterinario = null,
-                lote = null
-            )
-            programador?.let { prog ->
-                ReprogramadorNotificaciones.cancelarPreventivo(prog, id)
-                ReprogramadorNotificaciones.programarPreventivo(
-                    prog,
-                    Preventivo(
-                        id = id,
-                        mascotaId = mascotaId,
-                        tipo = tipo,
-                        nombre = nombre,
-                        fechaAplicacion = fechaAplicacion,
-                        fechaProximaDosis = fechaProximaDosis,
-                        veterinario = null,
-                        lote = null
-                    ),
-                    localizacion
+            val resultado = conResultado {
+                preventivoRepository.updatePreventivo(
+                    id = id,
+                    tipo = tipo,
+                    nombre = nombre,
+                    fechaAplicacion = fechaAplicacion,
+                    fechaProximaDosis = fechaProximaDosis,
+                    veterinario = null,
+                    lote = null
                 )
             }
-            cargarResumen()
+            if (resultado.isSuccess) {
+                programador?.let { prog ->
+                    ReprogramadorNotificaciones.cancelarPreventivo(prog, id)
+                    ReprogramadorNotificaciones.programarPreventivo(
+                        prog,
+                        Preventivo(
+                            id = id,
+                            mascotaId = mascotaId,
+                            tipo = tipo,
+                            nombre = nombre,
+                            fechaAplicacion = fechaAplicacion,
+                            fechaProximaDosis = fechaProximaDosis,
+                            veterinario = null,
+                            lote = null
+                        ),
+                        localizacion
+                    )
+                }
+            }
+            cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
@@ -483,15 +596,17 @@ class FichaMascotaViewModel(
     ) {
         if (nombreMedicamento.isBlank()) return
         scope.launch {
-            tratamientoRepository.updateTratamiento(
-                id = id,
-                nombreMedicamento = nombreMedicamento,
-                dosis = dosis,
-                frecuencia = frecuencia,
-                fechaInicio = fechaInicio,
-                fechaFin = fechaFin
-            )
-            cargarResumen()
+            val resultado = conResultado {
+                tratamientoRepository.updateTratamiento(
+                    id = id,
+                    nombreMedicamento = nombreMedicamento,
+                    dosis = dosis,
+                    frecuencia = frecuencia,
+                    fechaInicio = fechaInicio,
+                    fechaFin = fechaFin
+                )
+            }
+            cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
@@ -505,15 +620,17 @@ class FichaMascotaViewModel(
     ) {
         if (motivo.isBlank()) return
         scope.launch {
-            revisionRepository.insertRevision(
-                mascotaId = mascotaId,
-                fecha = fecha,
-                motivo = motivo,
-                diagnostico = diagnostico,
-                notas = notas,
-                veterinario = veterinario
-            )
-            cargarResumen()
+            val resultado = conResultado {
+                revisionRepository.insertRevision(
+                    mascotaId = mascotaId,
+                    fecha = fecha,
+                    motivo = motivo,
+                    diagnostico = diagnostico,
+                    notas = notas,
+                    veterinario = veterinario
+                )
+            }
+            cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
@@ -552,8 +669,8 @@ class FichaMascotaViewModel(
     fun actualizarNota(id: Long, texto: String) {
         if (texto.isBlank()) return
         scope.launch {
-            notaRepository.updateNota(id, texto)
-            cargarResumen()
+            val resultado = conResultado { notaRepository.updateNota(id, texto) }
+            cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
@@ -567,15 +684,17 @@ class FichaMascotaViewModel(
     ) {
         if (tipo.isBlank() || nombreArchivo.isBlank()) return
         scope.launch {
-            informeRepository.insertInforme(
-                mascotaId = mascotaId,
-                tipo = tipo,
-                descripcion = descripcion,
-                fecha = fecha,
-                nombreArchivo = nombreArchivo,
-                rutaArchivo = rutaArchivo
-            )
-            cargarResumen()
+            val resultado = conResultado {
+                informeRepository.insertInforme(
+                    mascotaId = mascotaId,
+                    tipo = tipo,
+                    descripcion = descripcion,
+                    fecha = fecha,
+                    nombreArchivo = nombreArchivo,
+                    rutaArchivo = rutaArchivo
+                )
+            }
+            cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
@@ -583,16 +702,16 @@ class FichaMascotaViewModel(
     fun actualizarInforme(id: Long, tipo: String, descripcion: String?, fecha: LocalDate) {
         if (tipo.isBlank()) return
         scope.launch {
-            informeRepository.updateInforme(id, tipo, descripcion, fecha)
-            cargarResumen()
+            val resultado = conResultado { informeRepository.updateInforme(id, tipo, descripcion, fecha) }
+            cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
     /** Borra un informe desde la hoja de la ficha. */
     fun borrarInforme(id: Long) {
         scope.launch {
-            informeRepository.deleteInforme(id)
-            cargarResumen()
+            val resultado = conResultado { informeRepository.deleteInforme(id) }
+            cerrarOperacion(resultado, Res.string.error_borrar_dato)
         }
     }
 
@@ -600,8 +719,10 @@ class FichaMascotaViewModel(
     fun agregarPeso(fecha: LocalDate, kilos: Double, notas: String?) {
         if (kilos <= 0.0) return
         scope.launch {
-            pesoRepository.insertPeso(mascotaId = mascotaId, fecha = fecha, peso = kilos, notas = notas)
-            cargarResumen()
+            val resultado = conResultado {
+                pesoRepository.insertPeso(mascotaId = mascotaId, fecha = fecha, peso = kilos, notas = notas)
+            }
+            cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
@@ -609,16 +730,18 @@ class FichaMascotaViewModel(
     fun actualizarPeso(id: Long, fecha: LocalDate, kilos: Double, notas: String?) {
         if (kilos <= 0.0) return
         scope.launch {
-            pesoRepository.updatePeso(id = id, fecha = fecha, peso = kilos, notas = notas)
-            cargarResumen()
+            val resultado = conResultado {
+                pesoRepository.updatePeso(id = id, fecha = fecha, peso = kilos, notas = notas)
+            }
+            cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
     /** Borra un pesaje desde la hoja de la ficha. */
     fun borrarPeso(id: Long) {
         scope.launch {
-            pesoRepository.deletePeso(id)
-            cargarResumen()
+            val resultado = conResultado { pesoRepository.deletePeso(id) }
+            cerrarOperacion(resultado, Res.string.error_borrar_dato)
         }
     }
 }

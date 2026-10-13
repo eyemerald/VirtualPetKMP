@@ -339,6 +339,11 @@
     <string name="error_id_requerido">An id is required to update</string>
     <string name="error_desconocido">Unknown error</string>
 
+    <!-- Errors from the pet record operations (vaccines, weights, notes, reports...) -->
+    <string name="error_cargar_ficha">Could not load the record: %1$s</string>
+    <string name="error_guardar_dato">Could not save: %1$s</string>
+    <string name="error_borrar_dato">Could not delete: %1$s</string>
+
     <!-- Etiquetas del PDF exportado (se generan fuera de la composición, con getString) -->
     <string name="pdf_ficha_de">Record for %1$s</string>
     <string name="pdf_resumen_cuidador">Caregiver summary</string>

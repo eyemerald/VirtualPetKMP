@@ -203,9 +203,13 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 - [x] **Multiidioma (es, en, pt, fr, de, it)**, con unidades y formato de fecha según la región:
       peso en libras solo en Estados Unidos (siempre guardado en kilos), orden de fecha
       día/mes salvo en inglés y separador decimal de la región.
-- [x] **Arquitectura offline-first** con base de datos local y migraciones versionadas.
-- [x] **Tests** de repositorios, de los cálculos del resumen de la ficha y de la
-      internacionalización (paridad entre idiomas y resolución real del idioma en ejecución).
+- [x] **Arquitectura offline-first** con base de datos local y migraciones versionadas, con
+      **tests que migran desde cualquier versión anterior** y comprueban que los datos sobreviven.
+- [x] **Los fallos se ven**: si una operación no se puede guardar o borrar, la ficha lo dice con
+      el detalle del error en vez de recargar como si hubiera ido bien.
+- [x] **Tests** de repositorios, migraciones de esquema, errores de las operaciones, los cálculos
+      del resumen de la ficha y la internacionalización (paridad entre idiomas y resolución real
+      del idioma en ejecución).
 
 ### 🔜 Pendiente antes de la v1.0
 

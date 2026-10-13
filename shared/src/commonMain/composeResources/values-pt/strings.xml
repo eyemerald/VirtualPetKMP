@@ -336,6 +336,9 @@
     <string name="error_nombre_duplicado">Já existe um animal com esse nome</string>
     <string name="error_id_requerido">É necessário um id para atualizar</string>
     <string name="error_desconocido">Erro desconhecido</string>
+    <string name="error_cargar_ficha">Não foi possível carregar a ficha: %1$s</string>
+    <string name="error_guardar_dato">Não foi possível guardar: %1$s</string>
+    <string name="error_borrar_dato">Não foi possível apagar: %1$s</string>
 
     <!-- Etiquetas do PDF exportado (são geradas fora da composição, com getString) -->
     <string name="pdf_ficha_de">Ficha de %1$s</string>

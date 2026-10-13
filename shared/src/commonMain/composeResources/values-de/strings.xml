@@ -337,6 +337,9 @@
     <string name="error_nombre_duplicado">Ein Tier mit diesem Namen existiert bereits</string>
     <string name="error_id_requerido">Zum Aktualisieren ist eine ID nötig</string>
     <string name="error_desconocido">Unbekannter Fehler</string>
+    <string name="error_cargar_ficha">Akte konnte nicht geladen werden: %1$s</string>
+    <string name="error_guardar_dato">Speichern fehlgeschlagen: %1$s</string>
+    <string name="error_borrar_dato">Löschen fehlgeschlagen: %1$s</string>
 
     <!-- Beschriftungen des exportierten PDFs (werden außerhalb der Komposition mit getString erzeugt) -->
     <string name="pdf_ficha_de">Akte von %1$s</string>

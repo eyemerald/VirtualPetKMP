@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Note
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import androidx.compose.runtime.*
@@ -62,6 +63,7 @@ import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
 import virtualpetkmp.shared.generated.resources.accion_aceptar
 import virtualpetkmp.shared.generated.resources.accion_cancelar
+import virtualpetkmp.shared.generated.resources.accion_cerrar
 import virtualpetkmp.shared.generated.resources.a11y_mas_acciones
 import virtualpetkmp.shared.generated.resources.exportar_elegir_version
 import virtualpetkmp.shared.generated.resources.exportar_en_curso
@@ -160,6 +162,8 @@ fun FichaMascotaScreen(
     onCambiarDialogoExportar: (Boolean) -> Unit
 ) {
     val resumen by viewModel.resumen.collectAsState()
+    // Último error de una operación (guardar una vacuna, borrar un pesaje...), si lo hubo.
+    val errorMessage by viewModel.errorMessage.collectAsState()
     // Se lee aquí, en contexto composable, para poder usarlo dentro de la corrutina de
     // exportación, donde no hay acceso a los recursos.
     val detalleDesconocido = stringResource(Res.string.exportar_error_desconocido)
@@ -348,6 +352,17 @@ fun FichaMascotaScreen(
     // @param conPeso la tarjeta de peso se omite en la columna izquierda de apaisado, donde
     //   ya tiene su propio sitio fijo: así no aparece dos veces en la misma pantalla.
     fun LazyListScope.contenidoHubFicha(conPeso: Boolean = true) {
+        // El aviso de error va el primero: si una operación falló, es lo que el usuario tiene
+        // que ver antes que nada, y desaparece cuando lo cierra.
+        if (errorMessage != null) {
+            item(key = "error-ficha") {
+                AvisoErrorFicha(
+                    mensaje = errorMessage!!,
+                    onCerrar = { viewModel.clearError() }
+                )
+            }
+        }
+
         if (conPeso) {
             item(key = "peso") {
                 TarjetaPesoFicha(
@@ -839,6 +854,47 @@ private fun ErrorFotoTexto(mensaje: String) {
         style = MaterialTheme.typography.bodySmall,
         modifier = Modifier.fillMaxWidth()
     )
+}
+
+/**
+ * Aviso de que una operación de la ficha ha fallado.
+ *
+ * Sin esto, un error al guardar una vacuna o al borrar un pesaje no se veía por ninguna parte:
+ * el ViewModel recargaba los datos y la pantalla quedaba igual, así que el usuario creía que
+ * había funcionado. El botón de cerrar solo quita el aviso; el error ya está en el detalle.
+ */
+@Composable
+private fun AvisoErrorFicha(mensaje: String, onCerrar: () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onErrorContainer
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = mensaje,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = onCerrar) {
+                Text(
+                    text = stringResource(Res.string.accion_cerrar),
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+        }
+    }
 }
 
 /**

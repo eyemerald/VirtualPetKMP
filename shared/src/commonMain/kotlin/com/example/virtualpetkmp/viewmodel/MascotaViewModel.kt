@@ -3,12 +3,12 @@ package com.example.virtualpetkmp.viewmodel
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.data.MascotaRepository
 import com.example.virtualpetkmp.data.PesoRepository
-import com.example.virtualpetkmp.util.ErrorAppException
-import com.example.virtualpetkmp.util.textoErrorApp
+import com.example.virtualpetkmp.util.detalleDeError
+import com.example.virtualpetkmp.util.textoDeFallo
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,23 +17,10 @@ import org.jetbrains.compose.resources.getString
 import virtualpetkmp.shared.generated.resources.Res
 import virtualpetkmp.shared.generated.resources.error_borrar_mascota
 import virtualpetkmp.shared.generated.resources.error_cargar_mascotas
-import virtualpetkmp.shared.generated.resources.error_desconocido
 import virtualpetkmp.shared.generated.resources.error_guardar_foto
 import virtualpetkmp.shared.generated.resources.error_guardar_foto_corto
 import virtualpetkmp.shared.generated.resources.error_guardar_peso_ideal
 import virtualpetkmp.shared.generated.resources.error_guardar_peso_ideal_corto
-
-/**
- * Traduce el fallo de un repositorio al idioma activo.
- *
- * Los repositorios devuelven [ErrorAppException] con un motivo (`ErrorApp`) cuando el fallo es
- * de negocio, y cualquier otra excepción cuando es técnico. Aquí se decide el texto: por eso
- * este ViewModel no guarda mensajes en español.
- */
-private suspend fun textoDeFallo(e: Throwable?): String = when (e) {
-    is ErrorAppException -> textoErrorApp(e.error)
-    else -> e?.message ?: getString(Res.string.error_desconocido)
-}
 
 /**
  * Estado de la lista de mascotas: los datos, si está cargando y el último error.
@@ -53,7 +40,7 @@ class MascotaViewModel(
     private val pesoRepository: PesoRepository? = null,
     dispatcher: CoroutineDispatcher = Dispatchers.Main
 ) {
-    private val scope = CoroutineScope(dispatcher + Job())
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     private val _mascotas = MutableStateFlow<List<Mascota>>(emptyList())
     val mascotas: StateFlow<List<Mascota>> = _mascotas.asStateFlow()
@@ -89,7 +76,7 @@ class MascotaViewModel(
                     emptyMap()
                 }
             } catch (e: Exception) {
-                _errorMessage.value = getString(Res.string.error_cargar_mascotas, detalleDe(e))
+                _errorMessage.value = getString(Res.string.error_cargar_mascotas, detalleDeError(e))
             } finally {
                 _isLoading.value = false
             }
@@ -137,7 +124,7 @@ class MascotaViewModel(
                     loadMascotas()
                 }
             } catch (e: Exception) {
-                _errorMessage.value = getString(Res.string.error_guardar_foto, detalleDe(e))
+                _errorMessage.value = getString(Res.string.error_guardar_foto, detalleDeError(e))
             }
         }
     }
@@ -159,7 +146,7 @@ class MascotaViewModel(
                     loadMascotas()
                 }
             } catch (e: Exception) {
-                _errorMessage.value = getString(Res.string.error_guardar_peso_ideal, detalleDe(e))
+                _errorMessage.value = getString(Res.string.error_guardar_peso_ideal, detalleDeError(e))
             }
         }
     }
@@ -172,7 +159,7 @@ class MascotaViewModel(
                 loadMascotas()
                 onSuccess()
             } catch (e: Exception) {
-                _errorMessage.value = getString(Res.string.error_borrar_mascota, detalleDe(e))
+                _errorMessage.value = getString(Res.string.error_borrar_mascota, detalleDeError(e))
             } finally {
                 _isLoading.value = false
             }
@@ -187,6 +174,3 @@ class MascotaViewModel(
         _errorMessage.value = message
     }
 }
-
-/** Detalle técnico del fallo para los mensajes "No se pudo hacer X: <detalle>". */
-private fun detalleDe(e: Throwable): String = e.message ?: e::class.simpleName ?: "?"

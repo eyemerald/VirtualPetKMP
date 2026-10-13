@@ -98,10 +98,31 @@ el esquema y lo entrega al driver; Android además necesita
 
 ### Cómo saber si una migración funciona
 
-Compilar no demuestra nada: un `ALTER TABLE` solo se prueba sobre una base de datos que ya
-existe. La forma de verificarlo es abrir la app **con una base de datos de la versión
-anterior** y comprobar que arranca sin excepciones y que los datos siguen ahí. En el README
-hay un apartado con la herramienta que genera datos de ejemplo, que sirve también para esto.
+**Con `MigracionesTest`, que ya lo comprueba solo.** Antes había que hacerlo a mano —abrir la
+app con una base de datos de la versión anterior— y eso significaba que nadie lo hacía. El test
+cubre tres cosas:
+
+1. **Los datos sobreviven desde cualquier versión anterior** (de la 1 a la 11, no solo desde la
+   penúltima: quien no actualiza en meses se salta varias de golpe).
+2. **El esquema migrado es idéntico al de una instalación nueva.** Es la comprobación que caza el
+   despiste clásico: tocar el `.sq` y olvidar el `.sqm` deja dos rutas que acaban en bases de
+   datos distintas, y el fallo no aparece hasta mucho después.
+3. **Abrir el fichero dos veces seguidas**, que es el escenario real de arrancar la app dos
+   veces.
+
+Para probar la primera hace falta reconstruir la versión 1 a mano, porque la tabla `mascotas` es
+anterior a los ficheros de migración y ninguno la crea. Está documentado en el propio test.
+
+### `user_version`, el detalle que rompía el escritorio
+
+Ni `create()` ni `migrate()` escriben `PRAGMA user_version` por su cuenta: eso lo hace el driver
+de Android, pero **no** el de JDBC. Como `DatabaseFactory` (escritorio) decide qué hacer leyendo
+esa marca, el fichero se quedaba en `0` y **cada arranque intentaba crear las tablas otra vez**:
+la app de escritorio moría al abrirse por segunda vez con un "table ... already exists". Ahora
+`abrirBaseDeDatos()` marca la versión al terminar, tanto al crear como al migrar, y hay un test
+que abre el fichero dos veces con conexiones distintas.
+
+Si algún día se toca esto: **marcar la versión no es opcional.**
 
 ---
 
@@ -233,6 +254,15 @@ No hay servicio en segundo plano: es un equilibrio consciente entre simplicidad 
 - **Textos largos (alemán).** Las filas de pastillas de estado y de chips de filtro usan
   `FlowRow`, no `Row`: en alemán las etiquetas son bastante más largas y en una sola línea se
   salían de la pantalla. Antes de dar por buena una fila nueva, comprueba que aguanta el alemán.
+- **Un fallo nunca se calla.** Toda operación de escritura de la ficha pasa por
+  `cerrarOperacion(...)`: si el repositorio devuelve `Result.failure`, se publica el error en
+  `errorMessage` y **no** se recarga como si hubiera ido bien. Antes se tiraba el `Result`, así
+  que guardar una vacuna podía fallar y la pantalla quedaba igual: el usuario creía que se había
+  guardado. Además, los scopes de los ViewModels usan `SupervisorJob` y las lecturas van en
+  `try`/`catch`: con un `Job` normal, una excepción sin capturar cancelaba el scope y **todas**
+  las operaciones siguientes se volvían invisibles —la ficha dejaba de guardar nada y no lo
+  decía—. `FichaMascotaErroresTest` reproduce justo eso provocando el fallo con una base de
+  datos cerrada.
 
 ---
 
@@ -293,8 +323,9 @@ publicar, sobre todo los nombres de raza.
 Están en `shared/src/jvmTest` y usan una base de datos SQLite **en memoria** creada desde el
 esquema, así que prueban los repositorios y los cálculos de verdad, sin mocks. Cubren el CRUD
 de cada entidad, la regla del nombre único, el peso ideal (incluido que `null` no sea `0`), los
-cálculos del resumen de la ficha y la internacionalización (paridad entre los seis idiomas,
-resolución real del idioma en ejecución y comportamiento de los plurales).
+cálculos del resumen de la ficha, las **migraciones de esquema**, los **errores de la ficha**
+(provocados con una base de datos cerrada) y la internacionalización (paridad entre los seis
+idiomas, resolución real del idioma en ejecución y comportamiento de los plurales).
 
 ```bash
 ./gradlew :shared:jvmTest

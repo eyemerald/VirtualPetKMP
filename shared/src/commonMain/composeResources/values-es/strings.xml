@@ -335,6 +335,11 @@
     <string name="error_id_requerido">Se necesita un id para actualizar</string>
     <string name="error_desconocido">Error desconocido</string>
 
+    <!-- Errores de las operaciones de la ficha (vacunas, pesos, notas, informes...) -->
+    <string name="error_cargar_ficha">No se pudo cargar la ficha: %1$s</string>
+    <string name="error_guardar_dato">No se pudo guardar: %1$s</string>
+    <string name="error_borrar_dato">No se pudo borrar: %1$s</string>
+
     <!-- Etiquetas del PDF exportado (se generan fuera de la composición, con getString) -->
     <string name="pdf_ficha_de">Ficha de %1$s</string>
     <string name="pdf_resumen_cuidador">Resumen para cuidador</string>
