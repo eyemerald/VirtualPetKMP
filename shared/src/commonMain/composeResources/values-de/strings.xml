@@ -33,7 +33,6 @@
     <string name="a11y_agregar_mascota">Tier hinzufügen</string>
     <string name="a11y_acciones_de">Aktionen für %1$s</string>
     <string name="a11y_volver">Zurück</string>
-    <string name="a11y_compartir">Teilen</string>
     <string name="a11y_mas_acciones">Weitere Aktionen</string>
     <string name="a11y_elegir_calendario">Aus Kalender wählen</string>
     <string name="a11y_historial_mostrar">Verlauf anzeigen</string>
@@ -49,6 +48,7 @@
 
     <!-- Karte: Gewichtskarte -->
     <string name="ficha_peso_actual">Aktuelles Gewicht</string>
+    <string name="ficha_peso_ideal">ideal %1$s %2$s</string>
     <string name="ficha_sin_datos">Keine Daten</string>
 
     <!-- Karte: Blockkarten -->
@@ -82,6 +82,7 @@
 
     <!-- Karte: Aktionsmenü -->
     <string name="ficha_modificar_datos">Daten ändern</string>
+    <string name="ficha_compartir_perfil">Profil teilen</string>
 
     <!-- Dialog zum PDF-Export -->
     <string name="exportar_titulo">Tierakte als PDF exportieren</string>

@@ -29,7 +29,6 @@
     <string name="a11y_agregar_mascota">Aggiungi animale</string>
     <string name="a11y_acciones_de">Azioni per %1$s</string>
     <string name="a11y_volver">Indietro</string>
-    <string name="a11y_compartir">Condividi</string>
     <string name="a11y_mas_acciones">Altre azioni</string>
     <string name="a11y_elegir_calendario">Scegli dal calendario</string>
     <string name="a11y_historial_mostrar">Mostra cronologia</string>
@@ -45,6 +44,7 @@
 
     <!-- Scheda: riquadro del peso -->
     <string name="ficha_peso_actual">Peso attuale</string>
+    <string name="ficha_peso_ideal">ideale %1$s %2$s</string>
     <string name="ficha_sin_datos">Nessun dato</string>
 
     <!-- Scheda: riquadri delle sezioni -->
@@ -78,6 +78,7 @@
 
     <!-- Scheda: menu delle azioni -->
     <string name="ficha_modificar_datos">Modifica dati</string>
+    <string name="ficha_compartir_perfil">Condividi profilo</string>
 
     <!-- Dialogo di esportazione in PDF -->
     <string name="exportar_titulo">Esporta la scheda in PDF</string>

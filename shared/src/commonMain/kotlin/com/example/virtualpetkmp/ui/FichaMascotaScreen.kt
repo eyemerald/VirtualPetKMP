@@ -48,6 +48,7 @@ import com.example.virtualpetkmp.util.ExportadorPdf
 import com.example.virtualpetkmp.util.UnidadPeso
 import com.example.virtualpetkmp.util.VersionPdf
 import com.example.virtualpetkmp.util.calcularEdad
+import com.example.virtualpetkmp.util.escalaDePeso
 import com.example.virtualpetkmp.util.guardarArchivo
 import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.util.rememberAbridorArchivo
@@ -75,8 +76,10 @@ import virtualpetkmp.shared.generated.resources.exportar_titulo
 import virtualpetkmp.shared.generated.resources.exportar_version_completa
 import virtualpetkmp.shared.generated.resources.exportar_version_resumida
 import virtualpetkmp.shared.generated.resources.ficha_activos
+import virtualpetkmp.shared.generated.resources.ficha_compartir_perfil
 import virtualpetkmp.shared.generated.resources.ficha_modificar_datos
 import virtualpetkmp.shared.generated.resources.ficha_peso_actual
+import virtualpetkmp.shared.generated.resources.ficha_peso_ideal
 import virtualpetkmp.shared.generated.resources.ficha_proximas
 import virtualpetkmp.shared.generated.resources.ficha_sin_datos
 import virtualpetkmp.shared.generated.resources.ficha_tarjeta_notas
@@ -350,6 +353,10 @@ fun FichaMascotaScreen(
             item(key = "peso") {
                 TarjetaPesoFicha(
                     resumen = resumen,
+                    // El ideal se lee de `mascota`, que viene del listado reactivo de
+                    // mascotas: cuando cambia en la base de datos, la tarjeta y su gráfico se
+                    // vuelven a dibujar solos, sin reiniciar la app.
+                    pesoIdeal = mascota.pesoIdeal,
                     compacta = compacta,
                     altura = if (compacta) 88.dp else 130.dp,
                     onClick = { activeSheet = ActiveSheet.Weight }
@@ -423,7 +430,12 @@ fun FichaMascotaScreen(
                         tamanoAvatar = 84.dp,
                         apilada = true,
                         onCambiarFoto = { mostrarOpcionesFoto = true },
-                        menuAcciones = { MenuAccionesFicha(onModificar = onModificar) }
+                        menuAcciones = {
+                            MenuAccionesFicha(
+                                onModificar = onModificar,
+                                onCompartir = { onCambiarDialogoExportar(true) }
+                            )
+                        }
                     )
 
                     errorFoto?.let { ErrorFotoTexto(it) }
@@ -474,7 +486,12 @@ fun FichaMascotaScreen(
             tamanoAvatar = 80.dp,
             apilada = false,
             onCambiarFoto = { mostrarOpcionesFoto = true },
-            menuAcciones = { MenuAccionesFicha(onModificar = onModificar) }
+            menuAcciones = {
+                MenuAccionesFicha(
+                    onModificar = onModificar,
+                    onCompartir = { onCambiarDialogoExportar(true) }
+                )
+            }
         )
 
         LazyColumn(
@@ -826,13 +843,16 @@ private fun ErrorFotoTexto(mensaje: String) {
 }
 
 /**
- * Menú de tres puntos con las acciones de la ficha que no son datos (por ahora, modificar los
- * datos de la mascota). Va en la fila del nombre, alineado arriba, para no gastar una fila
- * entera de botón como antes.
+ * Menú de tres puntos con las acciones de la ficha: modificar los datos y compartir el perfil.
+ *
+ * El botón de compartir vivía antes como icono flotante en la esquina superior derecha, donde
+ * era el único sitio de toda la app con dos iconos sueltos sobre el contenido. Aquí comparte
+ * menú con el resto de acciones, que es donde el usuario las busca.
  */
 @Composable
 private fun MenuAccionesFicha(
     onModificar: () -> Unit,
+    onCompartir: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var abierto by remember { mutableStateOf(false) }
@@ -857,6 +877,16 @@ private fun MenuAccionesFicha(
                 onClick = {
                     abierto = false
                     onModificar()
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.ficha_compartir_perfil)) },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Default.Share, contentDescription = null)
+                },
+                onClick = {
+                    abierto = false
+                    onCompartir()
                 }
             )
         }
@@ -972,6 +1002,7 @@ private fun CabeceraMascota(
 @Composable
 private fun TarjetaPesoFicha(
     resumen: ResumenFicha,
+    pesoIdeal: Double?,
     compacta: Boolean,
     altura: Dp,
     onClick: () -> Unit
@@ -980,6 +1011,7 @@ private fun TarjetaPesoFicha(
         ultimoPeso = resumen.ultimoPeso,
         pesoAnterior = resumen.pesoAnterior,
         pesos = resumen.pesosRecientes,
+        pesoIdeal = pesoIdeal,
         altura = altura,
         compacta = compacta,
         onClick = onClick
@@ -992,6 +1024,7 @@ private fun TarjetaPesoHero(
     pesoAnterior: Double?,
     pesos: List<com.example.virtualpetkmp.Peso>,
     onClick: () -> Unit,
+    pesoIdeal: Double? = null,
     altura: Dp = 130.dp,
     compacta: Boolean = false
 ) {
@@ -1067,6 +1100,20 @@ private fun TarjetaPesoHero(
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    // El ideal va aquí, junto al peso actual: es el otro número con el que se
+                    // compara el dato, y así se ve de un vistazo aunque el gráfico sea pequeño.
+                    if (pesoIdeal != null) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = stringResource(
+                                Res.string.ficha_peso_ideal,
+                                formato.formatearPeso(pesoIdeal),
+                                formato.unidadPesoSufijo
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
@@ -1078,6 +1125,7 @@ private fun TarjetaPesoHero(
                 ) {
                     SparklinePeso(
                         pesos = pesos,
+                        pesoIdeal = pesoIdeal,
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
@@ -1123,10 +1171,14 @@ private fun TarjetaPesoHero(
  * La línea es de izquierda a derecha en orden cronológico, y los puntos se reparten a
  * intervalos iguales (no por fecha), para que no queden huecos grandes si hay pesadas de
  * años distintos.
+ *
+ * @param pesoIdeal ideal **en kilos**, o `null` si no está configurado. Entra en la escala
+ *   (ver [escalaDePeso]) y se dibuja como referencia discontinua, a su altura exacta.
  */
 @Composable
 private fun SparklinePeso(
     pesos: List<com.example.virtualpetkmp.Peso>,
+    pesoIdeal: Double? = null,
     modifier: Modifier = Modifier
 ) {
     val puntos = remember(pesos) {
@@ -1140,6 +1192,7 @@ private fun SparklinePeso(
     val colorLinea = LocalExtrasColors.current.barraActual.copy(alpha = 0.75f)
     val colorPunto = LocalExtrasColors.current.barraActual
     val colorReferencia = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+    val colorIdeal = LocalExtrasColors.current.lineaIdeal
     val colorTexto = MaterialTheme.colorScheme.onSurfaceVariant
 
     val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
@@ -1156,14 +1209,19 @@ private fun SparklinePeso(
     androidx.compose.foundation.Canvas(modifier = modifier) {
         if (puntos.size < 2) return@Canvas
 
-        // El eje Y se calcula en la UNIDAD QUE VE EL USUARIO, no en kilos: si el gráfico se
-        // escalara en kilos pero los números de la derecha fueran libras, las etiquetas no
-        // corresponderían con la línea. Convertimos primero y trabajamos con eso.
+        // El eje Y se mide en la UNIDAD QUE VE EL USUARIO, no en kilos: los números de la
+        // derecha son los del eje, y si el gráfico se escalara en kilos pero las etiquetas
+        // fueran libras, no corresponderían con la línea. De la conversión se encarga
+        // `escalaDePeso`, que recibe kilos y devuelve el rango ya convertido.
         val unidad = formato.unidadPeso
         val valoresMostrados = puntos.map { UnidadPeso.desdeKilos(it.peso, unidad) }
-        val minPeso = valoresMostrados.min()
-        val maxPeso = valoresMostrados.max()
-        val rango = (maxPeso - minPeso).toFloat()
+        // El eje lo decide `escalaDePeso`: incluye el peso ideal además de los datos y deja
+        // margen arriba y abajo, así que ni la línea ni la referencia del ideal tocan un borde.
+        val escala = escalaDePeso(
+            pesosKilos = puntos.map { it.peso },
+            pesoIdealKilos = pesoIdeal,
+            unidad = unidad
+        )
         val padV = 4.dp.toPx()
         // El eje X va del tope izquierdo al arranque de la banda de etiquetas: el primer
         // punto queda con aire a su izquierda y el último con la banda a su derecha.
@@ -1192,13 +1250,28 @@ private fun SparklinePeso(
         fun x(indice: Int): Float =
             inicioGrafico + (indice.toFloat() / (puntos.size - 1)) * anchoGrafico - recorteIzquierdo
 
-        fun y(peso: Double): Float {
-            val normalizado = if (rango <= 0.0001f) 0.5f else ((peso - minPeso) / rango).toFloat()
-            // Se invierte porque en pantalla la Y crece hacia abajo.
-            return padV + altoUtil * (1f - normalizado)
+        // La escala recibe kilos: la conversión a la unidad mostrada la hace ella. Así no hay
+        // forma de colocar un punto con la unidad equivocada.
+        fun y(pesoKilos: Double): Float =
+            padV + altoUtil * (1f - escala.normalizarKilos(pesoKilos))
+
+        // Referencia del PESO IDEAL: discontinua y en tono neutro, como en la hoja de peso,
+        // para que se lea como una referencia y no como un dato medido. Va antes que la línea
+        // de datos para que el dato quede por encima.
+        if (pesoIdeal != null) {
+            val yIdeal = y(pesoIdeal)
+            drawLine(
+                color = colorIdeal,
+                start = Offset(inicioGrafico, yIdeal),
+                end = Offset(inicioGrafico + anchoGrafico, yIdeal),
+                strokeWidth = 1.5.dp.toPx(),
+                pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                    floatArrayOf(5.dp.toPx(), 4.dp.toPx())
+                )
+            )
         }
 
-        val coordenadas = puntos.indices.map { Offset(x(it), y(valoresMostrados[it])) }
+        val coordenadas = puntos.indices.map { Offset(x(it), y(puntos[it].peso)) }
 
         // Índices del peso máximo y mínimo: sus etiquetas se alinean con su punto real.
         val indiceMax = valoresMostrados.indices.maxBy { valoresMostrados[it] }
@@ -1221,11 +1294,14 @@ private fun SparklinePeso(
         }
         drawPath(path = path, color = colorLinea, style = Stroke(width = 2.dp.toPx()))
 
-        // Pesos máximo y mínimo en la banda de la derecha, a la altura de su propio punto
-        // pero sin pisarlo: van a partir del final del eje más un huequito. En la unidad del
-        // usuario y con su separador decimal.
-        val etiquetaMax = formato.formatearConDecimales(maxPeso, 2)
-        val etiquetaMin = formato.formatearConDecimales(minPeso, 2)
+        // Pesos máximo y mínimo **medidos** (no los del eje, que llevan margen y pueden incluir
+        // el ideal) en la banda de la derecha, a la altura de su propio punto pero sin pisarlo:
+        // van a partir del final del eje más un huequito. En la unidad del usuario y con su
+        // separador decimal.
+        val maxDato = valoresMostrados.max()
+        val minDato = valoresMostrados.min()
+        val etiquetaMax = formato.formatearConDecimales(maxDato, 2)
+        val etiquetaMin = formato.formatearConDecimales(minDato, 2)
         val medidaMax = textMeasurer.measure(etiquetaMax, style = estiloEtiqueta)
         val medidaMin = textMeasurer.measure(etiquetaMin, style = estiloEtiqueta)
         val xEtiquetas = inicioGrafico + anchoGrafico + separacionEtiquetaPx

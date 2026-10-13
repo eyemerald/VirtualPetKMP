@@ -132,11 +132,6 @@ fun App(databaseFactory: DatabaseFactory) {
             MainScreen(
             mostrarAcciones = enDetalleMascota,
             onVolver = volverAtras,
-            onCompartir = if (enDetalleMascota) {
-                { dialogoExportarFicha = true }
-            } else {
-                null
-            },
             contenidoMascotas = {
                 when (currentScreen) {
                     "list" -> {

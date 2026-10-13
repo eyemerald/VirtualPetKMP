@@ -33,7 +33,6 @@
     <string name="a11y_agregar_mascota">Ajouter un animal</string>
     <string name="a11y_acciones_de">Actions pour %1$s</string>
     <string name="a11y_volver">Retour</string>
-    <string name="a11y_compartir">Partager</string>
     <string name="a11y_mas_acciones">Plus d\'actions</string>
     <string name="a11y_elegir_calendario">Choisir dans le calendrier</string>
     <string name="a11y_historial_mostrar">Afficher l\'historique</string>
@@ -49,6 +48,7 @@
 
     <!-- Fiche : carte du poids -->
     <string name="ficha_peso_actual">Poids actuel</string>
+    <string name="ficha_peso_ideal">idéal %1$s %2$s</string>
     <string name="ficha_sin_datos">Aucune donnée</string>
 
     <!-- Fiche : cartes de bloc -->
@@ -82,6 +82,7 @@
 
     <!-- Fiche : menu d'actions -->
     <string name="ficha_modificar_datos">Modifier les informations</string>
+    <string name="ficha_compartir_perfil">Partager le profil</string>
 
     <!-- Boîte de dialogue d'export en PDF -->
     <string name="exportar_titulo">Exporter la fiche PDF</string>

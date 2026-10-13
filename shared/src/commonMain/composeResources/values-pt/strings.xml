@@ -33,7 +33,6 @@
     <string name="a11y_agregar_mascota">Adicionar animal</string>
     <string name="a11y_acciones_de">Ações de %1$s</string>
     <string name="a11y_volver">Voltar</string>
-    <string name="a11y_compartir">Partilhar</string>
     <string name="a11y_mas_acciones">Mais ações</string>
     <string name="a11y_elegir_calendario">Escolher do calendário</string>
     <string name="a11y_historial_mostrar">Mostrar histórico</string>
@@ -49,6 +48,7 @@
 
     <!-- Ficha: cartão de peso -->
     <string name="ficha_peso_actual">Peso atual</string>
+    <string name="ficha_peso_ideal">ideal %1$s %2$s</string>
     <string name="ficha_sin_datos">Sem dados</string>
 
     <!-- Ficha: cartões de bloco -->
@@ -81,6 +81,7 @@
 
     <!-- Ficha: menu de ações -->
     <string name="ficha_modificar_datos">Editar dados</string>
+    <string name="ficha_compartir_perfil">Partilhar perfil</string>
 
     <!-- Diálogo de exportação para PDF -->
     <string name="exportar_titulo">Exportar ficha do animal em PDF</string>

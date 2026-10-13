@@ -29,7 +29,6 @@
     <string name="a11y_agregar_mascota">Agregar mascota</string>
     <string name="a11y_acciones_de">Acciones de %1$s</string>
     <string name="a11y_volver">Volver</string>
-    <string name="a11y_compartir">Compartir</string>
     <string name="a11y_mas_acciones">Más acciones</string>
     <string name="a11y_elegir_calendario">Elegir del calendario</string>
     <string name="a11y_historial_mostrar">Mostrar histórico</string>
@@ -45,6 +44,7 @@
 
     <!-- Ficha: tarjeta de peso -->
     <string name="ficha_peso_actual">Peso actual</string>
+    <string name="ficha_peso_ideal">ideal %1$s %2$s</string>
     <string name="ficha_sin_datos">Sin datos</string>
 
     <!-- Ficha: tarjetas de bloque -->
@@ -77,6 +77,7 @@
 
     <!-- Ficha: menú de acciones -->
     <string name="ficha_modificar_datos">Modificar datos</string>
+    <string name="ficha_compartir_perfil">Compartir perfil</string>
 
     <!-- Diálogo de exportar a PDF -->
     <string name="exportar_titulo">Exportar ficha PDF</string>

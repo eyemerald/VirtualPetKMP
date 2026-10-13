@@ -178,6 +178,11 @@ No hay servicio en segundo plano: es un equilibrio consciente entre simplicidad 
 - **Ficha como panel.** La cabecera lleva foto, nombre, edad y un menú ⋮ con las acciones.
   Debajo, tarjetas por bloque. Cada tarjeta muestra **un solo dato relevante**, no un recuento:
   el objetivo es que un vistazo diga si hay algo que requiera atención.
+- **La cabecera tiene un solo botón flotante: volver.** Todo lo demás que se puede hacer con la
+  mascota (editar sus datos, compartir el perfil) vive en el menú ⋮, junto al nombre. Antes
+  compartir era un segundo icono suelto en la esquina opuesta y no se leía como una acción sobre
+  la mascota, sino como un adorno de la pantalla. El botón de volver es un círculo con fondo,
+  filo y sombra: con el icono solo se perdía entre la marca de agua y las tarjetas.
 - **Semántica del color.** El color no decora, informa:
   - **rojo** = algo va mal (vencido, y en el peso, por debajo del ideal);
   - **ámbar** = vence pronto;
@@ -193,6 +198,12 @@ No hay servicio en segundo plano: es un equilibrio consciente entre simplicidad 
   los bordes con un tope igual a cada lado, y las etiquetas de fecha se van saltando solas
   cuando hay muchos meses para que no se solapen. El peso ideal se dibuja como referencia
   **discontinua**, para que se distinga de los datos medidos.
+- **El eje del peso tiene un único cálculo, en `util/EscalaPeso.kt`.** El rango incluye **el
+  peso ideal además de los pesajes** y deja `MARGEN_ESCALA_KILOS` (medio kilo) de aire arriba y
+  abajo. Sin eso, un ideal por encima del pesaje más alto se dibujaba pegado al borde y no se
+  entendía. `EscalaPeso` recibe y devuelve kilos, y es ella la que convierte a la unidad
+  mostrada: fuera de ahí no se manejan valores "en libras", que es como un punto acaba en el
+  sitio equivocado sin que nada avise.
 - **Orientación.** En horizontal la ficha se parte en dos columnas: identidad a la izquierda,
   tarjetas a la derecha. El hueco reservado al banner de publicidad va anclado **abajo**, fuera
   del área de desplazamiento.

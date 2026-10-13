@@ -61,6 +61,7 @@ import com.example.virtualpetkmp.Peso
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import com.example.virtualpetkmp.util.Localizacion
 import com.example.virtualpetkmp.util.UnidadPeso
+import com.example.virtualpetkmp.util.escalaDePeso
 import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.util.parseFechaLocalizada
 import com.example.virtualpetkmp.util.parseKilos
@@ -719,26 +720,23 @@ private fun GraficoLineaMeses(
 
             // Solo los meses con pesaje: los huecos (meses sin datos) no se dibujan como
             // puntos, pero la línea sí los atraviesa para que la evolución se vea entera.
-            // Se trabaja en la unidad mostrada: si el eje fuera en kilos, los números de la
-            // derecha (en libras) no cuadrarían con la línea.
             val conDatos = meses.indices.filter { meses[it].media != null }
-            val valores = conDatos.map { UnidadPeso.desdeKilos(meses[it].media!!, unidad) }
-            val minDatos = valores.minOrNull() ?: 0.0
-            val maxDatos = valores.maxOrNull() ?: 0.0
-            val idealMostrado = pesoIdeal?.let { UnidadPeso.desdeKilos(it, unidad) }
 
-            // El peso ideal entra en la escala: si queda fuera del rango de los datos, la
-            // referencia se vería pegada al borde (o fuera) y no se entendería.
-            val minPeso = if (idealMostrado != null) minOf(minDatos, idealMostrado) else minDatos
-            val maxPeso = if (idealMostrado != null) maxOf(maxDatos, idealMostrado) else maxDatos
-            val rango = (maxPeso - minPeso).toFloat()
+            // El eje lo calcula `escalaDePeso`, que **incluye el peso ideal además de los
+            // datos** y deja margen arriba y abajo. Es lo que hace que la línea del ideal se
+            // dibuje a su altura exacta en vez de quedar pegada a un borde cuando el ideal
+            // está por encima del pesaje más alto (o por debajo del más bajo).
+            val escala = escalaDePeso(
+                pesosKilos = meses.mapNotNull { it.media },
+                pesoIdealKilos = pesoIdeal,
+                unidad = unidad
+            )
 
-            fun y(peso: Double): Float {
-                val normalizado = if (rango <= 0.0001f) 0.5f else ((peso - minPeso) / rango).toFloat()
-                return margenInterno + altoUtil * (1f - normalizado)
-            }
+            // La escala recibe kilos y devuelve la posición ya convertida a la unidad mostrada.
+            fun y(pesoKilos: Double): Float =
+                margenInterno + altoUtil * (1f - escala.normalizarKilos(pesoKilos))
 
-            val puntos = conDatos.map { Offset(x(it), y(UnidadPeso.desdeKilos(meses[it].media!!, unidad))) }
+            val puntos = conDatos.map { Offset(x(it), y(meses[it].media!!)) }
 
             // Referencias horizontales sutiles, como en la tarjeta de la ficha.
             listOf(0f, 0.5f, 1f).forEach { fraccion ->
@@ -753,8 +751,8 @@ private fun GraficoLineaMeses(
 
             // Línea del PESO IDEAL: discontinua y en tono neutro, para que se lea como una
             // referencia y no como un dato medido. Lleva su valor rotulado a la izquierda.
-            if (idealMostrado != null) {
-                val yIdeal = y(idealMostrado)
+            if (pesoIdeal != null) {
+                val yIdeal = y(pesoIdeal)
                 val etiquetaIdeal = etiquetaIdealTexto
                 val medidaIdeal = textMeasurer.measure(etiquetaIdeal, style = estiloEtiqueta)
                 // Encima de la línea si hay sitio, debajo si está muy arriba.

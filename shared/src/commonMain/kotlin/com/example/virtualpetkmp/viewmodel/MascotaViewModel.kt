@@ -5,6 +5,7 @@ import com.example.virtualpetkmp.data.MascotaRepository
 import com.example.virtualpetkmp.data.PesoRepository
 import com.example.virtualpetkmp.util.ErrorAppException
 import com.example.virtualpetkmp.util.textoErrorApp
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -44,12 +45,15 @@ private suspend fun textoDeFallo(e: Throwable?): String = when (e) {
  * @param pesoRepository es opcional a propósito: si no se pasa, la lista funciona igual y
  *   simplemente no muestra el indicador de peso. Así el ViewModel sigue siendo usable en
  *   tests y en pantallas que no necesitan pesos.
+ * @param dispatcher hilo en el que corre el estado. Se puede cambiar solo para los tests:
+ *   `Dispatchers.Main` no existe en jvmTest. En la app se deja el valor por defecto.
  */
 class MascotaViewModel(
     private val repository: MascotaRepository,
-    private val pesoRepository: PesoRepository? = null
+    private val pesoRepository: PesoRepository? = null,
+    dispatcher: CoroutineDispatcher = Dispatchers.Main
 ) {
-    private val scope = CoroutineScope(Dispatchers.Main + Job())
+    private val scope = CoroutineScope(dispatcher + Job())
 
     private val _mascotas = MutableStateFlow<List<Mascota>>(emptyList())
     val mascotas: StateFlow<List<Mascota>> = _mascotas.asStateFlow()

@@ -33,7 +33,6 @@
     <string name="a11y_agregar_mascota">Add pet</string>
     <string name="a11y_acciones_de">Actions for %1$s</string>
     <string name="a11y_volver">Back</string>
-    <string name="a11y_compartir">Share</string>
     <string name="a11y_mas_acciones">More actions</string>
     <string name="a11y_elegir_calendario">Pick from calendar</string>
     <string name="a11y_historial_mostrar">Show history</string>
@@ -49,6 +48,7 @@
 
     <!-- Ficha: tarjeta de peso -->
     <string name="ficha_peso_actual">Current weight</string>
+    <string name="ficha_peso_ideal">ideal %1$s %2$s</string>
     <string name="ficha_sin_datos">No data</string>
 
     <!-- Ficha: tarjetas de bloque -->
@@ -81,6 +81,7 @@
 
     <!-- Ficha: menú de acciones -->
     <string name="ficha_modificar_datos">Edit details</string>
+    <string name="ficha_compartir_perfil">Share profile</string>
 
     <!-- Diálogo de exportar a PDF -->
     <string name="exportar_titulo">Export pet record as PDF</string>

@@ -1,7 +1,7 @@
 package com.example.virtualpetkmp.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,11 +16,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -32,13 +31,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
-import virtualpetkmp.shared.generated.resources.a11y_compartir
 import virtualpetkmp.shared.generated.resources.a11y_volver
 import virtualpetkmp.shared.generated.resources.logo
 import virtualpetkmp.shared.generated.resources.pestana_mascotas
@@ -51,21 +48,21 @@ private const val OPACIDAD_MARCA_DE_AGUA = 0.05f
  * Contenedor raíz de la app: pestañas globales (Mascotas / Veterinarios) y el contenido de
  * la pestaña activa.
  *
- * No hay barra superior: las acciones de la ficha van como iconos flotantes superpuestos
- * sobre el contenido, y solo se muestran cuando tienen sentido (ver [mostrarAcciones]).
+ * No hay barra superior: el único botón superpuesto es el de **volver**, que aparece como
+ * botón flotante circular en la esquina superior izquierda del detalle. Las demás acciones de
+ * la ficha (compartir, editar) viven en su menú de tres puntos, para no llenar de iconos
+ * sueltos el contenido.
  *
  * @param mostrarAcciones true solo en el detalle de una mascota con la pestaña Mascotas
- *   activa. Con la pestaña de Veterinarios se ocultan y la lista ocupa toda la pantalla.
- * @param onVolver acción del icono flotante de volver.
- * @param onCompartir acción del icono flotante de compartir.
+ *   activa. Con la pestaña de Veterinarios se oculta y la lista ocupa toda la pantalla.
+ * @param onVolver acción del botón flotante de volver.
  */
 @Composable
 fun MainScreen(
     contenidoMascotas: @Composable () -> Unit,
     contenidoVeterinarios: @Composable () -> Unit,
     mostrarAcciones: Boolean = false,
-    onVolver: (() -> Unit)? = null,
-    onCompartir: (() -> Unit)? = null
+    onVolver: (() -> Unit)? = null
 ) {
     var tabActual by rememberSaveable { mutableStateOf(0) }
     val accionesVisibles = mostrarAcciones && tabActual == 0
@@ -118,25 +115,20 @@ fun MainScreen(
                         1 -> contenidoVeterinarios()
                     }
 
-                    // Iconos flotantes de la ficha, superpuestos sobre el contenido y por
-                    // debajo de las pestañas (que son la navegación global).
-                    if (accionesVisibles) {
-                        if (onVolver != null) {
-                            IconoFlotante(
-                                icono = Icons.AutoMirrored.Filled.ArrowBack,
-                                descripcion = stringResource(Res.string.a11y_volver),
-                                onClick = onVolver,
-                                modifier = Modifier.align(Alignment.TopStart)
-                            )
-                        }
-                        if (onCompartir != null) {
-                            IconoFlotante(
-                                icono = Icons.Default.Share,
-                                descripcion = stringResource(Res.string.a11y_compartir),
-                                onClick = onCompartir,
-                                modifier = Modifier.align(Alignment.TopEnd)
-                            )
-                        }
+                    // Botón flotante de volver, superpuesto sobre el contenido y por debajo
+                    // de las pestañas (que son la navegación global).
+                    //
+                    // El safe area ya viene aplicado por el `Scaffold` de arriba (su
+                    // `contentWindowInsets` es `safeDrawing`), así que aquí **no** se vuelve a
+                    // pedir: hacerlo otra vez empujaría el botón hacia abajo y quedaría
+                    // descolgado respecto a las pestañas.
+                    if (accionesVisibles && onVolver != null) {
+                        BotonFlotanteVolver(
+                            onClick = onVolver,
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(start = 12.dp, top = 6.dp)
+                        )
                     }
                 }
             }
@@ -145,24 +137,33 @@ fun MainScreen(
 }
 
 /**
- * Botón redondo superpuesto, con fondo semitransparente para que se lea sobre el contenido
- * que quede debajo.
+ * Botón flotante de volver: un círculo con fondo claro, filo suave y sombra.
+ *
+ * Antes era solo el icono suelto sobre el contenido, y se perdía entre la marca de agua y las
+ * tarjetas. El círculo le da la forma de botón que se espera de un elemento flotante, y la
+ * sombra lo despega del fondo sin necesidad de una barra superior.
  */
 @Composable
-private fun IconoFlotante(
-    icono: androidx.compose.ui.graphics.vector.ImageVector,
-    descripcion: String,
+private fun BotonFlotanteVolver(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    IconButton(
+    Surface(
         onClick = onClick,
-        modifier = modifier
-            .padding(horizontal = 8.dp, vertical = 2.dp)
-            .size(44.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.75f))
+        modifier = modifier.size(44.dp),
+        shape = CircleShape,
+        // Los colores del tema garantizan el contraste en claro y en oscuro.
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        shadowElevation = 3.dp
     ) {
-        Icon(imageVector = icono, contentDescription = descripcion)
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(Res.string.a11y_volver),
+                modifier = Modifier.size(22.dp)
+            )
+        }
     }
 }
