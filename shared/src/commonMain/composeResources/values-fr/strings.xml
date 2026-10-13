@@ -118,6 +118,7 @@
     <string name="hoja_peso_titulo">Poids</string>
     <string name="peso_filtro_todo">Tout</string>
     <string name="peso_filtro_anio">Année</string>
+    <string name="peso_filtro_mes">Ce mois</string>
     <string name="peso_filtro_fechas">Choisir des dates</string>
     <string name="peso_ideal">Poids idéal</string>
     <string name="peso_ideal_kg">Poids idéal (%1$s)</string>

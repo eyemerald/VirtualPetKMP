@@ -58,9 +58,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.virtualpetkmp.Peso
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
+import com.example.virtualpetkmp.util.FiltroPeso
+import com.example.virtualpetkmp.util.GranularidadPeso
 import com.example.virtualpetkmp.util.Localizacion
 import com.example.virtualpetkmp.util.UnidadPeso
 import com.example.virtualpetkmp.util.escalaDePeso
+import com.example.virtualpetkmp.util.filtrarPesos
+import com.example.virtualpetkmp.util.granularidadDe
+import com.example.virtualpetkmp.util.serieDePeso
 import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.util.parseFechaLocalizada
 import com.example.virtualpetkmp.util.parseKilos
@@ -68,7 +73,6 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
@@ -94,9 +98,6 @@ import virtualpetkmp.shared.generated.resources.peso_contador
 import virtualpetkmp.shared.generated.resources.peso_desde
 import virtualpetkmp.shared.generated.resources.peso_en_grafico
 import virtualpetkmp.shared.generated.resources.peso_etiqueta_ideal
-import virtualpetkmp.shared.generated.resources.peso_filtro_anio
-import virtualpetkmp.shared.generated.resources.peso_filtro_fechas
-import virtualpetkmp.shared.generated.resources.peso_filtro_todo
 import virtualpetkmp.shared.generated.resources.peso_formato_fechas
 import virtualpetkmp.shared.generated.resources.peso_grafico_vacio
 import virtualpetkmp.shared.generated.resources.peso_hasta
@@ -115,17 +116,6 @@ import virtualpetkmp.shared.generated.resources.peso_resumen_ideal
 import virtualpetkmp.shared.generated.resources.peso_resumen_sin_datos
 import virtualpetkmp.shared.generated.resources.peso_sin_pesajes_en_rango
 import virtualpetkmp.shared.generated.resources.peso_todavia_no_hay
-
-/**
- * Qué rango de pesajes se está mostrando en el gráfico.
- *
- * Guarda el recurso de su etiqueta y no el texto: así el chip se traduce solo al pintarlo.
- */
-private enum class FiltroPeso(val etiqueta: StringResource) {
-    TODO(Res.string.peso_filtro_todo),
-    ANIO(Res.string.peso_filtro_anio),
-    FECHAS(Res.string.peso_filtro_fechas)
-}
 
 /**
  * Gráfico de peso completo, agrupado por meses para que sea legible aunque haya años de
@@ -163,20 +153,17 @@ fun HojaPesoDetallada(
         mutableStateOf(anioPorDefecto)
     }
 
-    val filtrados = remember(pesos, filtro, desdeTexto, hastaTexto, anioSeleccionado) {
-        val ordenados = pesos.sortedBy { it.fecha }
-        when (filtro) {
-            FiltroPeso.TODO -> ordenados
-            FiltroPeso.ANIO -> ordenados.filter { it.fecha.year == anioSeleccionado }
-            FiltroPeso.FECHAS -> {
-                val desde = desdeTexto.toFechaONull(formato)
-                val hasta = hastaTexto.toFechaONull(formato)
-                ordenados.filter { registro ->
-                    (desde == null || registro.fecha >= desde) &&
-                        (hasta == null || registro.fecha <= hasta)
-                }
-            }
-        }
+    // `hoy` entra en las claves porque el filtro "mes actual" depende de él: si la hoja se
+    // quedara abierta pasada la medianoche, el filtro tiene que recalcularse.
+    val filtrados = remember(pesos, filtro, desdeTexto, hastaTexto, anioSeleccionado, hoy) {
+        filtrarPesos(
+            pesos = pesos,
+            filtro = filtro,
+            hoy = hoy,
+            anio = anioSeleccionado,
+            desde = desdeTexto.toFechaONull(formato),
+            hasta = hastaTexto.toFechaONull(formato)
+        )
     }
 
     val ultimo = filtrados.lastOrNull()
@@ -610,39 +597,13 @@ private fun DialogoPesoIdeal(
     )
 }
 
-/** Un mes del gráfico: su posición temporal y el peso medio de ese mes (null si no hay). */
-private data class MesPeso(val anio: Int, val mes: Int, val media: Double?)
-
-/** Cuántos meses hay entre dos claves (año, mes). */
-private fun mesesEntre(anioInicio: Int, mesInicio: Int, anioFin: Int, mesFin: Int): Int =
-    (anioFin - anioInicio) * 12 + (mesFin - mesInicio)
-
 /**
- * Serie mensual del gráfico: un punto por cada mes entre el primer y el último pesaje, con la
- * media de los pesajes de ese mes o null si ese mes no tiene ninguno. Así el eje inferior va
- * mes a mes seguido, sin saltos, como una línea de tiempo.
- */
-private fun serieMensual(pesos: List<Peso>): List<MesPeso> {
-    if (pesos.isEmpty()) return emptyList()
-    val medias = pesos.groupBy { it.fecha.year to it.fecha.monthNumber }
-        .mapValues { (_, delMes) -> delMes.sumOf { it.peso } / delMes.size }
-    val ordenados = pesos.sortedBy { it.fecha }
-    val primero = ordenados.first().fecha
-    val ultimo = ordenados.last().fecha
-
-    val total = mesesEntre(primero.year, primero.monthNumber, ultimo.year, ultimo.monthNumber)
-    return (0..total).map { avance ->
-        val bruto = primero.monthNumber - 1 + avance
-        val anio = primero.year + bruto / 12
-        val mes = bruto % 12 + 1
-        MesPeso(anio = anio, mes = mes, media = medias[anio to mes])
-    }
-}
-
-/**
- * Gráfico de la evolución del peso, mes a mes, como una línea (igual que la tarjeta de la
- * ficha y no como barras) con las etiquetas de mes debajo. Se puede arrastrar en horizontal
- * para recorrer todo el histórico.
+ * Gráfico de la evolución del peso como una línea (igual que la tarjeta de la ficha y no como
+ * barras), con las etiquetas de fecha debajo.
+ *
+ * La granularidad la decide `serieDePeso`: un punto por mes cuando el rango abarca varios
+ * meses, y un punto por pesaje cuando todo cae dentro del mismo mes. Sin eso, el filtro
+ * "Mes actual" dejaba un único punto y el gráfico se quedaba sin línea, con aspecto de roto.
  */
 @Composable
 private fun GraficoLineaMeses(
@@ -651,9 +612,11 @@ private fun GraficoLineaMeses(
     /** Peso ideal de la mascota: si existe, se dibuja como referencia discontinua. */
     pesoIdeal: Double? = null
 ) {
-    val meses = remember(pesos) { serieMensual(pesos) }
+    val serie = remember(pesos) { serieDePeso(pesos) }
+    // Con un punto por pesaje, el eje inferior son días del mes; con la serie mensual, meses.
+    val porPesajes = remember(pesos) { granularidadDe(pesos) == GranularidadPeso.POR_PESAJES }
 
-    if (meses.isEmpty()) {
+    if (serie.isEmpty()) {
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
             Text(
                 text = stringResource(Res.string.peso_grafico_vacio),
@@ -700,9 +663,9 @@ private fun GraficoLineaMeses(
 
     BoxWithConstraints(modifier = modifier) {
         // Todo el histórico se ajusta al ancho disponible: no hay desplazamiento, así que la
-        // línea nunca puede quedar cortada contra los bordes. Con muchos meses los puntos
-        // quedan más juntos, y por eso las etiquetas se van saltando para no solaparse.
-        val saltoEtiquetas = (meses.size / 8 + 1).coerceAtLeast(1)
+        // línea nunca puede quedar cortada contra los bordes. Con muchos puntos quedan más
+        // juntos, y por eso las etiquetas se van saltando para no solaparse.
+        val saltoEtiquetas = (serie.size / 8 + 1).coerceAtLeast(1)
 
         Canvas(
             modifier = Modifier.fillMaxSize()
@@ -722,17 +685,17 @@ private fun GraficoLineaMeses(
             val baseY = margenArriba + altoUtil
 
             fun x(indice: Int): Float =
-                margenIzq + (indice.toFloat() / (meses.size - 1).coerceAtLeast(1)) * anchoUtil
+                margenIzq + (indice.toFloat() / (serie.size - 1).coerceAtLeast(1)) * anchoUtil
 
-            // Solo los meses con pesaje: los huecos (meses sin datos) no se dibujan como
+            // Solo los puntos con pesaje: los huecos (meses sin datos) no se dibujan como
             // puntos, pero la línea sí los atraviesa para que la evolución se vea entera.
-            val conDatos = meses.indices.filter { meses[it].media != null }
+            val conDatos = serie.indices.filter { serie[it].media != null }
 
             // El eje lo calcula `escalaDePeso`, que **incluye el peso ideal además de los
             // datos** y deja un 10 % de margen arriba y abajo. Es lo que hace que la línea del
             // ideal se dibuje a su altura exacta y que ningún trazo toque los bordes.
             val escala = escalaDePeso(
-                pesosKilos = meses.mapNotNull { it.media },
+                pesosKilos = serie.mapNotNull { it.media },
                 pesoIdealKilos = pesoIdeal,
                 unidad = unidad
             )
@@ -741,7 +704,7 @@ private fun GraficoLineaMeses(
             fun y(pesoKilos: Double): Float =
                 margenArriba + altoUtil * (1f - escala.normalizarKilos(pesoKilos))
 
-            val puntos = conDatos.map { Offset(x(it), y(meses[it].media!!)) }
+            val puntos = conDatos.map { Offset(x(it), y(serie[it].media!!)) }
 
             // Referencias horizontales sutiles, como en la tarjeta de la ficha. Se quedan
             // dentro del área de dibujo, sin llegar a los bordes del lienzo.
@@ -756,7 +719,7 @@ private fun GraficoLineaMeses(
             }
 
             // Retícula vertical muy tenue: ayuda a seguir el eje sin ensuciar el gráfico.
-            meses.forEachIndexed { indice, _ ->
+            serie.forEachIndexed { indice, _ ->
                 val lineaX = x(indice)
                 if (lineaX >= margenIzq && lineaX <= size.width - margenDer) {
                     drawLine(
@@ -813,21 +776,27 @@ private fun GraficoLineaMeses(
                 drawCircle(color = colorLinea, radius = 2.5.dp.toPx(), center = punto)
             }
 
-            // Etiquetas de mes debajo. El año aparece solo cuando cambia, como en una línea
-            // de tiempo: "nov dic 25 ene feb 26".
+            // Etiquetas del eje inferior. Con la serie mensual, el año aparece cuando cambia,
+            // como en una línea de tiempo ("nov dic 25 ene feb 26"). Con un punto por pesaje,
+            // todo cae en el mismo mes y lo que sitúa cada punto es el DÍA, así que se rotula
+            // el número del día y el primer rótulo dice de qué mes es.
             val datosEtiquetas = mutableListOf<Pair<String, Float>>()
             var bordeDerecho = -Float.MAX_VALUE
-            meses.forEachIndexed { indice, mes ->
-                val primeraDelAnio = indice == 0 || meses[indice - 1].anio != mes.anio
-                if (indice % saltoEtiquetas != 0 && !primeraDelAnio) return@forEachIndexed
-                val etiqueta = if (primeraDelAnio) {
-                    "${etiquetasMes[mes.mes - 1]} ${mes.anio % 100}"
-                } else {
-                    etiquetasMes[mes.mes - 1]
+            serie.forEachIndexed { indice, punto ->
+                val primeroDelAnio = indice == 0 ||
+                    serie[indice - 1].fecha.year != punto.fecha.year
+                if (indice % saltoEtiquetas != 0 && !primeroDelAnio) return@forEachIndexed
+                val etiqueta = when {
+                    porPesajes && indice == 0 ->
+                        "${etiquetasMes[punto.fecha.monthNumber - 1]} ${punto.fecha.year % 100}"
+                    porPesajes -> "${punto.fecha.dayOfMonth}"
+                    primeroDelAnio ->
+                        "${etiquetasMes[punto.fecha.monthNumber - 1]} ${punto.fecha.year % 100}"
+                    else -> etiquetasMes[punto.fecha.monthNumber - 1]
                 }
                 val medida = textMeasurer.measure(etiqueta, style = estiloEtiqueta)
-                // Se centra en el mes, se mete dentro del margen y, si quedaría pegada a la
-                // etiqueta anterior, se salta: mejor un mes sin rótulo que dos montados.
+                // Se centra en el punto, se mete dentro del margen y, si quedaría pegada a la
+                // etiqueta anterior, se salta: mejor un punto sin rótulo que dos montados.
                 val limiteDerecho = (size.width - margenDer - medida.size.width).coerceAtLeast(margenIzq)
                 val idealX = (x(indice) - medida.size.width / 2f).coerceIn(margenIzq, limiteDerecho)
                 if (idealX < bordeDerecho + 6.dp.toPx()) return@forEachIndexed

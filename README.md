@@ -11,7 +11,7 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 - 🐶 **Gestión de mascotas**: ficha con datos básicos (nombre, especie, raza, fecha de nacimiento, sexo, color, microchip) y **peso ideal** opcional. Las acciones de cada mascota (editar, eliminar) están en un menú **⋮**, tanto en la lista como en su ficha.
 - 📷 **Foto de la mascota**: se puede elegir de los archivos o **hacer con la cámara** (Android); se ve en la ficha y en la lista de mascotas.
 - 🏠 **Ficha como panel**: cabecera con la foto, el nombre y la edad, y tarjetas por bloque (peso, vacunas y preventivos, salud y seguimiento, notas) que muestran **un solo aviso** cada una: en ámbar lo que vence pronto y en rojo lo vencido.
-- ⚖️ **Pesos**: registro y evolución en un **gráfico de línea** en la ficha, y una vista detallada con el histórico mes a mes, filtros (todo, por año o por rango de fechas) y el **histórico plegable**. Al pulsar un pesaje se abre un modal para editarlo o eliminarlo.
+- ⚖️ **Pesos**: registro y evolución en un **gráfico de línea** en la ficha, y una vista detallada con el histórico mes a mes, filtros (todo, por año, **mes actual** o por rango de fechas) y el **histórico plegable**. Al pulsar un pesaje se abre un modal para editarlo o eliminarlo.
 - 🎯 **Peso ideal**: se fija desde la ficha de la mascota o desde la propia hoja de peso. Se dibuja como **línea discontinua** de referencia en el gráfico y, en la lista, el último peso lleva un indicador **▲ verde** si está por encima o **▼ rojo** si está por debajo.
 - 💉 **Vacunas**: registro con próxima dosis, **notificaciones locales** 15 días antes y **añadir el recordatorio al calendario** del teléfono.
 - 💊 **Preventivos**: pipetas, desparasitaciones y otros tratamientos preventivos, con aviso 1 día antes y también añadibles al calendario.
@@ -194,7 +194,7 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 - [x] **Vacunas y preventivos** con próxima dosis, estado (vencida / vence pronto / al día) y recordatorio añadible al calendario.
 - [x] **Peso**: gráfico de línea con todo el histórico ajustado al ancho, eje de meses con el año al cambiar, y peso ideal como referencia discontinua. El eje se recalcula solo e incluye el peso ideal, así que la referencia se coloca a su altura exacta y nunca toca un borde.
 - [x] **Peso ideal**: opcional, configurable desde la ficha de la mascota o desde la hoja de peso, con indicador ▲/▼ en la lista. Al cambiarlo, el gráfico y los indicadores se actualizan al momento (el estado es reactivo, no hace falta reiniciar).
-- [x] **Histórico de peso plegable**, con filtros (todo / año / rango de fechas) y modal para editar o eliminar un pesaje.
+- [x] **Histórico de peso plegable**, con filtros (todo / año / mes actual / rango de fechas) y modal para editar o eliminar un pesaje. El gráfico decide solo si dibujar un punto por mes o uno por pesaje, para que el mes en curso no se quede con un punto suelto.
 - [x] **Revisiones veterinarias, tratamientos, informes adjuntos y notas**.
 - [x] **Agenda de veterinarios** con urgencias 24 h, llamada directa y navegación con Google Maps.
 - [x] **Exportar la ficha a PDF**, en versión resumida o completa.
