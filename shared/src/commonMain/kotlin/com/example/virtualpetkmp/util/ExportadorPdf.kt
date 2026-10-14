@@ -1,6 +1,5 @@
 package com.example.virtualpetkmp.util
 
-import com.example.virtualpetkmp.Informe
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.Nota
 import com.example.virtualpetkmp.Peso
@@ -30,10 +29,11 @@ import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.getString
 import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.estado_al_dia
+import virtualpetkmp.shared.generated.resources.estado_vence_pronto
+import virtualpetkmp.shared.generated.resources.estado_vencida
 import virtualpetkmp.shared.generated.resources.pdf_a_tener_en_cuenta
 import virtualpetkmp.shared.generated.resources.pdf_aplicada
-import virtualpetkmp.shared.generated.resources.pdf_archivo
-import virtualpetkmp.shared.generated.resources.pdf_descripcion
 import virtualpetkmp.shared.generated.resources.pdf_diagnostico
 import virtualpetkmp.shared.generated.resources.pdf_dosis
 import virtualpetkmp.shared.generated.resources.pdf_evolucion_peso
@@ -44,16 +44,13 @@ import virtualpetkmp.shared.generated.resources.pdf_fin
 import virtualpetkmp.shared.generated.resources.pdf_frecuencia
 import virtualpetkmp.shared.generated.resources.pdf_generado_el
 import virtualpetkmp.shared.generated.resources.pdf_historial_tratamientos
-import virtualpetkmp.shared.generated.resources.pdf_informes_notas
 import virtualpetkmp.shared.generated.resources.pdf_inicio
 import virtualpetkmp.shared.generated.resources.pdf_lote
 import virtualpetkmp.shared.generated.resources.pdf_medicamento
 import virtualpetkmp.shared.generated.resources.pdf_motivo
-import virtualpetkmp.shared.generated.resources.pdf_ninguna_proxima
-import virtualpetkmp.shared.generated.resources.pdf_no_tratamientos_activos
-import virtualpetkmp.shared.generated.resources.pdf_nombre
+import virtualpetkmp.shared.generated.resources.pdf_nada_que_hacer
 import virtualpetkmp.shared.generated.resources.pdf_nota
-import virtualpetkmp.shared.generated.resources.pdf_peso
+import virtualpetkmp.shared.generated.resources.pdf_pesajes_registrados
 import virtualpetkmp.shared.generated.resources.pdf_preventivos
 import virtualpetkmp.shared.generated.resources.pdf_proxima_dosis
 import virtualpetkmp.shared.generated.resources.pdf_proximas_dosis
@@ -61,10 +58,7 @@ import virtualpetkmp.shared.generated.resources.pdf_que_darle
 import virtualpetkmp.shared.generated.resources.pdf_resumen_aviso
 import virtualpetkmp.shared.generated.resources.pdf_resumen_cuidador
 import virtualpetkmp.shared.generated.resources.pdf_revisiones
-import virtualpetkmp.shared.generated.resources.pdf_sin_tratamientos
-import virtualpetkmp.shared.generated.resources.pdf_tipo
 import virtualpetkmp.shared.generated.resources.pdf_tratamientos_activos
-import virtualpetkmp.shared.generated.resources.pdf_vacuna
 import virtualpetkmp.shared.generated.resources.pdf_vacunas
 import virtualpetkmp.shared.generated.resources.pdf_veterinario
 
@@ -93,7 +87,6 @@ class ExportadorPdf {
         revisiones: List<Revision>,
         tratamientos: List<Tratamiento>,
         pesos: List<Peso>,
-        informes: List<Informe>,
         notas: List<Nota>,
         version: VersionPdf = VersionPdf.COMPLETA,
         localizacion: Localizacion = Localizacion.desdeRegion("es-ES"),
@@ -109,7 +102,6 @@ class ExportadorPdf {
             revisiones = revisiones,
             tratamientos = tratamientos,
             pesos = pesos,
-            informes = informes,
             notas = notas,
             version = version,
             localizacion = localizacion,
@@ -140,7 +132,6 @@ class ExportadorPdf {
         revisiones: List<Revision>,
         tratamientos: List<Tratamiento>,
         pesos: List<Peso>,
-        informes: List<Informe>,
         notas: List<Nota>,
         version: VersionPdf = VersionPdf.COMPLETA,
         localizacion: Localizacion = Localizacion.desdeRegion("es-ES"),
@@ -148,27 +139,26 @@ class ExportadorPdf {
     ): PdfDocumentSpec {
         val edadMeses = calcularEdadMeses(mascota.fechaNacimiento, hoy)
         val edad = localizacion.formatearEdad(edadMeses.anios, edadMeses.meses)
-        val ultimoPeso = pesos.maxByOrNull { it.fecha }?.peso
 
         // --- Contenido, ya decidido y en texto (ver ContenidoPdf) --------------------------
-        val identificacion = datosDeLaMascotaPdf(mascota, edad, ultimoPeso, localizacion)
+        val identificacion = datosDeLaMascotaPdf(mascota, edad, localizacion)
             .map { getString(it.etiqueta) to it.valor }
 
         val activos = tratamientosActivosPdf(tratamientos, hoy).map { filaTratamientoPdf(it, localizacion) }
         val terminados = tratamientosTerminadosPdf(tratamientos, hoy).map { filaTratamientoPdf(it, localizacion) }
-        val filasVacunas = vacunas.sortedBy { it.fechaAplicacion }.map { filaVacunaPdf(it, localizacion) }
-        val filasPreventivos = preventivos.sortedBy { it.fechaAplicacion }
-            .map { filaPreventivoPdf(it, localizacion) }
+        val vacunasPdf = vacunas.sortedBy { it.fechaAplicacion }.map { fichaVacunaPdf(it, hoy, localizacion) }
+        val preventivosPdf = preventivos.sortedBy { it.fechaAplicacion }
+            .map { fichaPreventivoPdf(it, hoy, localizacion) }
         val filasRevisiones = revisiones.sortedByDescending { it.fecha }.map { filaRevisionPdf(it, localizacion) }
-        val filasInformes = informes.sortedByDescending { it.fecha }.map { filaInformePdf(it, localizacion) }
-        val filasPeso = pesos.sortedByDescending { it.fecha }.map { filaPesoPdf(it, localizacion) }
         val resumenPeso = resumenDePesoPdf(pesos, mascota.pesoIdeal, localizacion)
+            .map { getString(it.etiqueta) to it.valor }
+        val pesoDelCuidador = pesoActualIdealPdf(pesos, mascota.pesoIdeal, localizacion)
             .map { getString(it.etiqueta) to it.valor }
         val proximas = proximasDosisPdf(vacunas, preventivos, hoy)
             .map { localizacion.formatearFecha(it.fecha) to it.descripcion }
         val textosNotas = notas.map { it.texto }
 
-        val t = leerTextos(mascota.nombre, localizacion, version, hoy)
+        val t = leerTextos(mascota.nombre, localizacion, version, hoy, pesos.size)
         val logo = cargarLogo()
 
         val documento = pdfDocument(
@@ -213,19 +203,18 @@ class ExportadorPdf {
                     t = t,
                     activos = activos,
                     terminados = terminados,
-                    filasVacunas = filasVacunas,
-                    filasPreventivos = filasPreventivos,
+                    vacunas = vacunasPdf,
+                    preventivos = preventivosPdf,
                     filasRevisiones = filasRevisiones,
-                    filasInformes = filasInformes,
-                    filasPeso = filasPeso,
                     resumenPeso = resumenPeso,
-                    notas = textosNotas
+                    totalPesajes = pesos.size
                 )
 
                 VersionPdf.RESUMIDA -> resumenCuidador(
                     t = t,
                     activos = activos,
                     proximas = proximas,
+                    peso = pesoDelCuidador,
                     notas = textosNotas
                 )
             }
@@ -262,25 +251,27 @@ class ExportadorPdf {
         }
     }
 
-    /** Ficha para el veterinario: lo clínico, en el orden en que se consulta. */
+    /**
+     * Ficha para el veterinario: lo clínico, en el orden en que se consulta.
+     *
+     * **Regla de oro: una sección sin datos no se pinta.** Ni el título ni un "sin datos": un
+     * apartado vacío solo gasta papel y hace dudar de si el dato no está o se ha perdido por el
+     * camino. Si no hay nada de nada, el documento es la cabecera y la identificación, que ya
+     * dice bastante.
+     */
     private fun ContainerScope.fichaCompleta(
         t: TextosPdf,
         activos: List<List<String>>,
         terminados: List<List<String>>,
-        filasVacunas: List<List<String>>,
-        filasPreventivos: List<List<String>>,
+        vacunas: List<DosisPdf>,
+        preventivos: List<DosisPdf>,
         filasRevisiones: List<List<String>>,
-        filasInformes: List<List<String>>,
-        filasPeso: List<List<String>>,
         resumenPeso: List<Pair<String, String>>,
-        notas: List<String>
+        totalPesajes: Int
     ) {
-        // Primero lo que el veterinario necesita saber ya: qué está tomando ahora mismo. Esta
-        // sección sale siempre, aunque esté vacía: "no toma nada" también es información.
-        seccion(t.tratamientosActivos)
-        if (activos.isEmpty()) {
-            text(t.noTratamientosActivos, TextStyle(fontSize = 9.sp, color = GRIS))
-        } else {
+        // Primero lo que el veterinario necesita saber ya: qué está tomando ahora mismo.
+        if (activos.isNotEmpty()) {
+            seccion(t.tratamientosActivos)
             tablaTratamientos(t, activos)
         }
 
@@ -289,34 +280,14 @@ class ExportadorPdf {
             tablaTratamientos(t, terminados)
         }
 
-        if (filasVacunas.isNotEmpty()) {
+        if (vacunas.isNotEmpty()) {
             seccion(t.vacunas)
-            tabla(
-                columns = listOf(
-                    PdfColumn(2.4f, t.vacuna),
-                    PdfColumn(1.1f, t.aplicada),
-                    PdfColumn(1.1f, t.proximaDosis),
-                    PdfColumn(1.4f, t.veterinario),
-                    PdfColumn(1f, t.lote)
-                )
-            ) {
-                filasVacunas.forEach { fila -> row(fila) }
-            }
+            listaDosis(t, vacunas)
         }
 
-        if (filasPreventivos.isNotEmpty()) {
+        if (preventivos.isNotEmpty()) {
             seccion(t.preventivos)
-            tabla(
-                columns = listOf(
-                    PdfColumn(2.4f, t.nombre),
-                    PdfColumn(1.1f, t.aplicada),
-                    PdfColumn(1.1f, t.proximaDosis),
-                    PdfColumn(1.4f, t.veterinario),
-                    PdfColumn(1f, t.lote)
-                )
-            ) {
-                filasPreventivos.forEach { fila -> row(fila) }
-            }
+            listaDosis(t, preventivos)
         }
 
         if (filasRevisiones.isNotEmpty()) {
@@ -334,44 +305,18 @@ class ExportadorPdf {
             }
         }
 
-        if (filasPeso.isNotEmpty()) {
+        if (resumenPeso.isNotEmpty()) {
             seccion(t.evolucionPeso)
-            // Resumen arriba (lo que se mira de un vistazo) y el detalle debajo.
+            // Solo el resumen: el histórico completo son varias páginas de números que en papel
+            // nadie lee, y el dato que se busca (el peso de hoy y cuánto ha cambiado) ya está aquí.
             resumenPeso.forEach { (etiqueta, valor) -> keyValue(etiqueta, valor) }
-            spacer(6.dp)
-            tabla(
-                columns = listOf(
-                    PdfColumn(1f, t.fecha),
-                    PdfColumn(1f, t.peso),
-                    PdfColumn(3f, t.nota)
-                )
-            ) {
-                filasPeso.forEach { fila -> row(fila) }
-            }
+            spacer(4.dp)
+            text(t.pesajesRegistrados, TextStyle(fontSize = 8.sp, color = GRIS))
         }
 
-        if (filasInformes.isNotEmpty() || notas.isNotEmpty()) {
-            seccion(t.informesNotas)
-            if (filasInformes.isNotEmpty()) {
-                tabla(
-                    columns = listOf(
-                        PdfColumn(1f, t.fecha),
-                        PdfColumn(1.6f, t.tipo),
-                        PdfColumn(2.4f, t.descripcion),
-                        PdfColumn(1.6f, t.archivo)
-                    )
-                ) {
-                    filasInformes.forEach { fila -> row(fila) }
-                }
-            }
-            if (notas.isNotEmpty()) {
-                tabla(
-                    columns = listOf(PdfColumn(3f, t.nota))
-                ) {
-                    notas.forEach { nota -> row(nota) }
-                }
-            }
-        }
+        // Las notas de la app se dejan para la hoja del cuidador, que es quien las usa, y los
+        // informes adjuntos no se listan: el PDF no puede enseñar su contenido, así que una
+        // tabla con el nombre del archivo solo ocupaba sitio.
     }
 
     /**
@@ -382,12 +327,14 @@ class ExportadorPdf {
         t: TextosPdf,
         activos: List<List<String>>,
         proximas: List<Pair<String, String>>,
+        peso: List<Pair<String, String>>,
         notas: List<String>
     ) {
-        seccion(t.queDarle)
-        if (activos.isEmpty()) {
-            text(t.sinTratamientos, TextStyle(fontSize = 9.sp, color = GRIS))
-        } else {
+        // El peso va arriba del todo: es el dato de contexto que se mira antes de decidir nada.
+        peso.forEach { (etiqueta, valor) -> keyValue(etiqueta, valor) }
+
+        if (activos.isNotEmpty()) {
+            seccion(t.queDarle)
             // La dosis va justo al lado del medicamento y antes de la pauta: es la instrucción.
             tabla(
                 columns = listOf(
@@ -402,13 +349,21 @@ class ExportadorPdf {
             }
         }
 
-        seccion(t.proximasDosis)
-        if (proximas.isEmpty()) {
-            text(t.ningunaProxima, TextStyle(fontSize = 9.sp, color = GRIS))
-        } else {
+        if (proximas.isNotEmpty()) {
+            seccion(t.proximasDosis)
             // Primero **qué** toca y a la derecha **cuándo**: la lista se lee como una tarea
             // ("Pipeta ...... 25/05/2026"), que es lo que viene a buscar quien cuida.
             proximas.forEach { (fecha, descripcion) -> keyValue(descripcion, fecha) }
+        }
+
+        // Si no hay nada que dar ni nada programado, se dice una vez y claro. Es el único texto
+        // que se pinta sin datos detrás, porque aquí "no hay nada" **es** la respuesta que se
+        // viene a buscar: una hoja en blanco no tranquiliza a nadie.
+        if (activos.isEmpty() && proximas.isEmpty()) {
+            spacer(12.dp)
+            box(padding = 8.dp, background = FONDO_SUAVE, cornerRadius = 4.dp) {
+                text(t.nadaQueHacer, TextStyle(fontSize = 9.sp))
+            }
         }
 
         if (notas.isNotEmpty()) {
@@ -417,6 +372,59 @@ class ExportadorPdf {
             // su valor a la derecha, que dejaría media línea en blanco.
             notas.forEach { nota -> text("• $nota", TextStyle(fontSize = 9.sp)) }
         }
+    }
+
+    /**
+     * Vacunas o preventivos, uno por línea, con el estado como pastilla de color.
+     *
+     * No es una tabla a propósito: el estado hay que **verlo** (verde al día, ámbar vence pronto,
+     * rojo vencida), y una celda de tabla es solo texto con un estilo común para todas. Así el
+     * veterinario distingue lo vencido de un vistazo, igual que en la pantalla de la app.
+     */
+    private fun ContainerScope.listaDosis(t: TextosPdf, dosis: List<DosisPdf>) {
+        dosis.forEach { ficha ->
+            row(gap = 8.dp, verticalAlignment = VerticalAlignment.Center) {
+                cell(3.2f) {
+                    text(ficha.nombre, TextStyle(fontSize = 9.sp, fontWeight = FontWeight.Bold))
+                    text(detalleDosis(t, ficha), TextStyle(fontSize = 7.sp, color = GRIS))
+                }
+                cell(1.6f) {
+                    text(t.proximaDosis, TextStyle(fontSize = 7.sp, color = GRIS))
+                    text(ficha.proxima, TextStyle(fontSize = 9.sp))
+                }
+                cell(1.2f) {
+                    pastillaEstado(etiquetaEstado(t, ficha.estado), ficha.estado)
+                }
+            }
+            spacer(5.dp)
+            divider(color = GRIS_LINEA)
+        }
+    }
+
+    /** Línea gris de apoyo: tipo, fecha de aplicación, veterinario y lote, sin los huecos. */
+    private fun detalleDosis(t: TextosPdf, ficha: DosisPdf): String = listOf(
+        ficha.tipo,
+        "${t.aplicada} ${ficha.aplicada}",
+        ficha.veterinario.takeIf { it != SIN_DATO_PDF }?.let { "${t.veterinario} $it" }.orEmpty(),
+        ficha.lote.takeIf { it != SIN_DATO_PDF }?.let { "${t.lote} $it" }.orEmpty()
+    ).filter { it.isNotBlank() }.joinToString("  ·  ")
+
+    /** Estado de una dosis como pastilla, con los mismos colores que la pantalla. */
+    private fun ContainerScope.pastillaEstado(texto: String, estado: EstadoDosis) {
+        val (fondo, tinta) = when (estado) {
+            EstadoDosis.AL_DIA -> VERDE_FONDO to VERDE_TINTA
+            EstadoDosis.PROXIMA -> AMBAR_FONDO to AMBAR_TINTA
+            EstadoDosis.VENCIDA -> ROJO_FONDO to ROJO_TINTA
+        }
+        box(padding = 4.dp, background = fondo, cornerRadius = 3.dp) {
+            text(texto, TextStyle(fontSize = 7.sp, fontWeight = FontWeight.Bold, color = tinta))
+        }
+    }
+
+    private fun etiquetaEstado(t: TextosPdf, estado: EstadoDosis): String = when (estado) {
+        EstadoDosis.AL_DIA -> t.alDia
+        EstadoDosis.PROXIMA -> t.vencePronto
+        EstadoDosis.VENCIDA -> t.vencida
     }
 
     private fun ContainerScope.seccion(titulo: String) {
@@ -492,6 +500,16 @@ class ExportadorPdf {
         val FONDO_SUAVE = Color(0xFFF5F7FA)
         val FONDO_CABECERA = Color(0xFFEDF1F5)
         val FONDO_ZEBRA = Color(0xFFFAFBFC)
+
+        // Los mismos colores que usa la ficha en pantalla para el estado de una dosis
+        // (`ExtrasColors` y el contenedor de error del tema claro). El papel siempre es blanco,
+        // así que se toman los del tema claro y no los del oscuro.
+        val VERDE_FONDO = Color(0xFFDCE8DC)
+        val VERDE_TINTA = Color(0xFF002107)
+        val AMBAR_FONDO = Color(0xFFFFB74D)
+        val AMBAR_TINTA = Color(0xFF2E1A00)
+        val ROJO_FONDO = Color(0xFFFFDAD6)
+        val ROJO_TINTA = Color(0xFF410002)
     }
 }
 
@@ -502,7 +520,6 @@ private data class TextosPdf(
     val generadoEl: String,
     val pie: String,
     val tratamientosActivos: String,
-    val noTratamientosActivos: String,
     val historialTratamientos: String,
     val medicamento: String,
     val dosis: String,
@@ -510,36 +527,34 @@ private data class TextosPdf(
     val inicio: String,
     val fin: String,
     val vacunas: String,
-    val vacuna: String,
     val aplicada: String,
     val proximaDosis: String,
     val veterinario: String,
     val lote: String,
     val preventivos: String,
-    val nombre: String,
     val revisiones: String,
     val fecha: String,
     val motivo: String,
     val diagnostico: String,
     val nota: String,
     val evolucionPeso: String,
-    val peso: String,
-    val informesNotas: String,
-    val tipo: String,
-    val descripcion: String,
-    val archivo: String,
     val queDarle: String,
-    val sinTratamientos: String,
     val proximasDosis: String,
-    val ningunaProxima: String,
-    val aTenerEnCuenta: String
+    val aTenerEnCuenta: String,
+    val nadaQueHacer: String,
+    /** Texto del recuento de pesajes, ya con el número dentro. */
+    val pesajesRegistrados: String,
+    val alDia: String,
+    val vencePronto: String,
+    val vencida: String
 )
 
 private suspend fun leerTextos(
     nombreMascota: String,
     localizacion: Localizacion,
     version: VersionPdf,
-    hoy: LocalDate
+    hoy: LocalDate,
+    totalPesajes: Int
 ): TextosPdf {
     return TextosPdf(
         titulo = getString(Res.string.pdf_ficha_de, nombreMascota),
@@ -553,7 +568,6 @@ private suspend fun leerTextos(
             VersionPdf.RESUMIDA -> getString(Res.string.pdf_resumen_aviso)
         },
         tratamientosActivos = getString(Res.string.pdf_tratamientos_activos),
-        noTratamientosActivos = getString(Res.string.pdf_no_tratamientos_activos),
         historialTratamientos = getString(Res.string.pdf_historial_tratamientos),
         medicamento = getString(Res.string.pdf_medicamento),
         dosis = getString(Res.string.pdf_dosis),
@@ -561,29 +575,27 @@ private suspend fun leerTextos(
         inicio = getString(Res.string.pdf_inicio),
         fin = getString(Res.string.pdf_fin),
         vacunas = getString(Res.string.pdf_vacunas),
-        vacuna = getString(Res.string.pdf_vacuna),
         aplicada = getString(Res.string.pdf_aplicada),
         proximaDosis = getString(Res.string.pdf_proxima_dosis),
         veterinario = getString(Res.string.pdf_veterinario),
         lote = getString(Res.string.pdf_lote),
         preventivos = getString(Res.string.pdf_preventivos),
-        nombre = getString(Res.string.pdf_nombre),
         revisiones = getString(Res.string.pdf_revisiones),
         fecha = getString(Res.string.pdf_fecha),
         motivo = getString(Res.string.pdf_motivo),
         diagnostico = getString(Res.string.pdf_diagnostico),
         nota = getString(Res.string.pdf_nota),
         evolucionPeso = getString(Res.string.pdf_evolucion_peso),
-        peso = getString(Res.string.pdf_peso),
-        informesNotas = getString(Res.string.pdf_informes_notas),
-        tipo = getString(Res.string.pdf_tipo),
-        descripcion = getString(Res.string.pdf_descripcion),
-        archivo = getString(Res.string.pdf_archivo),
         queDarle = getString(Res.string.pdf_que_darle),
-        sinTratamientos = getString(Res.string.pdf_sin_tratamientos),
         proximasDosis = getString(Res.string.pdf_proximas_dosis),
-        ningunaProxima = getString(Res.string.pdf_ninguna_proxima),
-        aTenerEnCuenta = getString(Res.string.pdf_a_tener_en_cuenta)
+        aTenerEnCuenta = getString(Res.string.pdf_a_tener_en_cuenta),
+        nadaQueHacer = getString(Res.string.pdf_nada_que_hacer),
+        // El número se sustituye aquí, que es donde se puede leer un recurso: dentro del
+        // documento ya no hay contexto para pedir textos.
+        pesajesRegistrados = getString(Res.string.pdf_pesajes_registrados, totalPesajes.toString()),
+        alDia = getString(Res.string.estado_al_dia),
+        vencePronto = getString(Res.string.estado_vence_pronto),
+        vencida = getString(Res.string.estado_vencida)
     )
 }
 

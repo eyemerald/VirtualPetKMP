@@ -359,12 +359,10 @@
     <string name="pdf_microchip">Microchip</string>
     <string name="pdf_peso_actual">Peso atual</string>
     <string name="pdf_peso_ideal">Peso ideal</string>
-    <string name="pdf_vacuna">Vacina</string>
     <string name="pdf_proxima_dosis">Próxima dose</string>
     <string name="pdf_veterinario">Veterinário</string>
     <string name="pdf_lote">Lote</string>
     <string name="pdf_tratamientos_activos">Tratamentos ativos</string>
-    <string name="pdf_no_tratamientos_activos">Sem tratamentos ativos</string>
     <string name="pdf_historial_tratamientos">Histórico de tratamentos</string>
     <string name="pdf_medicamento">Medicamento</string>
     <string name="pdf_dosis">Dose</string>
@@ -380,20 +378,14 @@
     <string name="pdf_diagnostico">Diagnóstico</string>
     <string name="pdf_inicio">Início</string>
     <string name="pdf_fin">Fim</string>
-    <string name="pdf_informes_notas">Relatórios e notas</string>
-    <string name="pdf_tipo">Tipo</string>
-    <string name="pdf_descripcion">Descrição</string>
-    <string name="pdf_archivo">Ficheiro</string>
     <string name="pdf_generado_el">Gerado a %1$s</string>
     <string name="pdf_evolucion_peso">Peso</string>
-    <string name="pdf_peso">Peso</string>
+    <string name="pdf_pesajes_registrados">Pesagens registadas: %1$s. Consulte a aplicação para ver o histórico completo.</string>
     <string name="pdf_primero">Primeiro</string>
-    <string name="pdf_ultimo">Último</string>
     <string name="pdf_minimo">Mínimo</string>
     <string name="pdf_maximo">Máximo</string>
     <string name="pdf_que_darle">O que lhe dar</string>
+    <string name="pdf_nada_que_hacer">Sem tratamentos nem doses programadas.</string>
     <string name="pdf_proximas_dosis">Próximas doses</string>
-    <string name="pdf_ninguna_proxima">Nada agendado</string>
-    <string name="pdf_sin_tratamientos">Sem tratamentos registados</string>
     <string name="pdf_resumen_aviso">Resumo para os cuidados diários. Para a ficha completa, pede a versão veterinária.</string>
 </resources>

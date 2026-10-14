@@ -52,6 +52,8 @@ import com.example.virtualpetkmp.Tratamiento
 import com.example.virtualpetkmp.Vacuna
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import com.example.virtualpetkmp.util.TraduccionesDatos
+import com.example.virtualpetkmp.util.DIAS_AVISO_PREVENTIVO
+import com.example.virtualpetkmp.util.DIAS_AVISO_VACUNA
 import com.example.virtualpetkmp.util.estadoDosis
 import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.util.rememberAbridorArchivo
@@ -112,15 +114,6 @@ import kotlinx.datetime.todayIn
 
 /** Alto máximo de las hojas modales, para que no tapen toda la ficha. */
 private val ALTO_MAXIMO_HOJA = 0.86f
-
-/**
- * Días de antelación con los que se considera que una dosis "vence pronto".
- *
- * Tienen que coincidir con los avisos de [ReprogramadorNotificaciones]: si la pastilla dijera
- * "vence pronto" cuando la notificación aún no ha saltado (o al revés), la app se contradiría.
- */
-private const val DIAS_AVISO_VACUNA = 15
-private const val DIAS_AVISO_PREVENTIVO = 5
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

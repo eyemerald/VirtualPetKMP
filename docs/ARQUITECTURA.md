@@ -298,24 +298,38 @@ No hay servicio en segundo plano: es un equilibrio consciente entre simplicidad 
 La ficha exportada son **dos documentos distintos**, no el mismo recortado:
 
 - **Completa**, para el veterinario: identificación, tratamientos en curso **con la dosis**,
-  historial de tratamientos, vacunas y preventivos (con lote y veterinario), visitas con
-  diagnóstico y notas, evolución del peso con primero/último/mínimo/máximo y peso ideal, e
-  informes.
-- **Resumida**, para quien cuida a la mascota: qué hay que darle con su dosis, cada cuánto y
-  hasta cuándo, las próximas dosis (vacunas y preventivos mezclados y ordenados por fecha) y las
-  notas a tener en cuenta.
+  historial de tratamientos, vacunas y preventivos (con lote, veterinario y **estado en color**),
+  visitas con diagnóstico y notas, y un **resumen de peso** (actual, primero, mínimo, máximo e
+  ideal) con el recuento de pesajes.
+- **Resumida**, para quien cuida a la mascota: peso actual e ideal, qué hay que darle con su
+  dosis, cada cuánto y hasta cuándo, las próximas dosis (vacunas y preventivos mezclados y
+  ordenados por fecha) y las notas a tener en cuenta.
+
+Tres decisiones que conviene no deshacer sin querer:
+
+1. **Una sección sin datos no se pinta** (ni el título ni un "no hay datos"). Un apartado vacío
+   gasta papel y hace dudar de si el dato no está o se ha perdido. La única excepción es la hoja
+   del cuidador cuando no hay nada que dar ni nada programado: ahí "no hay nada" **es** la
+   respuesta, y se dice una vez en lugar de dejar la hoja en blanco.
+2. **El histórico de peso no se vuelca.** Estaba, y el PDF salía de varias páginas por unos
+   números que en papel nadie lee. Queda el resumen y el recuento ("Pesajes registrados: N.
+   Consulte la aplicación…"), que es lo que se consulta de un vistazo. Por lo mismo, los informes
+   adjuntos ya no se listan: el PDF no puede enseñar su contenido, así que solo podía enseñar el
+   nombre del archivo. Las notas de la app se quedan en la hoja del cuidador, que es quien las usa.
+3. **El estado de una dosis se ve, no se lee.** Vacunas y preventivos no son tablas sino una línea
+   por registro con una pastilla de color (verde al día, ámbar vence pronto, rojo vencida), porque
+   una celda de tabla es solo texto con un estilo común para todas. Los plazos y los colores salen
+   de `util/EstadoDosis.kt` y del tema, **los mismos que usa la pantalla**: si el papel dijera "al
+   día" donde la app dice "vence pronto", uno de los dos mentiría.
 
 `ContenidoPdf.kt` decide **qué se escribe** (etiqueta y valor de cada fila) y devuelve cadenas;
 `ExportadorPdf.kt` solo pinta tablas y recuadros con la librería `compose-pdf`. Esa separación
 existe porque el motor del PDF corre en una corrutina, donde no hay composición ni
 `stringResource`: los rótulos se leen antes, con `getString`, y se pasan ya resueltos. Gracias a
 ella, lo que de verdad puede estar mal —que falte la dosis, que un tratamiento terminado salga
-como activo, que las próximas dosis vayan desordenadas— se comprueba con tests
-(`ContenidoPdfTest`) sin abrir un PDF.
-
-Las secciones sin datos no se pintan, con dos excepciones deliberadas: "tratamientos activos"
-sale siempre (que no tome nada **es** información) y el resumen enseña un texto explícito cuando
-no hay tratamientos ni próximas dosis, en vez de dejar la hoja vacía.
+como activo, que una vacuna vencida se pinte como al día— se comprueba con tests
+(`ContenidoPdfTest`) sin abrir un PDF, y `ExportadorPdfTest` va un paso más allá: recorre el
+documento con `previewPages` y comprueba los textos y los colores de las pastillas.
 
 ---
 

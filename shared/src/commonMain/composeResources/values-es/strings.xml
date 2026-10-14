@@ -359,12 +359,10 @@
     <string name="pdf_microchip">Microchip</string>
     <string name="pdf_peso_actual">Peso actual</string>
     <string name="pdf_peso_ideal">Peso ideal</string>
-    <string name="pdf_vacuna">Vacuna</string>
     <string name="pdf_proxima_dosis">Próxima dosis</string>
     <string name="pdf_veterinario">Veterinario</string>
     <string name="pdf_lote">Lote</string>
     <string name="pdf_tratamientos_activos">Tratamientos activos</string>
-    <string name="pdf_no_tratamientos_activos">No hay tratamientos activos</string>
     <string name="pdf_historial_tratamientos">Historial de tratamientos</string>
     <string name="pdf_medicamento">Medicamento</string>
     <string name="pdf_dosis">Dosis</string>
@@ -380,20 +378,14 @@
     <string name="pdf_diagnostico">Diagnóstico</string>
     <string name="pdf_inicio">Inicio</string>
     <string name="pdf_fin">Fin</string>
-    <string name="pdf_informes_notas">Informes y notas</string>
-    <string name="pdf_tipo">Tipo</string>
-    <string name="pdf_descripcion">Descripción</string>
-    <string name="pdf_archivo">Archivo</string>
     <string name="pdf_generado_el">Generado el %1$s</string>
     <string name="pdf_evolucion_peso">Peso</string>
-    <string name="pdf_peso">Peso</string>
+    <string name="pdf_pesajes_registrados">Pesajes registrados: %1$s. Consulte la aplicación para ver el historial completo.</string>
     <string name="pdf_primero">Primero</string>
-    <string name="pdf_ultimo">Último</string>
     <string name="pdf_minimo">Mínimo</string>
     <string name="pdf_maximo">Máximo</string>
     <string name="pdf_que_darle">Qué hay que darle</string>
+    <string name="pdf_nada_que_hacer">No hay ningún tratamiento ni ninguna dosis programada.</string>
     <string name="pdf_proximas_dosis">Próximas dosis</string>
-    <string name="pdf_ninguna_proxima">No hay nada programado</string>
-    <string name="pdf_sin_tratamientos">No hay tratamientos registrados</string>
     <string name="pdf_resumen_aviso">Resumen para el cuidado diario. Para la ficha completa, pide la versión veterinaria.</string>
 </resources>

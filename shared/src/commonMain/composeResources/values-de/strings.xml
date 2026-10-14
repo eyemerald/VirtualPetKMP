@@ -360,12 +360,10 @@
     <string name="pdf_microchip">Mikrochip</string>
     <string name="pdf_peso_actual">Aktuelles Gewicht</string>
     <string name="pdf_peso_ideal">Idealgewicht</string>
-    <string name="pdf_vacuna">Impfstoff</string>
     <string name="pdf_proxima_dosis">Nächste Dosis</string>
     <string name="pdf_veterinario">Tierarzt</string>
     <string name="pdf_lote">Charge</string>
     <string name="pdf_tratamientos_activos">Aktive Behandlungen</string>
-    <string name="pdf_no_tratamientos_activos">Keine aktiven Behandlungen</string>
     <string name="pdf_historial_tratamientos">Behandlungsverlauf</string>
     <string name="pdf_medicamento">Medikament</string>
     <string name="pdf_dosis">Dosis</string>
@@ -381,20 +379,14 @@
     <string name="pdf_diagnostico">Diagnose</string>
     <string name="pdf_inicio">Beginn</string>
     <string name="pdf_fin">Ende</string>
-    <string name="pdf_informes_notas">Berichte und Notizen</string>
-    <string name="pdf_tipo">Typ</string>
-    <string name="pdf_descripcion">Beschreibung</string>
-    <string name="pdf_archivo">Datei</string>
     <string name="pdf_generado_el">Erstellt am %1$s</string>
     <string name="pdf_evolucion_peso">Gewicht</string>
-    <string name="pdf_peso">Gewicht</string>
+    <string name="pdf_pesajes_registrados">Erfasste Wägungen: %1$s. Die vollständige Historie finden Sie in der App.</string>
     <string name="pdf_primero">Erster</string>
-    <string name="pdf_ultimo">Letzter</string>
     <string name="pdf_minimo">Niedrigster</string>
     <string name="pdf_maximo">Höchster</string>
     <string name="pdf_que_darle">Was geben</string>
+    <string name="pdf_nada_que_hacer">Keine Behandlungen und keine anstehenden Dosen.</string>
     <string name="pdf_proximas_dosis">Nächste Dosen</string>
-    <string name="pdf_ninguna_proxima">Nichts geplant</string>
-    <string name="pdf_sin_tratamientos">Keine Behandlungen erfasst</string>
     <string name="pdf_resumen_aviso">Zusammenfassung für die tägliche Pflege. Für die vollständige Akte die Tierarztversion anfordern.</string>
 </resources>

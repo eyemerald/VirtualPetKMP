@@ -204,12 +204,15 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 - [x] **Histórico de peso plegable**, con filtros (6 meses / año / mes actual / rango de fechas) y modal para editar o eliminar un pesaje. El gráfico decide por el filtro si dibujar un punto por mes o uno por pesaje, y se desplaza en horizontal cuando la serie no cabe en la pantalla.
 - [x] **Revisiones veterinarias, tratamientos, informes adjuntos y notas**.
 - [x] **Agenda de veterinarios** con urgencias 24 h, llamada directa y navegación con Google Maps.
-- [x] **Exportar la ficha a PDF** en dos versiones pensadas para lectores distintos:
+- [x] **Exportar la ficha a PDF** en dos versiones pensadas para lectores distintos, y **pensada
+      para imprimirse** (una sección sin datos no se pinta, y el histórico de peso no se vuelca):
       la **completa** para el veterinario (identificación, tratamientos en curso **con la dosis**,
-      historial, vacunas y preventivos con lote y veterinario, visitas con diagnóstico y notas,
-      evolución del peso con primero/último/mínimo/máximo y peso ideal, e informes) y la
-      **resumida** para quien cuida a la mascota (qué hay que darle con su dosis, cada cuánto y
-      hasta cuándo, las próximas dosis juntas y las notas a tener en cuenta).
+      historial, vacunas y preventivos con lote, veterinario y **su estado en color** —al día,
+      vence pronto, vencida—, visitas con diagnóstico y notas, y un **resumen de peso** con el peso
+      actual, el primero, el mínimo, el máximo y el ideal, más el recuento de pesajes que remite a
+      la app) y la **resumida** para quien cuida a la mascota (peso actual e ideal, qué hay que
+      darle con su dosis, cada cuánto y hasta cuándo, las próximas dosis juntas y las notas a
+      tener en cuenta).
 - [x] **Compartir el PDF** con el "compartir" del sistema (`ACTION_SEND` de `application/pdf`):
       WhatsApp, correo, Drive... o **guardar una copia** donde elija el usuario. El PDF pasa por
       la caché con un `FileProvider`, así que ninguna otra app necesita permisos de almacenamiento.
@@ -228,6 +231,9 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 
 ### 🔜 Pendiente antes de la v1.0
 
+- [ ] **Dosis vencidas en el resumen del cuidador**: hoy la hoja resumida anuncia las próximas
+      dosis, pero las que ya pasaron se quedan fuera. Puede interesar que aparezcan con su
+      etiqueta roja, que es justo lo que hay que resolver.
 - [ ] **Cartilla veterinaria**: poder guardarla y consultarla dentro de la app, con fotos
       (una foto por página, reutilizando el selector de foto actual) o en PDF/imágenes.
       Requiere decidir antes: tabla nueva de páginas de cartilla (`mascotaId`, `ruta`,

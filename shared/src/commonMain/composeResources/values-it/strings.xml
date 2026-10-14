@@ -356,12 +356,10 @@
     <string name="pdf_microchip">Microchip</string>
     <string name="pdf_peso_actual">Peso attuale</string>
     <string name="pdf_peso_ideal">Peso ideale</string>
-    <string name="pdf_vacuna">Vaccino</string>
     <string name="pdf_proxima_dosis">Prossima dose</string>
     <string name="pdf_veterinario">Veterinario</string>
     <string name="pdf_lote">Lotto</string>
     <string name="pdf_tratamientos_activos">Trattamenti attivi</string>
-    <string name="pdf_no_tratamientos_activos">Nessun trattamento attivo</string>
     <string name="pdf_historial_tratamientos">Storico trattamenti</string>
     <string name="pdf_medicamento">Farmaco</string>
     <string name="pdf_dosis">Dose</string>
@@ -377,20 +375,14 @@
     <string name="pdf_diagnostico">Diagnosi</string>
     <string name="pdf_inicio">Inizio</string>
     <string name="pdf_fin">Fine</string>
-    <string name="pdf_informes_notas">Referti e note</string>
-    <string name="pdf_tipo">Tipo</string>
-    <string name="pdf_descripcion">Descrizione</string>
-    <string name="pdf_archivo">File</string>
     <string name="pdf_generado_el">Generato il %1$s</string>
     <string name="pdf_evolucion_peso">Peso</string>
-    <string name="pdf_peso">Peso</string>
+    <string name="pdf_pesajes_registrados">Pesate registrate: %1$s. Consulta l'app per lo storico completo.</string>
     <string name="pdf_primero">Primo</string>
-    <string name="pdf_ultimo">Ultimo</string>
     <string name="pdf_minimo">Minimo</string>
     <string name="pdf_maximo">Massimo</string>
     <string name="pdf_que_darle">Cosa dare</string>
+    <string name="pdf_nada_que_hacer">Nessun trattamento e nessuna dose programmata.</string>
     <string name="pdf_proximas_dosis">Prossime dosi</string>
-    <string name="pdf_ninguna_proxima">Niente in programma</string>
-    <string name="pdf_sin_tratamientos">Nessun trattamento registrato</string>
     <string name="pdf_resumen_aviso">Riepilogo per la cura quotidiana. Per la scheda completa, chiedi la versione veterinaria.</string>
 </resources>

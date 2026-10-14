@@ -20,6 +20,18 @@ import virtualpetkmp.shared.generated.resources.estado_vence_pronto
  */
 enum class EstadoDosis { VENCIDA, PROXIMA, AL_DIA }
 
+/**
+ * Días de antelación con los que se avisa de una dosis.
+ *
+ * No son los mismos para vacunas y preventivos: una vacuna se puede mirar con semanas de margen,
+ * una pipeta se pone el día que toca.
+ *
+ * Viven aquí, y no cada uno en su pantalla, porque **también los usa el PDF**: si cada sitio
+ * tuviera los suyos, la ficha de papel podría decir "al día" donde la app dice "vence pronto".
+ */
+const val DIAS_AVISO_VACUNA = 15
+const val DIAS_AVISO_PREVENTIVO = 5
+
 /** Calcula el estado de una dosis a partir de hoy y del margen de aviso. */
 fun estadoDosis(fechaProximaDosis: LocalDate, hoy: LocalDate, diasAviso: Int): EstadoDosis {
     val limite = LocalDate.fromEpochDays(hoy.toEpochDays() + diasAviso)

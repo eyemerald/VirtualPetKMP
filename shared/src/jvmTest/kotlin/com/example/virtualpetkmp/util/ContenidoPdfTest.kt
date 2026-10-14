@@ -19,13 +19,15 @@ import virtualpetkmp.shared.generated.resources.pdf_color
 import virtualpetkmp.shared.generated.resources.pdf_microchip
 import virtualpetkmp.shared.generated.resources.pdf_peso_actual
 import virtualpetkmp.shared.generated.resources.pdf_peso_ideal
+import virtualpetkmp.shared.generated.resources.pdf_primero
 
 /**
  * Lo que se escribe en el PDF.
  *
  * Esta es la parte que de verdad puede estar mal: el dibujo del documento se ve al abrirlo, pero
- * que falte la dosis de un tratamiento, que un tratamiento terminado salga como activo o que las
- * próximas dosis vayan desordenadas no da ningún error — simplemente el PDF miente.
+ * que falte la dosis de un tratamiento, que un tratamiento terminado salga como activo, que una
+ * vacuna vencida se pinte como "al día" o que el peso se repita dos veces en la misma hoja no da
+ * ningún error — simplemente el PDF miente.
  */
 class ContenidoPdfTest {
 
@@ -77,7 +79,8 @@ class ContenidoPdfTest {
     private fun preventivo(nombre: String, proxima: String) = Preventivo(
         id = null,
         mascotaId = 1L,
-        tipo = "interna",
+        // Uno de los tipos reales del formulario, para que el texto sea el de verdad.
+        tipo = "Desparasitación",
         nombre = nombre,
         fechaAplicacion = LocalDate.parse("2025-02-01"),
         fechaProximaDosis = LocalDate.parse(proxima),
@@ -85,12 +88,12 @@ class ContenidoPdfTest {
         lote = null
     )
 
-    private fun peso(fecha: String, kilos: Double, notas: String? = null) = Peso(
+    private fun peso(fecha: String, kilos: Double) = Peso(
         id = null,
         mascotaId = 1L,
         fecha = LocalDate.parse(fecha),
         peso = kilos,
-        notas = notas
+        notas = null
     )
 
     // --- Tratamientos ---------------------------------------------------------------------
@@ -156,6 +159,58 @@ class ContenidoPdfTest {
         assertEquals(listOf(futuro), tratamientosTerminadosPdf(listOf(futuro), hoy))
     }
 
+    // --- Vacunas y preventivos: el estado -------------------------------------------------
+
+    @Test
+    fun `una vacuna vencida se marca como vencida`() {
+        val ficha = fichaVacunaPdf(vacuna("Rabia", "2026-05-19"), hoy, formato)
+
+        assertEquals(EstadoDosis.VENCIDA, ficha.estado)
+        assertEquals("Rabia", ficha.nombre)
+        assertEquals("10/01/2025", ficha.aplicada)
+        assertEquals("19/05/2026", ficha.proxima)
+    }
+
+    @Test
+    fun `una vacuna que vence dentro del margen avisa`() {
+        // La vacuna avisa con 15 días: del 20/05 al 04/06.
+        assertEquals(EstadoDosis.PROXIMA, fichaVacunaPdf(vacuna("Rabia", "2026-06-04"), hoy, formato).estado)
+        assertEquals(EstadoDosis.AL_DIA, fichaVacunaPdf(vacuna("Rabia", "2026-06-05"), hoy, formato).estado)
+    }
+
+    @Test
+    fun `un preventivo usa su propio margen, mas corto que el de la vacuna`() {
+        // Los dos avisan con márgenes distintos: la vacuna con 15 días (hasta el 04/06) y el
+        // preventivo con 5 (hasta el 25/05). Una dosis del 28/05 en una vacuna ya avisa, y en un
+        // preventivo todavía está al día: es justo lo que se vería mal si cada uno tuviera su
+        // propia regla escrita a mano.
+        assertEquals(EstadoDosis.PROXIMA, fichaVacunaPdf(vacuna("Rabia", "2026-05-28"), hoy, formato).estado)
+        assertEquals(EstadoDosis.AL_DIA, fichaPreventivoPdf(preventivo("Pipeta", "2026-05-28"), hoy, formato).estado)
+
+        // Y los bordes de cada margen.
+        assertEquals(EstadoDosis.PROXIMA, fichaVacunaPdf(vacuna("Rabia", "2026-06-04"), hoy, formato).estado)
+        assertEquals(EstadoDosis.AL_DIA, fichaVacunaPdf(vacuna("Rabia", "2026-06-05"), hoy, formato).estado)
+        assertEquals(EstadoDosis.PROXIMA, fichaPreventivoPdf(preventivo("Pipeta", "2026-05-25"), hoy, formato).estado)
+        assertEquals(EstadoDosis.AL_DIA, fichaPreventivoPdf(preventivo("Pipeta", "2026-05-26"), hoy, formato).estado)
+    }
+
+    @Test
+    fun `el preventivo lleva su tipo traducido y la vacuna no`() {
+        val conTipo = fichaPreventivoPdf(preventivo("Pipeta", "2026-06-30"), hoy, formato)
+        val sinTipo = fichaVacunaPdf(vacuna("Rabia", "2026-06-30"), hoy, formato)
+
+        assertEquals("Desparasitación", conTipo.tipo, "el tipo del preventivo se enseña")
+        assertEquals("", sinTipo.tipo)
+    }
+
+    @Test
+    fun `los datos que faltan de una dosis se marcan, no se dejan en blanco`() {
+        val ficha = fichaPreventivoPdf(preventivo("Pipeta", "2026-06-30"), hoy, formato)
+
+        assertEquals(SIN_DATO_PDF, ficha.veterinario)
+        assertEquals(SIN_DATO_PDF, ficha.lote)
+    }
+
     // --- Próximas dosis -------------------------------------------------------------------
 
     @Test
@@ -198,7 +253,7 @@ class ContenidoPdfTest {
     // --- Peso -----------------------------------------------------------------------------
 
     @Test
-    fun `el resumen de peso da primero, ultimo e ideal`() {
+    fun `el resumen de peso abre con el peso actual, que es el ultimo pesaje`() {
         val resumen = resumenDePesoPdf(
             pesos = listOf(
                 peso("2026-05-01", 24.0),
@@ -209,10 +264,24 @@ class ContenidoPdfTest {
             formato = formato
         )
 
+        // Actual y primero, y ni mínimo ni máximo porque coinciden con los extremos del rango.
         assertEquals(3, resumen.size, "sin mínimos ni máximos intermedios que aporten algo")
-        assertTrue(resumen[0].valor.startsWith("22,00"), "el primero es el más antiguo: ${resumen[0].valor}")
-        assertTrue(resumen[1].valor.startsWith("24,00"), "el último es el más reciente: ${resumen[1].valor}")
+        assertEquals("24,00 kg · 01/05/2026", resumen[0].valor, "el actual es el más reciente")
+        assertEquals("22,00 kg · 01/01/2026", resumen[1].valor, "el primero es el más antiguo")
         assertEquals("25,00 kg", resumen[2].valor)
+    }
+
+    @Test
+    fun `el peso actual no se repite como ultimo`() {
+        val resumen = resumenDePesoPdf(
+            pesos = listOf(peso("2026-01-01", 22.0), peso("2026-05-01", 24.0)),
+            pesoIdeal = null,
+            formato = formato
+        )
+
+        assertEquals(2, resumen.size)
+        assertEquals("24,00 kg · 01/05/2026", resumen[0].valor)
+        assertEquals("22,00 kg · 01/01/2026", resumen[1].valor)
     }
 
     @Test
@@ -229,6 +298,8 @@ class ContenidoPdfTest {
         )
 
         assertEquals(4, resumen.size)
+        assertEquals("22,00 kg · 01/04/2026", resumen[0].valor, "el actual")
+        assertEquals("24,00 kg · 01/01/2026", resumen[1].valor, "el primero")
         assertTrue(resumen[2].valor.startsWith("20,00"), "el mínimo: ${resumen[2].valor}")
         assertTrue(resumen[3].valor.startsWith("27,00"), "el máximo: ${resumen[3].valor}")
     }
@@ -238,14 +309,35 @@ class ContenidoPdfTest {
         assertTrue(resumenDePesoPdf(emptyList(), pesoIdeal = 25.0, formato = formato).isEmpty())
     }
 
+    @Test
+    fun `el peso del cuidador es solo el actual y el ideal`() = runBlocking {
+        val datos = pesoActualIdealPdf(
+            pesos = listOf(peso("2026-01-01", 22.0), peso("2026-05-01", 24.0)),
+            pesoIdeal = 25.0,
+            formato = formato
+        )
+
+        assertEquals(2, datos.size, "sin primero, mínimo ni máximo: eso es del veterinario")
+        assertEquals(getString(Res.string.pdf_peso_actual), getString(datos[0].etiqueta))
+        assertEquals(getString(Res.string.pdf_peso_ideal), getString(datos[1].etiqueta))
+        assertEquals("24,00 kg · 01/05/2026", datos[0].valor)
+    }
+
+    @Test
+    fun `sin pesajes el cuidador ve el peso ideal pero no un peso actual inventado`() = runBlocking {
+        val datos = pesoActualIdealPdf(pesos = emptyList(), pesoIdeal = 25.0, formato = formato)
+
+        assertEquals(1, datos.size)
+        assertEquals(getString(Res.string.pdf_peso_ideal), getString(datos[0].etiqueta))
+    }
+
     // --- Identificación -------------------------------------------------------------------
 
     @Test
     fun `la identificacion lleva los datos de la mascota y omite lo que no esta`() = runBlocking {
         val datos = datosDeLaMascotaPdf(
-            mascota = mascota(microchip = null, pesoIdeal = null),
+            mascota = mascota(microchip = null),
             edad = "6 años y 2 meses",
-            ultimoPeso = null,
             formato = formato
         )
 
@@ -257,36 +349,31 @@ class ContenidoPdfTest {
             datos.any { getString(it.etiqueta) == getString(Res.string.pdf_microchip) },
             "sin microchip no debe salir la fila"
         )
-        assertFalse(
-            datos.any { getString(it.etiqueta) == getString(Res.string.pdf_peso_actual) },
-            "sin pesajes no hay peso actual"
-        )
     }
 
     @Test
-    fun `la identificacion incluye color, microchip y peso cuando los hay`() = runBlocking {
-        val datos = datosDeLaMascotaPdf(
-            mascota = mascota(microchip = "999", pesoIdeal = 25.0),
-            edad = "6 años",
-            ultimoPeso = 24.5,
-            formato = formato
-        )
+    fun `la identificacion no lleva el peso, que tiene su propia seccion`() = runBlocking {
+        val datos = datosDeLaMascotaPdf(mascota(), edad = "6 años", formato = formato)
 
-        val etiquetas = datos.map { getString(it.etiqueta) }
-        assertTrue(etiquetas.contains(getString(Res.string.pdf_color)))
-        assertTrue(etiquetas.contains(getString(Res.string.pdf_microchip)))
-        assertTrue(etiquetas.contains(getString(Res.string.pdf_peso_actual)))
-        assertTrue(etiquetas.contains(getString(Res.string.pdf_peso_ideal)))
+        assertFalse(
+            datos.any { getString(it.etiqueta) == getString(Res.string.pdf_peso_actual) },
+            "el peso actual se enseña en la sección de peso, no dos veces en la misma hoja"
+        )
+        assertFalse(datos.any { getString(it.etiqueta) == getString(Res.string.pdf_peso_ideal) })
+        assertFalse(datos.any { getString(it.etiqueta) == getString(Res.string.pdf_primero) })
+    }
+
+    @Test
+    fun `la identificacion incluye el color cuando lo hay`() = runBlocking {
+        val datos = datosDeLaMascotaPdf(mascota(microchip = "999"), edad = "6 años", formato = formato)
+
+        assertTrue(datos.any { getString(it.etiqueta) == getString(Res.string.pdf_color) })
+        assertTrue(datos.any { getString(it.etiqueta) == getString(Res.string.pdf_microchip) })
     }
 
     @Test
     fun `un color en blanco no deja una fila vacia`() = runBlocking {
-        val datos = datosDeLaMascotaPdf(
-            mascota = mascota(color = "  "),
-            edad = "6 años",
-            ultimoPeso = null,
-            formato = formato
-        )
+        val datos = datosDeLaMascotaPdf(mascota(color = "  "), edad = "6 años", formato = formato)
 
         assertFalse(datos.any { getString(it.etiqueta) == getString(Res.string.pdf_color) })
     }

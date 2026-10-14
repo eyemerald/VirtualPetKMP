@@ -262,7 +262,6 @@ fun FichaMascotaScreen(
                 revisiones = datosPdf.revisiones,
                 tratamientos = datosPdf.tratamientos,
                 pesos = datosPdf.pesos,
-                informes = datosPdf.informes,
                 notas = datosPdf.notas,
                 version = versionSeleccionada,
                 // La configuración regional se lee fuera de la corrutina: aquí dentro no hay

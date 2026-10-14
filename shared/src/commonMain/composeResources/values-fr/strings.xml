@@ -360,12 +360,10 @@
     <string name="pdf_microchip">Puce électronique</string>
     <string name="pdf_peso_actual">Poids actuel</string>
     <string name="pdf_peso_ideal">Poids idéal</string>
-    <string name="pdf_vacuna">Vaccin</string>
     <string name="pdf_proxima_dosis">Prochaine dose</string>
     <string name="pdf_veterinario">Vétérinaire</string>
     <string name="pdf_lote">Lot</string>
     <string name="pdf_tratamientos_activos">Traitements actifs</string>
-    <string name="pdf_no_tratamientos_activos">Aucun traitement actif</string>
     <string name="pdf_historial_tratamientos">Historique des traitements</string>
     <string name="pdf_medicamento">Médicament</string>
     <string name="pdf_dosis">Dose</string>
@@ -381,20 +379,14 @@
     <string name="pdf_diagnostico">Diagnostic</string>
     <string name="pdf_inicio">Début</string>
     <string name="pdf_fin">Fin</string>
-    <string name="pdf_informes_notas">Rapports et notes</string>
-    <string name="pdf_tipo">Type</string>
-    <string name="pdf_descripcion">Description</string>
-    <string name="pdf_archivo">Fichier</string>
     <string name="pdf_generado_el">Généré le %1$s</string>
     <string name="pdf_evolucion_peso">Poids</string>
-    <string name="pdf_peso">Poids</string>
+    <string name="pdf_pesajes_registrados">Pesées enregistrées : %1$s. Consultez l'application pour l'historique complet.</string>
     <string name="pdf_primero">Premier</string>
-    <string name="pdf_ultimo">Dernier</string>
     <string name="pdf_minimo">Minimum</string>
     <string name="pdf_maximo">Maximum</string>
     <string name="pdf_que_darle">À donner</string>
+    <string name="pdf_nada_que_hacer">Aucun traitement ni aucune dose programmée.</string>
     <string name="pdf_proximas_dosis">Prochaines doses</string>
-    <string name="pdf_ninguna_proxima">Rien de prévu</string>
-    <string name="pdf_sin_tratamientos">Aucun traitement enregistré</string>
     <string name="pdf_resumen_aviso">Résumé pour les soins quotidiens. Pour la fiche complète, demandez la version vétérinaire.</string>
 </resources>

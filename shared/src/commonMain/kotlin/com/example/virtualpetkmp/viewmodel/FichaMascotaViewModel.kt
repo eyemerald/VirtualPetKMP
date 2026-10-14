@@ -84,7 +84,6 @@ data class DatosFichaPdf(
     val revisiones: List<Revision> = emptyList(),
     val tratamientos: List<Tratamiento> = emptyList(),
     val pesos: List<Peso> = emptyList(),
-    val informes: List<Informe> = emptyList(),
     val notas: List<Nota> = emptyList(),
     val preventivos: List<Preventivo> = emptyList()
 )
@@ -333,12 +332,17 @@ class FichaMascotaViewModel(
             getString(clave, detalleDeError(fallo))
         }
 
+    /**
+     * Todo lo que necesita el PDF de esta mascota.
+     *
+     * Los informes **no** se leen: el PDF ya no los lista (solo podía enseñar el nombre del
+     * archivo, y eso no le sirve a nadie), así que consultarlos sería una consulta de más.
+     */
     suspend fun obtenerDatosPdf(): DatosFichaPdf {
         val vacunas = vacunaRepository.getVacunasByMascotaId(mascotaId)
         val revisiones = revisionRepository.getRevisionesByMascotaId(mascotaId)
         val tratamientos = tratamientoRepository.getTratamientosByMascotaId(mascotaId)
         val pesos = pesoRepository.getPesosByMascotaId(mascotaId)
-        val informes = informeRepository.getInformesByMascotaId(mascotaId)
         val notas = notaRepository.getNotasByMascotaId(mascotaId)
         val preventivos = preventivoRepository.getPreventivosByMascotaId(mascotaId)
 
@@ -347,7 +351,6 @@ class FichaMascotaViewModel(
             revisiones = revisiones,
             tratamientos = tratamientos,
             pesos = pesos,
-            informes = informes,
             notas = notas,
             preventivos = preventivos
         )

@@ -75,6 +75,17 @@ kotlin {
     }
 }
 
+/**
+ * Los tests leen textos de `composeResources`, que resuelve el idioma del sistema: sin fijarlo,
+ * la misma prueba pasaría o fallaría según el idioma del ordenador de quien la ejecute. Se fija
+ * el español (el idioma en el que están escritas las comprobaciones) y una región con kilos y
+ * fecha día/mes, que es lo que esperan los tests de peso y de fechas.
+ */
+tasks.withType<Test>().configureEach {
+    systemProperty("user.language", "es")
+    systemProperty("user.country", "ES")
+}
+
 sqldelight {
     databases {
         create("VirtualPetDatabase") {

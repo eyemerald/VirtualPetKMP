@@ -363,12 +363,10 @@
     <string name="pdf_microchip">Microchip</string>
     <string name="pdf_peso_actual">Current weight</string>
     <string name="pdf_peso_ideal">Ideal weight</string>
-    <string name="pdf_vacuna">Vaccine</string>
     <string name="pdf_proxima_dosis">Next dose</string>
     <string name="pdf_veterinario">Vet</string>
     <string name="pdf_lote">Batch</string>
     <string name="pdf_tratamientos_activos">Active treatments</string>
-    <string name="pdf_no_tratamientos_activos">No active treatments</string>
     <string name="pdf_historial_tratamientos">Treatment history</string>
     <string name="pdf_medicamento">Medication</string>
     <string name="pdf_dosis">Dose</string>
@@ -384,20 +382,14 @@
     <string name="pdf_diagnostico">Diagnosis</string>
     <string name="pdf_inicio">Start</string>
     <string name="pdf_fin">End</string>
-    <string name="pdf_informes_notas">Reports and notes</string>
-    <string name="pdf_tipo">Type</string>
-    <string name="pdf_descripcion">Description</string>
-    <string name="pdf_archivo">File</string>
     <string name="pdf_generado_el">Generated on %1$s</string>
     <string name="pdf_evolucion_peso">Weight</string>
-    <string name="pdf_peso">Weight</string>
+    <string name="pdf_pesajes_registrados">Weigh-ins recorded: %1$s. See the app for the full history.</string>
     <string name="pdf_primero">First</string>
-    <string name="pdf_ultimo">Latest</string>
     <string name="pdf_minimo">Lowest</string>
     <string name="pdf_maximo">Highest</string>
     <string name="pdf_que_darle">What to give</string>
+    <string name="pdf_nada_que_hacer">No treatments and no doses scheduled.</string>
     <string name="pdf_proximas_dosis">Upcoming doses</string>
-    <string name="pdf_ninguna_proxima">Nothing scheduled</string>
-    <string name="pdf_sin_tratamientos">No treatments recorded</string>
     <string name="pdf_resumen_aviso">Daily care summary. For the full record, ask for the veterinary version.</string>
 </resources>
