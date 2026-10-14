@@ -266,11 +266,12 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
       Requiere decidir antes: tabla nueva de páginas de cartilla (`mascotaId`, `ruta`,
       `fecha`, `nota`), su migración, y cómo mostrar un PDF dentro de la app (hoy los PDF se
       abren con una app externa).
-- [ ] **Backup y paso de datos entre PC y móvil**: en una primera fase, exportar e importar
-      la base de datos completa a un archivo (es un único fichero SQLite, así que es copiarlo;
-      con el compartir del sistema ya se puede subir a Drive o enviarlo por correo). La
-      sincronización automática entre dispositivos queda para más adelante: necesita backend
-      o cuenta de Google y resolver conflictos.
+- [ ] **Paso de datos entre PC y móvil** (documento y móvil), en los dos sentidos, pudiendo
+      pasar **todo** o **una sola mascota**, y **sin duplicar ni borrar nada**: importar tiene
+      que ser actualizar. El diseño está decidido y escrito en
+      [`docs/TRASPASO_DE_DATOS.md`](docs/TRASPASO_DE_DATOS.md) (identidad que viaja —`uuid` y
+      `actualizadoEn`—, paquete ZIP con JSON y fotos, reglas de fusión y plan por fases). La
+      sincronización automática por red queda descartada: el proyecto es offline a propósito.
 - [ ] Publicación en Google Play Store.
 
 ### 🔍 Revisar (no bloquea la v1.0)
