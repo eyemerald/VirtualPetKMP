@@ -15,7 +15,20 @@ dependencies {
 
 android {
     namespace = "com.example.virtualpetkmp"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+
+    // Misma lectura que en `:shared`, para que los dos módulos compilen contra lo mismo: se
+    // admite "37" y "37.0" (el SDK instala la API 37 en `platforms/android-37.0`, así que el
+    // punto es lo natural) y se rechaza con un mensaje claro una versión menor distinta de cero
+    // en vez de compilar en silencio contra otra plataforma.
+    //
+    // Antes esto era un `.toInt()` a secas, que reventaba con un NumberFormatException poco
+    // claro en cuanto alguien escribía el punto.
+    val apiCompilacion = libs.versions.android.compileSdk.get()
+    require(apiCompilacion.substringAfter('.', "0") == "0") {
+        "compileSdk = \"$apiCompilacion\": este proyecto solo compila con versión menor 0 " +
+            "(escribe \"37\" o \"37.0\")"
+    }
+    compileSdk = apiCompilacion.substringBefore('.').toInt()
 
     defaultConfig {
         applicationId = "com.example.virtualpetkmp"

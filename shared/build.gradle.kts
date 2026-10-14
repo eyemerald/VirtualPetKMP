@@ -11,7 +11,23 @@ plugins {
 kotlin {
     androidLibrary {
         namespace = "com.example.virtualpetkmp.shared"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
+
+        // La versión se escribe en el catálogo como "37" o como "37.0", y las dos formas son
+        // naturales porque el SDK instala la API 37 en `platforms/android-37.0`. Antes esto era
+        // un `.toInt()` a secas, que reventaba con un NumberFormatException poco claro en cuanto
+        // alguien escribía el punto.
+        //
+        // Las versiones menores distintas de cero se rechazan a propósito: el DSL del módulo de
+        // librería KMP (`com.android.kotlin.multiplatform.library`) no expone `compileSdkMinor`
+        // —el de aplicación sí—, así que aceptarlas aquí haría que los dos módulos compilaran
+        // contra plataformas distintas.
+        val apiCompilacion = libs.versions.android.compileSdk.get()
+        require(apiCompilacion.substringAfter('.', "0") == "0") {
+            "compileSdk = \"$apiCompilacion\": este proyecto solo compila con versión menor 0 " +
+                "(escribe \"37\" o \"37.0\")"
+        }
+        compileSdk = apiCompilacion.substringBefore('.').toInt()
+
         // Necesario para que los recursos de Compose (composeResources) se empaqueten
         // como assets de Android. Sin esto, el target androidLibrary de AGP 9 no ejecuta
         // el pipeline de assets y Res.drawable.* falla en runtime con MissingResourceException.
