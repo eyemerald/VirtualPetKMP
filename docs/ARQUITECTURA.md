@@ -220,15 +220,22 @@ No hay servicio en segundo plano: es un equilibrio consciente entre simplicidad 
   cuando hay muchos meses para que no se solapen. El peso ideal se dibuja como referencia
   **discontinua**, para que se distinga de los datos medidos.
 - **El filtro del historial y la serie del gráfico viven en `util` (`FiltrosPeso.kt` y
-  `SeriesPeso.kt`), con test.** Filtros: todo, año, **mes actual** y rango de fechas. Que "mes
-  actual" compare **año y mes** —y no solo el mes— es justo lo que más fácil se rompe en
-  silencio: si no, octubre de este año arrastraría el octubre del anterior.
-- **La granularidad del gráfico es adaptativa.** Agrupa por meses (con la media de cada mes y
-  los meses sin datos como huecos) porque un historial de años con un punto por pesaje sería un
-  amasijo. Pero si **todo lo filtrado cae dentro del mismo mes** —el caso de "Mes actual", o de
-  una mascota recién estrenada— agrupar por mes deja un único punto y el gráfico se queda sin
-  línea: un punto suelto con aspecto de roto. Ahí se dibuja un punto por pesaje y el eje inferior
-  pasa a rotular el día en vez del mes.
+  `SeriesPeso.kt`), con test.** Filtros: **6 meses** (el de por defecto, para no cargar todo el
+  historial de golpe), año, **mes actual** y rango de fechas. Que "mes actual" compare **año y
+  mes** —y no solo el mes— es justo lo que más fácil se rompe en silencio: si no, octubre de este
+  año arrastraría el octubre del anterior. Y que "6 meses" cuente **desde hoy** y no desde el
+  último pesaje también: estirar la ventana hasta el último dato escondería que hace meses que no
+  se pesa.
+- **La granularidad la decide el filtro, no los datos.** Ver `presentacionDe`. Agrupar por meses
+  (media de cada mes, con los meses sin datos como huecos) es lo correcto para un año entero, que
+  con un punto por pesaje sería un amasijo; el resto de filtros enseñan **cada pesaje**, que es el
+  detalle que se quiere ver. El eje se rotula con meses o con días según el caso: días cuando todo
+  cae en un mes (el número sitúa el punto) y meses cuando el rango cruza.
+- **El gráfico se arrastra en horizontal solo cuando no cabe.** `anchoDelGrafico` mide lo que
+  necesita la serie con `SEPARACION_MINIMA_PUNTO` (14 dp) de aire y **nunca menos que la
+  pantalla**: con pocos puntos se ajusta al ancho como siempre y no hay desplazamiento; con
+  muchos el lienzo se ensancha y se puede arrastrar, arrancando por el final (el pesaje más
+  reciente) para no tener que buscarlo.
 - **El eje del peso tiene un único cálculo, en `util/EscalaPeso.kt`.** El rango incluye **el
   peso ideal además de los pesajes** y deja un **10 % de margen** (`MARGEN_RELATIVO_ESCALA`) por
   encima del máximo y por debajo del mínimo. El margen es *relativo* a propósito: con una

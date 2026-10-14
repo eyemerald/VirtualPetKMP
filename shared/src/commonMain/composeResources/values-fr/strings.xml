@@ -116,7 +116,7 @@
 
     <!-- Feuille de poids -->
     <string name="hoja_peso_titulo">Poids</string>
-    <string name="peso_filtro_todo">Tout</string>
+    <string name="peso_filtro_reciente">6 mois</string>
     <string name="peso_filtro_anio">Année</string>
     <string name="peso_filtro_mes">Ce mois</string>
     <string name="peso_filtro_fechas">Choisir des dates</string>

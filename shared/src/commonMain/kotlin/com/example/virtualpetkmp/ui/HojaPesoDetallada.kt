@@ -2,6 +2,7 @@ package com.example.virtualpetkmp.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -11,12 +12,14 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -38,6 +41,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,10 +65,12 @@ import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import com.example.virtualpetkmp.util.FiltroPeso
 import com.example.virtualpetkmp.util.GranularidadPeso
 import com.example.virtualpetkmp.util.Localizacion
+import com.example.virtualpetkmp.util.PuntoPeso
+import com.example.virtualpetkmp.util.RotuloEjePeso
 import com.example.virtualpetkmp.util.UnidadPeso
 import com.example.virtualpetkmp.util.escalaDePeso
 import com.example.virtualpetkmp.util.filtrarPesos
-import com.example.virtualpetkmp.util.granularidadDe
+import com.example.virtualpetkmp.util.presentacionDe
 import com.example.virtualpetkmp.util.serieDePeso
 import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.util.parseFechaLocalizada
@@ -136,7 +142,9 @@ fun HojaPesoDetallada(
     val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
     // Unidades, orden de fecha y separador decimal salen de aquí.
     val formato = localizacion
-    var filtro by rememberSaveable { mutableStateOf(FiltroPeso.TODO) }
+    // Por defecto, "6 meses": es lo que se quiere ver al entrar y evita cargar todo el historial
+    // de golpe. El usuario puede ampliar con el resto de filtros.
+    var filtro by rememberSaveable { mutableStateOf(FiltroPeso.RECIENTE) }
     var desdeTexto by rememberSaveable { mutableStateOf("") }
     var hastaTexto by rememberSaveable { mutableStateOf("") }
     var errorFechas by remember { mutableStateOf<String?>(null) }
@@ -167,6 +175,10 @@ fun HojaPesoDetallada(
     }
 
     val ultimo = filtrados.lastOrNull()
+
+    // Cómo se dibuja el gráfico con este filtro (un punto por pesaje o por mes, y qué se rotula
+    // bajo el eje). Lo decide `util`, no la pantalla, para poder probarlo.
+    val presentacion = remember(filtro, filtrados) { presentacionDe(filtro, filtrados) }
 
     HojaFicha(
         titulo = stringResource(Res.string.hoja_peso_titulo),
@@ -301,7 +313,10 @@ fun HojaPesoDetallada(
 
             item(key = "grafico") {
                 GraficoLineaMeses(
-                    pesos = filtrados,
+                    // La serie se construye aquí y no dentro del gráfico: así la granularidad la
+                    // decide el filtro (ver `presentacionDe`) en un solo sitio y con tests.
+                    serie = serieDePeso(filtrados, presentacion.granularidad),
+                    rotulo = presentacion.rotulo,
                     pesoIdeal = pesoIdeal,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -601,21 +616,22 @@ private fun DialogoPesoIdeal(
  * Gráfico de la evolución del peso como una línea (igual que la tarjeta de la ficha y no como
  * barras), con las etiquetas de fecha debajo.
  *
- * La granularidad la decide `serieDePeso`: un punto por mes cuando el rango abarca varios
- * meses, y un punto por pesaje cuando todo cae dentro del mismo mes. Sin eso, el filtro
- * "Mes actual" dejaba un único punto y el gráfico se quedaba sin línea, con aspecto de roto.
+ * Cómo se dibuja lo decide [presentacionDe] a partir del filtro: un punto por pesaje o uno por
+ * mes (media), y el eje rotulado con meses o con días. La serie llega ya construida para que esa
+ * decisión esté en un solo sitio y con tests.
+ *
+ * Si la serie no cabe en el ancho disponible con [SEPARACION_MINIMA_PUNTO] de aire, el gráfico se
+ * hace más ancho que la pantalla y se puede arrastrar en horizontal; además arranca enseñando el
+ * final, que es el pesaje más reciente.
  */
 @Composable
 private fun GraficoLineaMeses(
-    pesos: List<Peso>,
+    serie: List<PuntoPeso>,
+    rotulo: RotuloEjePeso,
     modifier: Modifier = Modifier,
     /** Peso ideal de la mascota: si existe, se dibuja como referencia discontinua. */
     pesoIdeal: Double? = null
 ) {
-    val serie = remember(pesos) { serieDePeso(pesos) }
-    // Con un punto por pesaje, el eje inferior son días del mes; con la serie mensual, meses.
-    val porPesajes = remember(pesos) { granularidadDe(pesos) == GranularidadPeso.POR_PESAJES }
-
     if (serie.isEmpty()) {
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
             Text(
@@ -662,27 +678,47 @@ private fun GraficoLineaMeses(
     )
 
     BoxWithConstraints(modifier = modifier) {
-        // Todo el histórico se ajusta al ancho disponible: no hay desplazamiento, así que la
-        // línea nunca puede quedar cortada contra los bordes. Con muchos puntos quedan más
-        // juntos, y por eso las etiquetas se van saltando para no solaparse.
+        // El lienzo mide lo que pida la serie, pero nunca menos que la pantalla: si cabe, se ve
+        // entera (como siempre) y si no, se arrastra. Con muchos puntos quedan más juntos y las
+        // etiquetas se van saltando para no solaparse.
+        val anchoContenido = anchoDelGrafico(anchoDisponible = maxWidth, puntos = serie.size)
         val saltoEtiquetas = (serie.size / 8 + 1).coerceAtLeast(1)
 
-        Canvas(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Márgenes internos del área de dibujo: la línea flota dentro del lienzo y no toca
-            // ningún borde. Van en píxeles porque el lienzo trabaja en píxeles.
-            val margenIzq = MARGENES_GRAFICO_PESO.izquierda.toPx()
-            val margenDer = MARGENES_GRAFICO_PESO.derecha.toPx()
-            val margenArriba = MARGENES_GRAFICO_PESO.arriba.toPx()
-            val margenAbajo = MARGENES_GRAFICO_PESO.abajo.toPx()
+        val desplazamiento = rememberScrollState()
+        // Si hay más gráfico que pantalla, se arranca por el final (el pesaje más reciente) en
+        // vez de por el más antiguo. Solo la primera vez de cada serie, para no pelearse con el
+        // usuario si decide arrastrar hacia atrás.
+        var colocadoAlFinal by remember(serie) { mutableStateOf(false) }
+        LaunchedEffect(desplazamiento.maxValue) {
+            if (!colocadoAlFinal && desplazamiento.maxValue > 0) {
+                desplazamiento.scrollTo(desplazamiento.maxValue)
+                colocadoAlFinal = true
+            }
+        }
 
-            // El alto útil descuenta la franja de las etiquetas de mes (que va debajo del todo)
-            // y los márgenes de arriba y abajo.
-            val altoGrafico = (size.height - altoEtiquetas).coerceAtLeast(1f)
-            val altoUtil = (altoGrafico - margenArriba - margenAbajo).coerceAtLeast(1f)
-            val anchoUtil = (size.width - margenIzq - margenDer).coerceAtLeast(1f)
-            val baseY = margenArriba + altoUtil
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .horizontalScroll(desplazamiento)
+        ) {
+            Canvas(
+                modifier = Modifier
+                    .width(anchoContenido)
+                    .fillMaxHeight()
+            ) {
+                // Márgenes internos del área de dibujo: la línea flota dentro del lienzo y no toca
+                // ningún borde. Van en píxeles porque el lienzo trabaja en píxeles.
+                val margenIzq = MARGENES_GRAFICO_PESO.izquierda.toPx()
+                val margenDer = MARGENES_GRAFICO_PESO.derecha.toPx()
+                val margenArriba = MARGENES_GRAFICO_PESO.arriba.toPx()
+                val margenAbajo = MARGENES_GRAFICO_PESO.abajo.toPx()
+
+                // El alto útil descuenta la franja de las etiquetas de mes (que va debajo del todo)
+                // y los márgenes de arriba y abajo.
+                val altoGrafico = (size.height - altoEtiquetas).coerceAtLeast(1f)
+                val altoUtil = (altoGrafico - margenArriba - margenAbajo).coerceAtLeast(1f)
+                val anchoUtil = (size.width - margenIzq - margenDer).coerceAtLeast(1f)
+                val baseY = margenArriba + altoUtil
 
             fun x(indice: Int): Float =
                 margenIzq + (indice.toFloat() / (serie.size - 1).coerceAtLeast(1)) * anchoUtil
@@ -776,22 +812,33 @@ private fun GraficoLineaMeses(
                 drawCircle(color = colorLinea, radius = 2.5.dp.toPx(), center = punto)
             }
 
-            // Etiquetas del eje inferior. Con la serie mensual, el año aparece cuando cambia,
-            // como en una línea de tiempo ("nov dic 25 ene feb 26"). Con un punto por pesaje,
-            // todo cae en el mismo mes y lo que sitúa cada punto es el DÍA, así que se rotula
-            // el número del día y el primer rótulo dice de qué mes es.
+            // Etiquetas del eje inferior, según lo que toque rotular:
+            //
+            // - Eje de MESES: una por mes, con el año la primera vez que aparece ("nov 25 ene
+            //   feb 26"). Es lo que se quiere ver en "6 meses" y en "Año".
+            // - Eje de DÍAS: el número del día, y la primera dice de qué mes es. Es lo que se
+            //   quiere ver en "Mes actual", donde todos los puntos son del mismo mes.
             val datosEtiquetas = mutableListOf<Pair<String, Float>>()
             var bordeDerecho = -Float.MAX_VALUE
             serie.forEachIndexed { indice, punto ->
-                val primeroDelAnio = indice == 0 ||
-                    serie[indice - 1].fecha.year != punto.fecha.year
-                if (indice % saltoEtiquetas != 0 && !primeroDelAnio) return@forEachIndexed
+                val cambiaDeMes = indice == 0 ||
+                    serie[indice - 1].fecha.year != punto.fecha.year ||
+                    serie[indice - 1].fecha.monthNumber != punto.fecha.monthNumber
+                val cambiaDeAnio = indice == 0 || serie[indice - 1].fecha.year != punto.fecha.year
+
+                // Con el eje en meses solo se rotula cuando empieza uno nuevo; con el de días se
+                // van saltando para que no se solapen.
+                if (rotulo == RotuloEjePeso.MES && !cambiaDeMes) return@forEachIndexed
+                if (rotulo == RotuloEjePeso.DIA && !cambiaDeMes && indice % saltoEtiquetas != 0) {
+                    return@forEachIndexed
+                }
+
                 val etiqueta = when {
-                    porPesajes && indice == 0 ->
+                    rotulo == RotuloEjePeso.DIA && indice == 0 ->
                         "${etiquetasMes[punto.fecha.monthNumber - 1]} ${punto.fecha.year % 100}"
-                    porPesajes -> "${punto.fecha.dayOfMonth}"
-                    primeroDelAnio ->
-                        "${etiquetasMes[punto.fecha.monthNumber - 1]} ${punto.fecha.year % 100}"
+
+                    rotulo == RotuloEjePeso.DIA -> "${punto.fecha.dayOfMonth}"
+                    cambiaDeAnio -> "${etiquetasMes[punto.fecha.monthNumber - 1]} ${punto.fecha.year % 100}"
                     else -> etiquetasMes[punto.fecha.monthNumber - 1]
                 }
                 val medida = textMeasurer.measure(etiqueta, style = estiloEtiqueta)
@@ -819,6 +866,7 @@ private fun GraficoLineaMeses(
                     radius = 4.dp.toPx(),
                     center = puntos.last()
                 )
+            }
             }
         }
     }

@@ -116,7 +116,7 @@
 
     <!-- Gewichtsblatt -->
     <string name="hoja_peso_titulo">Gewicht</string>
-    <string name="peso_filtro_todo">Alles</string>
+    <string name="peso_filtro_reciente">6 Monate</string>
     <string name="peso_filtro_anio">Jahr</string>
     <string name="peso_filtro_mes">Dieser Monat</string>
     <string name="peso_filtro_fechas">Daten wählen</string>

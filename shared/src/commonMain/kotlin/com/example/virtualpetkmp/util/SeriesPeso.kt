@@ -14,11 +14,9 @@ data class PuntoPeso(val fecha: LocalDate, val media: Double?)
 /**
  * Cada cuánto se dibuja un punto en el gráfico.
  *
- * El gráfico agrupa por meses porque un historial de años, con un punto por pesaje, sería un
- * amasijo. Pero cuando todo lo que se está mirando cae dentro del **mismo mes** —el caso del
- * filtro "Mes actual", o de una mascota recién pesada por primera vez— agrupar por mes deja un
- * único punto y el gráfico se queda sin línea: se ve un punto suelto y parece roto. En ese caso
- * se dibuja un punto por pesaje, que es lo que el usuario quiere ver: cómo evolucionó ese mes.
+ * Lo decide el filtro activo, no los datos: ver [presentacionDe]. Un historial de años con un
+ * punto por pesaje sería un amasijo, así que el filtro de un año agrupa por meses; el resto de
+ * filtros enseñan cada pesaje, que es el detalle que el usuario quiere ver.
  */
 enum class GranularidadPeso {
     /** Un punto por mes, con la media de los pesajes de ese mes. */
@@ -29,19 +27,6 @@ enum class GranularidadPeso {
 }
 
 /**
- * Decide la granularidad de [pesos]: por pesajes si todos caen en el mismo mes natural, y
- * mensual en cualquier otro caso.
- */
-fun granularidadDe(pesos: List<Peso>): GranularidadPeso {
-    val primera = pesos.minByOrNull { it.fecha } ?: return GranularidadPeso.MENSUAL
-    val ultima = pesos.maxByOrNull { it.fecha } ?: return GranularidadPeso.MENSUAL
-
-    val mismoAnio = primera.fecha.year == ultima.fecha.year
-    val mismoMes = primera.fecha.monthNumber == ultima.fecha.monthNumber
-    return if (mismoAnio && mismoMes) GranularidadPeso.POR_PESAJES else GranularidadPeso.MENSUAL
-}
-
-/**
  * Construye la serie que dibuja el gráfico, **siempre en orden cronológico**.
  *
  * - [GranularidadPeso.POR_PESAJES]: un punto por pesaje.
@@ -49,12 +34,13 @@ fun granularidadDe(pesos: List<Peso>): GranularidadPeso {
  *   incluidos los meses sin datos (con `media = null`), para que el eje sea una línea de tiempo
  *   continua y no un salto.
  */
-fun serieDePeso(pesos: List<Peso>): List<PuntoPeso> = when (granularidadDe(pesos)) {
-    GranularidadPeso.POR_PESAJES -> pesos.sortedBy { it.fecha }
-        .map { PuntoPeso(fecha = it.fecha, media = it.peso) }
+fun serieDePeso(pesos: List<Peso>, granularidad: GranularidadPeso): List<PuntoPeso> =
+    when (granularidad) {
+        GranularidadPeso.POR_PESAJES -> pesos.sortedBy { it.fecha }
+            .map { PuntoPeso(fecha = it.fecha, media = it.peso) }
 
-    GranularidadPeso.MENSUAL -> serieMensual(pesos)
-}
+        GranularidadPeso.MENSUAL -> serieMensual(pesos)
+    }
 
 /** Serie mensual: la media de cada mes, con los meses sin pesajes intercalados como huecos. */
 private fun serieMensual(pesos: List<Peso>): List<PuntoPeso> {

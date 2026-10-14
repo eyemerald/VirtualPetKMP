@@ -29,6 +29,35 @@ data class MargenesGrafico(
 val MARGENES_GRAFICO_PESO = MargenesGrafico()
 
 /**
+ * Separación mínima entre dos puntos del gráfico.
+ *
+ * Es lo que decide si hace falta arrastrar en horizontal: si la serie no cabe con este aire, el
+ * lienzo se hace más ancho que la pantalla y se puede mover. Con 14 dp, una serie de seis meses
+ * con un pesaje por semana entra sin desplazamiento; con un pesaje al día se arrastra, que es lo
+ * razonable porque ahí sí hay detalle que ver.
+ */
+val SEPARACION_MINIMA_PUNTO = 14.dp
+
+/**
+ * Ancho del lienzo del gráfico: lo que necesita la serie para no apelotonarse, y **nunca menos
+ * que la pantalla**.
+ *
+ * Que sea un `maxOf` es lo que hace que el comportamiento sea el de siempre cuando hay pocos
+ * datos (el gráfico se ajusta al ancho y no se arrastra nada) y que el desplazamiento aparezca
+ * solo cuando de verdad hace falta. Sin el `maxOf`, con dos pesajes el lienzo mediría 14 dp.
+ */
+fun anchoDelGrafico(
+    anchoDisponible: Dp,
+    puntos: Int,
+    separacionMinima: Dp = SEPARACION_MINIMA_PUNTO,
+    margenes: MargenesGrafico = MARGENES_GRAFICO_PESO
+): Dp {
+    val necesario = separacionMinima * (puntos - 1).coerceAtLeast(0) +
+        margenes.izquierda + margenes.derecha
+    return maxOf(anchoDisponible, necesario)
+}
+
+/**
  * Opacidad del degradado bajo la línea, en su punto más alto. Baja a propósito: da volumen al
  * gráfico sin que el relleno compita con la línea, que es el dato.
  */
