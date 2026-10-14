@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -176,6 +178,9 @@ class FichaMascotaViewModel(
     private val _pesos = MutableStateFlow<List<Peso>>(emptyList())
     val pesos: StateFlow<List<Peso>> = _pesos.asStateFlow()
 
+    /** Serializa los recálculos del resumen: ver [cargarResumen]. */
+    private val mutexResumen = Mutex()
+
     init {
         cargarResumen()
     }
@@ -186,12 +191,20 @@ class FichaMascotaViewModel(
      * Va envuelto en `try`/`catch` porque las lecturas no devuelven `Result`: si una consulta
      * falla, la excepción subiría hasta el scope y —con el `Job` que había antes— lo dejaría
      * cancelado, de modo que la ficha entera dejaría de responder sin decir nada.
+     *
+     * Los recálculos van **de uno en uno** ([mutexResumen]). Sin eso, dos recargas encadenadas
+     * pueden cruzarse: la primera lee la base de datos, la segunda lee y escribe ya con el dato
+     * nuevo, y la primera termina después **pisando** ese resultado bueno con el viejo. Se vio
+     * como una nota recién guardada que no aparecía en la ficha hasta volver a entrar, y hacía
+     * fallar un test una de cada cuatro veces.
      */
     fun cargarResumen() {
         scope.launch {
             _isLoading.value = true
             try {
-                leerYRecalcular()
+                // La lectura va dentro del cerrojo y no antes: así el último recálculo en
+                // ejecutarse es también el que ha leído los datos más recientes.
+                mutexResumen.withLock { leerYRecalcular() }
             } catch (e: Exception) {
                 _errorMessage.value = getString(Res.string.error_cargar_ficha, detalleDeError(e))
             } finally {

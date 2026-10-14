@@ -20,7 +20,8 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 - 📄 **Informes**: adjuntar informes veterinarios con tipo, descripción y archivo, y abrirlos desde la app.
 - 📝 **Notas**: apuntes rápidos de interés sobre cada mascota.
 - 🏥 **Veterinarios**: agenda con urgencias (botón directo de llamada), llamada normal y navegación con Google Maps.
-- 📤 **Exportar ficha a PDF**: genera un PDF completo o resumido de la ficha de la mascota.
+- 📤 **Exportar la ficha a PDF**: dos documentos distintos, **completo** (para el veterinario) y **resumido** (para quien se queda cuidando a la mascota), y al generarlo se puede **compartir** por WhatsApp, correo o donde haga falta, o **guardar una copia**.
+- 🖼️ **Un icono propio**: el corazón del logo, sin el texto, para el lanzador de Android (icono normal y adaptativo) y para el instalable de Windows (`.ico`). El nombre que se ve bajo el icono es **Virtual Pet**, no el del proyecto.
 - 🔔 **Notificaciones locales**: para no olvidar las próximas dosis.
 - 🌓 **Tema claro / oscuro**: se adapta a la configuración del sistema.
 - 📱 **Multiplataforma**: misma experiencia en Android y Escritorio.
@@ -46,6 +47,12 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 | Vacunas | Preventivos | Visitas y revisiones |
 |---------|-------------|----------------------|
 | ![Vacunas](screenshots/06-vacunas.jpg) | ![Preventivos](screenshots/07-preventivos.jpg) | ![Visitas](screenshots/08-salud-visitas.jpg) |
+
+### Ficha en PDF
+
+| Exportar (versión y destino) | Compartir con otra app |
+|------------------------------|------------------------|
+| ![Exportar](screenshots/10-exportar-pdf.jpg) | ![Compartir](screenshots/11-compartir-pdf.jpg) |
 
 ### Veterinarios
 
@@ -197,7 +204,15 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 - [x] **Histórico de peso plegable**, con filtros (6 meses / año / mes actual / rango de fechas) y modal para editar o eliminar un pesaje. El gráfico decide por el filtro si dibujar un punto por mes o uno por pesaje, y se desplaza en horizontal cuando la serie no cabe en la pantalla.
 - [x] **Revisiones veterinarias, tratamientos, informes adjuntos y notas**.
 - [x] **Agenda de veterinarios** con urgencias 24 h, llamada directa y navegación con Google Maps.
-- [x] **Exportar la ficha a PDF**, en versión resumida o completa.
+- [x] **Exportar la ficha a PDF** en dos versiones pensadas para lectores distintos:
+      la **completa** para el veterinario (identificación, tratamientos en curso **con la dosis**,
+      historial, vacunas y preventivos con lote y veterinario, visitas con diagnóstico y notas,
+      evolución del peso con primero/último/mínimo/máximo y peso ideal, e informes) y la
+      **resumida** para quien cuida a la mascota (qué hay que darle con su dosis, cada cuánto y
+      hasta cuándo, las próximas dosis juntas y las notas a tener en cuenta).
+- [x] **Compartir el PDF** con el "compartir" del sistema (`ACTION_SEND` de `application/pdf`):
+      WhatsApp, correo, Drive... o **guardar una copia** donde elija el usuario. El PDF pasa por
+      la caché con un `FileProvider`, así que ninguna otra app necesita permisos de almacenamiento.
 - [x] **Notificaciones locales** de próximas dosis, con permiso de alarmas exactas en Android 12+.
 - [x] **Tema claro y oscuro**.
 - [x] **Multiidioma (es, en, pt, fr, de, it)**, con unidades y formato de fecha según la región:
@@ -213,12 +228,6 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 
 ### 🔜 Pendiente antes de la v1.0
 
-- [ ] **Compartir el PDF de la ficha** en lugar de solo guardarlo: el botón de exportar debe
-      ofrecer enviarlo por correo, WhatsApp, guardarlo en una carpeta, etc. Enfoque acordado:
-      generar el PDF en la caché y lanzar el "compartir" del sistema (`ACTION_SEND` con
-      `application/pdf`), que ya muestra esas opciones, en vez de construir un menú propio.
-      Hace falta un `expect/actual` de compartir, como los que ya existen para llamar o abrir
-      el mapa. Desbloquea también el punto de backup.
 - [ ] **Cartilla veterinaria**: poder guardarla y consultarla dentro de la app, con fotos
       (una foto por página, reutilizando el selector de foto actual) o en PDF/imágenes.
       Requiere decidir antes: tabla nueva de páginas de cartilla (`mascotaId`, `ruta`,
@@ -247,8 +256,9 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 - [ ] **Línea de peso ideal en los extremos**: si el peso ideal coincide con el máximo o el
       mínimo de los datos, la referencia queda pegada al borde del gráfico y se ve poco.
       Habría que darle un margen extra en ese caso.
-- [ ] **Peso ideal en el PDF**: hoy la ficha exportada no incluye el peso ideal ni la
-      comparación con el último pesaje.
+- [ ] **Comprobar el PDF compartido en un móvil sin ninguna app de mensajería**: el caso está
+      cubierto con un aviso ("no hay ninguna aplicación para compartir archivos"), pero solo se
+      ha probado el camino normal.
 
 ---
 

@@ -170,6 +170,7 @@ Los contratos están en `commonMain/util` y cada plataforma los implementa:
 | `rememberSelectorArchivo` | selector de documentos | selector de archivos |
 | `rememberGuardarArchivo` | crear documento | guardar en disco |
 | `rememberAbridorArchivo` | intent de visualización | abrir con el SO |
+| `rememberCompartidorArchivo` | caché + `FileProvider` + `ACTION_SEND` | guarda en `~/.virtualpet/exportaciones` y lo abre |
 | `rememberLlamador` | `ACTION_DIAL` | (sin efecto) |
 | `rememberAbridorMapa` | Google Maps | navegador |
 | `rememberAgregadorCalendario` | intent de calendario | (sin efecto) |
@@ -180,6 +181,20 @@ Los contratos están en `commonMain/util` y cada plataforma los implementa:
 **Regla:** el `expect` lleva la documentación del contrato (qué garantiza, qué devuelve); el
 `actual` explica solo lo específico de su plataforma. Si añades una función de plataforma,
 documenta el contrato en el `expect`.
+
+### Compartir el PDF
+
+Compartir **no** es un menú propio: se le entrega el archivo al sistema. En Android el PDF se
+escribe en `cacheDir/exportaciones` (una de las rutas declaradas en `file_paths.xml`, o el
+`FileProvider` lo deniega) y se lanza un `ACTION_SEND` con `application/pdf`, así que el
+selector lo ponen WhatsApp, el correo o Drive. En escritorio no existe esa hoja de compartir: se
+guarda en una carpeta propia y se abre con la aplicación por defecto.
+
+El icono que ve el usuario es también cosa de cada plataforma: Android usa el logo **sin texto**
+(`mipmap-*/ic_launcher*`, con variante adaptativa) y el instalable de Windows el `.ico`
+equivalente, porque en los dos casos el nombre lo pone el sistema al lado. En el PDF, en cambio,
+no hay ninguna etiqueta del sistema que diga cómo se llama la app, así que la cabecera usa el
+logo completo (`drawable/logo_virtualpet.png`).
 
 ### Notificaciones
 
@@ -270,6 +285,37 @@ No hay servicio en segundo plano: es un equilibrio consciente entre simplicidad 
   las operaciones siguientes se volvían invisibles —la ficha dejaba de guardar nada y no lo
   decía—. `FichaMascotaErroresTest` reproduce justo eso provocando el fallo con una base de
   datos cerrada.
+- **Los recálculos del resumen van de uno en uno.** `FichaMascotaViewModel.cargarResumen`
+  encadena una recarga tras cada escritura, y sin serializar se cruzaban: una recarga leía la
+  base de datos, otra leía y escribía ya con el dato nuevo, y la primera terminaba después
+  pisando el resultado bueno con el viejo. Se veía como una nota recién guardada que no aparecía
+  en la ficha, y hacía fallar un test una de cada cuatro veces. El cerrojo (`mutexResumen`) cubre
+  **lectura y escritura**, no solo la escritura: así el último recálculo en ejecutarse es también
+  el que ha leído los datos más recientes.
+
+### El PDF: el contenido se decide aparte de cómo se pinta
+
+La ficha exportada son **dos documentos distintos**, no el mismo recortado:
+
+- **Completa**, para el veterinario: identificación, tratamientos en curso **con la dosis**,
+  historial de tratamientos, vacunas y preventivos (con lote y veterinario), visitas con
+  diagnóstico y notas, evolución del peso con primero/último/mínimo/máximo y peso ideal, e
+  informes.
+- **Resumida**, para quien cuida a la mascota: qué hay que darle con su dosis, cada cuánto y
+  hasta cuándo, las próximas dosis (vacunas y preventivos mezclados y ordenados por fecha) y las
+  notas a tener en cuenta.
+
+`ContenidoPdf.kt` decide **qué se escribe** (etiqueta y valor de cada fila) y devuelve cadenas;
+`ExportadorPdf.kt` solo pinta tablas y recuadros con la librería `compose-pdf`. Esa separación
+existe porque el motor del PDF corre en una corrutina, donde no hay composición ni
+`stringResource`: los rótulos se leen antes, con `getString`, y se pasan ya resueltos. Gracias a
+ella, lo que de verdad puede estar mal —que falte la dosis, que un tratamiento terminado salga
+como activo, que las próximas dosis vayan desordenadas— se comprueba con tests
+(`ContenidoPdfTest`) sin abrir un PDF.
+
+Las secciones sin datos no se pintan, con dos excepciones deliberadas: "tratamientos activos"
+sale siempre (que no tome nada **es** información) y el resumen enseña un texto explícito cuando
+no hay tratamientos ni próximas dosis, en vez de dejar la hoja vacía.
 
 ---
 

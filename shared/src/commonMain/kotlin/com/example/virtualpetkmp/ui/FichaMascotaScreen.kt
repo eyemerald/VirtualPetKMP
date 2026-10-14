@@ -45,13 +45,16 @@ import androidx.compose.ui.unit.sp
 import com.example.virtualpetkmp.Mascota
 import kotlinx.coroutines.launch
 import com.example.virtualpetkmp.util.ExportadorPdf
+import com.example.virtualpetkmp.util.ResultadoCompartir
 import com.example.virtualpetkmp.util.UnidadPeso
 import com.example.virtualpetkmp.util.VersionPdf
 import com.example.virtualpetkmp.util.calcularEdad
 import com.example.virtualpetkmp.util.escalaDePeso
 import com.example.virtualpetkmp.util.guardarArchivo
 import com.example.virtualpetkmp.util.localizacion
+import com.example.virtualpetkmp.util.nombreArchivoPdf
 import com.example.virtualpetkmp.util.rememberAbridorArchivo
+import com.example.virtualpetkmp.util.rememberCompartidorArchivo
 import com.example.virtualpetkmp.util.rememberFotoMascota
 import com.example.virtualpetkmp.util.rememberSelectorDestino
 import com.example.virtualpetkmp.util.toFormatoEuropeo
@@ -65,19 +68,24 @@ import virtualpetkmp.shared.generated.resources.accion_aceptar
 import virtualpetkmp.shared.generated.resources.accion_cancelar
 import virtualpetkmp.shared.generated.resources.accion_cerrar
 import virtualpetkmp.shared.generated.resources.a11y_mas_acciones
+import virtualpetkmp.shared.generated.resources.exportar_compartir
 import virtualpetkmp.shared.generated.resources.exportar_elegir_version
 import virtualpetkmp.shared.generated.resources.exportar_en_curso
+import virtualpetkmp.shared.generated.resources.exportar_error_compartir
 import virtualpetkmp.shared.generated.resources.exportar_error_desconocido
 import virtualpetkmp.shared.generated.resources.exportar_error_generar
 import virtualpetkmp.shared.generated.resources.exportar_error_guardar
 import virtualpetkmp.shared.generated.resources.exportar_error_no_es_pdf
+import virtualpetkmp.shared.generated.resources.exportar_guardar_copia
 import virtualpetkmp.shared.generated.resources.exportar_ok_abierto
+import virtualpetkmp.shared.generated.resources.exportar_ok_compartido
 import virtualpetkmp.shared.generated.resources.exportar_ok_guardado
+import virtualpetkmp.shared.generated.resources.exportar_sin_app
 import virtualpetkmp.shared.generated.resources.exportar_titulo
 import virtualpetkmp.shared.generated.resources.exportar_version_completa
 import virtualpetkmp.shared.generated.resources.exportar_version_resumida
 import virtualpetkmp.shared.generated.resources.ficha_activos
-import virtualpetkmp.shared.generated.resources.ficha_compartir_perfil
+import virtualpetkmp.shared.generated.resources.ficha_exportar_pdf
 import virtualpetkmp.shared.generated.resources.ficha_modificar_datos
 import virtualpetkmp.shared.generated.resources.ficha_peso_actual
 import virtualpetkmp.shared.generated.resources.ficha_peso_ideal
@@ -130,6 +138,9 @@ sealed class ActiveSheet {
 private sealed class MensajeExportar {
     data object OkAbierto : MensajeExportar()
     data class OkGuardado(val ruta: String) : MensajeExportar()
+    data object OkCompartido : MensajeExportar()
+    data object SinAplicacionParaCompartir : MensajeExportar()
+    data class ErrorCompartir(val detalle: String) : MensajeExportar()
     data class ErrorNoEsPdf(val detalle: String) : MensajeExportar()
     data object ErrorGuardar : MensajeExportar()
     data class ErrorGenerar(val detalle: String) : MensajeExportar()
@@ -140,6 +151,9 @@ private sealed class MensajeExportar {
 private fun textoMensajeExportar(mensaje: MensajeExportar): String = when (mensaje) {
     is MensajeExportar.OkAbierto -> stringResource(Res.string.exportar_ok_abierto)
     is MensajeExportar.OkGuardado -> stringResource(Res.string.exportar_ok_guardado, mensaje.ruta)
+    is MensajeExportar.OkCompartido -> stringResource(Res.string.exportar_ok_compartido)
+    is MensajeExportar.SinAplicacionParaCompartir -> stringResource(Res.string.exportar_sin_app)
+    is MensajeExportar.ErrorCompartir -> stringResource(Res.string.exportar_error_compartir, mensaje.detalle)
     is MensajeExportar.ErrorNoEsPdf -> stringResource(Res.string.exportar_error_no_es_pdf, mensaje.detalle)
     is MensajeExportar.ErrorGuardar -> stringResource(Res.string.exportar_error_guardar)
     is MensajeExportar.ErrorGenerar -> stringResource(Res.string.exportar_error_generar, mensaje.detalle)
@@ -147,7 +161,14 @@ private fun textoMensajeExportar(mensaje: MensajeExportar): String = when (mensa
 
 /** Los que son un fallo se pintan en rojo; el resto, en el color de acento. */
 private fun MensajeExportar.esError(): Boolean = when (this) {
-    is MensajeExportar.OkAbierto, is MensajeExportar.OkGuardado -> false
+    is MensajeExportar.OkAbierto,
+    is MensajeExportar.OkGuardado,
+    is MensajeExportar.OkCompartido -> false
+
+    // No encontrar con qué compartir no es un fallo de la app: puede que el móvil no tenga
+    // ninguna app de correo o mensajería. Se avisa, pero sin pintarlo como error.
+    is MensajeExportar.SinAplicacionParaCompartir -> false
+
     else -> true
 }
 
@@ -226,37 +247,54 @@ fun FichaMascotaScreen(
 
     val exportador = remember { ExportadorPdf() }
     val abrirArchivo = rememberAbridorArchivo()
-    val seleccionarDestino = rememberSelectorDestino(nombreSugerido = "ficha-${mascota.nombre}.pdf") { _, rutaArchivo ->
+    val compartirArchivo = rememberCompartidorArchivo()
+    val nombrePdf = nombreArchivoPdf(mascota.nombre)
+
+    // Genera el PDF con la versión elegida. Si algo falla deja el mensaje puesto y devuelve null,
+    // para que quien llame (compartir o guardar) no tenga que repetir el manejo de errores.
+    suspend fun generarPdf(): ByteArray? {
+        return try {
+            val datosPdf = viewModel.obtenerDatosPdf()
+            val pdf = exportador.exportarFichaMascota(
+                mascota = mascota,
+                vacunas = datosPdf.vacunas,
+                preventivos = datosPdf.preventivos,
+                revisiones = datosPdf.revisiones,
+                tratamientos = datosPdf.tratamientos,
+                pesos = datosPdf.pesos,
+                informes = datosPdf.informes,
+                notas = datosPdf.notas,
+                version = versionSeleccionada,
+                // La configuración regional se lee fuera de la corrutina: aquí dentro no hay
+                // contexto composable y los recursos no están disponibles.
+                localizacion = formatoActual
+            )
+
+            val esPdf = pdf.size >= 4 &&
+                pdf[0] == 0x25.toByte() && pdf[1] == 0x50.toByte() &&
+                pdf[2] == 0x44.toByte() && pdf[3] == 0x46.toByte()
+            if (esPdf) {
+                pdf
+            } else {
+                mensajeExportar = MensajeExportar.ErrorNoEsPdf("size=${pdf.size}")
+                null
+            }
+        } catch (e: Exception) {
+            // El texto por defecto se resuelve fuera de la corrutina: `stringResource` es una
+            // función composable y aquí no hay contexto de composición.
+            mensajeExportar = MensajeExportar.ErrorGenerar(e.message ?: detalleDesconocido)
+            null
+        }
+    }
+
+    val seleccionarDestino = rememberSelectorDestino(nombreSugerido = nombrePdf) { _, rutaArchivo ->
         scope.launch {
+            exportando = true
             try {
-                exportando = true
+                val pdf = generarPdf() ?: return@launch
                 val rutaValida = normalizarRutaDestinoPdf(rutaArchivo, mascota.nombre)
-                val datosPdf = viewModel.obtenerDatosPdf()
-                val pdf = exportador.exportarFichaMascota(
-                    mascota = mascota,
-                    vacunas = datosPdf.vacunas,
-                    revisiones = datosPdf.revisiones,
-                    tratamientos = datosPdf.tratamientos,
-                    pesos = datosPdf.pesos,
-                    informes = datosPdf.informes,
-                    notas = datosPdf.notas,
-                    version = versionSeleccionada,
-                    // La configuración regional se lee fuera de la corrutina: aquí dentro no
-                    // hay contexto composable y los recursos no están disponibles.
-                    localizacion = formatoActual
-                )
 
-                val isPdf = pdf.size >= 4 && pdf[0] == 0x25.toByte() && pdf[1] == 0x50.toByte() && pdf[2] == 0x44.toByte() && pdf[3] == 0x46.toByte()
-                if (!isPdf) {
-                    mensajeExportar = MensajeExportar.ErrorNoEsPdf("size=${pdf.size}")
-                    exportando = false
-                    onCambiarDialogoExportar(false)
-                    return@launch
-                }
-
-                val guardado = guardarArchivo(rutaValida, pdf)
-
-                if (guardado) {
+                if (guardarArchivo(rutaValida, pdf)) {
                     val abierto = abrirArchivo(rutaValida)
                     mensajeExportar = if (abierto) {
                         MensajeExportar.OkAbierto
@@ -266,10 +304,26 @@ fun FichaMascotaScreen(
                 } else {
                     mensajeExportar = MensajeExportar.ErrorGuardar
                 }
-            } catch (e: Exception) {
-                // El texto por defecto se resuelve fuera de la corrutina: `stringResource` es
-                // una función composable y aquí no hay contexto de composición.
-                mensajeExportar = MensajeExportar.ErrorGenerar(e.message ?: detalleDesconocido)
+            } finally {
+                exportando = false
+                onCambiarDialogoExportar(false)
+            }
+        }
+    }
+
+    // Compartir: se genera el PDF, se deja donde el sistema pueda leerlo y se abre su hoja de
+    // compartir (WhatsApp, correo, Drive...). Es el camino corto: la mayoría de las veces la
+    // ficha se manda a alguien, no se archiva.
+    fun compartirPdf() {
+        scope.launch {
+            exportando = true
+            try {
+                val pdf = generarPdf() ?: return@launch
+                mensajeExportar = when (compartirArchivo(nombrePdf, pdf)) {
+                    ResultadoCompartir.COMPARTIDO -> MensajeExportar.OkCompartido
+                    ResultadoCompartir.SIN_APLICACION -> MensajeExportar.SinAplicacionParaCompartir
+                    ResultadoCompartir.ERROR -> MensajeExportar.ErrorCompartir(detalleDesconocido)
+                }
             } finally {
                 exportando = false
                 onCambiarDialogoExportar(false)
@@ -447,7 +501,7 @@ fun FichaMascotaScreen(
                         menuAcciones = {
                             MenuAccionesFicha(
                                 onModificar = onModificar,
-                                onCompartir = { onCambiarDialogoExportar(true) }
+                                onExportarPdf = { onCambiarDialogoExportar(true) }
                             )
                         }
                     )
@@ -503,7 +557,7 @@ fun FichaMascotaScreen(
             menuAcciones = {
                 MenuAccionesFicha(
                     onModificar = onModificar,
-                    onCompartir = { onCambiarDialogoExportar(true) }
+                    onExportarPdf = { onCambiarDialogoExportar(true) }
                 )
             }
         )
@@ -549,19 +603,46 @@ fun FichaMascotaScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { seleccionarDestino() }, enabled = !exportando) {
+                // Compartir es la acción principal: lo normal es mandar la ficha por WhatsApp o
+                // correo; guardarla es la excepción, así que va como acción secundaria.
+                Button(
+                    onClick = { compartirPdf() },
+                    enabled = !exportando
+                ) {
+                    if (exportando) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(Modifier.width(8.dp))
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                    }
                     Text(
                         if (exportando) {
                             stringResource(Res.string.exportar_en_curso)
                         } else {
-                            stringResource(Res.string.accion_aceptar)
+                            stringResource(Res.string.exportar_compartir)
                         }
                     )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { if (!exportando) onCambiarDialogoExportar(false) }) {
-                    Text(stringResource(Res.string.accion_cancelar))
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(
+                        onClick = { seleccionarDestino() },
+                        enabled = !exportando
+                    ) {
+                        Text(stringResource(Res.string.exportar_guardar_copia))
+                    }
+                    TextButton(onClick = { if (!exportando) onCambiarDialogoExportar(false) }) {
+                        Text(stringResource(Res.string.accion_cancelar))
+                    }
                 }
             }
         )
@@ -907,7 +988,7 @@ private fun AvisoErrorFicha(mensaje: String, onCerrar: () -> Unit) {
 @Composable
 private fun MenuAccionesFicha(
     onModificar: () -> Unit,
-    onCompartir: () -> Unit,
+    onExportarPdf: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var abierto by remember { mutableStateOf(false) }
@@ -935,13 +1016,13 @@ private fun MenuAccionesFicha(
                 }
             )
             DropdownMenuItem(
-                text = { Text(stringResource(Res.string.ficha_compartir_perfil)) },
+                text = { Text(stringResource(Res.string.ficha_exportar_pdf)) },
                 leadingIcon = {
                     Icon(imageVector = Icons.Default.Share, contentDescription = null)
                 },
                 onClick = {
                     abierto = false
-                    onCompartir()
+                    onExportarPdf()
                 }
             )
         }

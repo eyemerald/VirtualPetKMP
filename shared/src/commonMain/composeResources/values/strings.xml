@@ -81,7 +81,7 @@
 
     <!-- Ficha: menú de acciones -->
     <string name="ficha_modificar_datos">Edit details</string>
-    <string name="ficha_compartir_perfil">Share profile</string>
+    <string name="ficha_exportar_pdf">Export record to PDF</string>
 
     <!-- Diálogo de exportar a PDF -->
     <string name="exportar_titulo">Export pet record as PDF</string>
@@ -95,6 +95,11 @@
     <string name="exportar_error_generar">Error creating the PDF: %1$s</string>
     <string name="exportar_error_desconocido">unknown</string>
     <string name="exportar_error_no_es_pdf">The generated content does not look like a valid PDF (%1$s). It was not saved.</string>
+    <string name="exportar_compartir">Share</string>
+    <string name="exportar_guardar_copia">Save a copy</string>
+    <string name="exportar_ok_compartido">Record ready. Choose where to send it.</string>
+    <string name="exportar_error_compartir">Could not share the record: %1$s</string>
+    <string name="exportar_sin_app">There is no app on this device to share files with.</string>
 
     <!--
       Meses abreviados para el eje del gráfico. Van en recursos y no en una lista del código
@@ -354,24 +359,25 @@
     <string name="pdf_sexo">Sex</string>
     <string name="pdf_edad">Age</string>
     <string name="pdf_fecha_nacimiento">Date of birth</string>
+    <string name="pdf_color">Colour</string>
     <string name="pdf_microchip">Microchip</string>
     <string name="pdf_peso_actual">Current weight</string>
-    <string name="pdf_vacunas_proximas">Upcoming vaccines</string>
-    <string name="pdf_no_vacunas_proximas">No upcoming vaccines scheduled</string>
+    <string name="pdf_peso_ideal">Ideal weight</string>
     <string name="pdf_vacuna">Vaccine</string>
     <string name="pdf_proxima_dosis">Next dose</string>
+    <string name="pdf_veterinario">Vet</string>
+    <string name="pdf_lote">Batch</string>
     <string name="pdf_tratamientos_activos">Active treatments</string>
     <string name="pdf_no_tratamientos_activos">No active treatments</string>
+    <string name="pdf_historial_tratamientos">Treatment history</string>
     <string name="pdf_medicamento">Medication</string>
+    <string name="pdf_dosis">Dose</string>
     <string name="pdf_frecuencia">Frequency</string>
-    <string name="pdf_resumen_general">Overall summary</string>
-    <string name="pdf_ultimo_peso">Latest weight</string>
-    <string name="pdf_fecha_reporte">Report date</string>
     <string name="pdf_a_tener_en_cuenta">Keep in mind</string>
     <string name="pdf_nota">Note</string>
     <string name="pdf_vacunas">Vaccines</string>
+    <string name="pdf_preventivos">Preventive treatments</string>
     <string name="pdf_aplicada">Given</string>
-    <string name="pdf_proxima">Next</string>
     <string name="pdf_revisiones">Veterinary visits</string>
     <string name="pdf_fecha">Date</string>
     <string name="pdf_motivo">Reason</string>
@@ -381,5 +387,17 @@
     <string name="pdf_informes_notas">Reports and notes</string>
     <string name="pdf_tipo">Type</string>
     <string name="pdf_descripcion">Description</string>
+    <string name="pdf_archivo">File</string>
     <string name="pdf_generado_el">Generated on %1$s</string>
+    <string name="pdf_evolucion_peso">Weight</string>
+    <string name="pdf_peso">Weight</string>
+    <string name="pdf_primero">First</string>
+    <string name="pdf_ultimo">Latest</string>
+    <string name="pdf_minimo">Lowest</string>
+    <string name="pdf_maximo">Highest</string>
+    <string name="pdf_que_darle">What to give</string>
+    <string name="pdf_proximas_dosis">Upcoming doses</string>
+    <string name="pdf_ninguna_proxima">Nothing scheduled</string>
+    <string name="pdf_sin_tratamientos">No treatments recorded</string>
+    <string name="pdf_resumen_aviso">Daily care summary. For the full record, ask for the veterinary version.</string>
 </resources>

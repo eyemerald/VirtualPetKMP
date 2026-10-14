@@ -150,8 +150,12 @@ class FichaMascotaErroresTest {
         viewModel.agregarNota("Revisión en casa")
         viewModel.borrarPeso(id = 1L)
 
-        // Se le da margen a que terminen las corrutinas antes de comprobar.
+        // Se le da margen a que terminen las corrutinas antes de comprobar. Se esperan las DOS
+        // cosas: el tratamiento y el resumen, que se recarga por su cuenta. Esperar solo al
+        // tratamiento dejaba una carrera —la lista ya estaba y el resumen todavía no— que hacía
+        // fallar el test de vez en cuando, justo cuando la máquina iba cargada.
         withTimeout(5_000) { viewModel.tratamientos.first { it.isNotEmpty() } }
+        withTimeout(5_000) { viewModel.resumen.first { it.totalNotas == 1 } }
 
         assertEquals(null, viewModel.errorMessage.value, "no debería haber ningún aviso")
         assertEquals(1, viewModel.tratamientos.value.size)

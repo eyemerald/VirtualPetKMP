@@ -8,7 +8,7 @@ fun main() = application {
     val databaseFactory = DatabaseFactory()
     Window(
         onCloseRequest = ::exitApplication,
-        title = "VirtualPetKMP",
+        title = "Virtual Pet",
     ) {
         App(databaseFactory)
     }

@@ -3,4 +3,6 @@
     <files-path name="informes" path="informes/" />
     <files-path name="fotos" path="fotos/" />
     <cache-path name="capturas" path="capturas/" />
+    <!-- PDF de la ficha: se deja en la caché para entregárselo al compartir del sistema. -->
+    <cache-path name="exportaciones" path="exportaciones/" />
 </paths>
