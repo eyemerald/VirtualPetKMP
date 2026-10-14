@@ -1,6 +1,22 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
+}
+
+/**
+ * Firma de la APK de release, leída de `keystore.properties` (que no se sube al repositorio).
+ *
+ * Si el fichero no está, el proyecto se sigue compilando y `assembleRelease` deja la APK **sin
+ * firmar**: es lo que hace falta para que cualquiera pueda compilar el repo sin la clave privada,
+ * y así el aviso sale al final (la APK se llama `...-unsigned.apk`) en vez de reventar el build.
+ */
+val propiedadesFirma = Properties().apply {
+    val fichero = rootProject.file("keystore.properties")
+    if (fichero.exists()) {
+        fichero.inputStream().use { load(it) }
+    }
 }
 
 dependencies {
@@ -42,13 +58,26 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    signingConfigs {
+        if (propiedadesFirma.getProperty("storeFile") != null) {
+            create("release") {
+                storeFile = rootProject.file(propiedadesFirma.getProperty("storeFile"))
+                storePassword = propiedadesFirma.getProperty("storePassword")
+                keyAlias = propiedadesFirma.getProperty("keyAlias")
+                keyPassword = propiedadesFirma.getProperty("keyPassword")
+            }
+        }
+    }
     buildTypes {
         release {
+            // Sin ofuscar: la app no tiene reflexión propia y, para una APK que se reparte a
+            // mano, un fallo por R8 cuesta más de diagnosticar que el poco tamaño que ahorra.
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.findByName("release")
         }
     }
     compileOptions {

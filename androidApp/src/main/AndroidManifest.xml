@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+
+    <!--
+      La biblioteca compartida arrastra tres permisos heredados que esta app no usa: los archivos
+      se eligen con el selector del sistema (SAF) y las fotos se copian a la carpeta privada, así
+      que no hace falta tocar el almacenamiento ni el teléfono. Se quitan aquí para que quien
+      instale la APK no vea "leer el estado del teléfono" y se asuste.
+    -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove"/>
 
     <application
             android:allowBackup="true"

@@ -22,3 +22,11 @@ node_modules/
 Thumbs.db
 .aider*
 .tmp-*
+
+# Firma y reparto de la app. El almacen de claves y sus contrasenas NO se suben nunca: quien
+# los tenga puede firmar actualizaciones que se instalan encima de la app ya instalada.
+*.jks
+*.keystore
+keystore.properties
+# APKs listas para repartir (se generan con `:androidApp:assembleRelease`).
+dist/

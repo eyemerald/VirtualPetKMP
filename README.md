@@ -115,6 +115,33 @@ Con **hot reload** durante el desarrollo:
 
 ---
 
+## 📦 APK para repartir a los testers
+
+```bash
+./gradlew :androidApp:assembleRelease
+```
+
+Deja la APK en `androidApp/build/outputs/apk/release/androidApp-release.apk`. Para repartirla se
+copia a `dist/` con un nombre que se entienda (por ejemplo `dist/VirtualPet-1.0.apk`).
+
+**La firma.** La APK de release se firma con el almacén de claves que apunta
+`keystore.properties` (raíz del proyecto). Ese fichero y el `.jks` **no están en el repositorio**
+(están en `.gitignore`) y hay que guardarlos en un sitio seguro, con copia:
+
+- Son lo que permite publicar una versión nueva que **se instala encima** de la app ya instalada.
+  Si se pierden, los testers tienen que desinstalar la app para instalar la siguiente versión.
+- Si el fichero `keystore.properties` no existe, el proyecto se compila igual y `assembleRelease`
+  deja la APK **sin firmar** (`...-unsigned.apk`), que no se puede instalar.
+
+**Antes de mandarla, dos detalles que ahorran preguntas:**
+
+- Quien la reciba tiene que permitir instalar apps de origen desconocido.
+- Si en ese móvil ya hay una versión instalada firmada con **otra** clave (por ejemplo el `debug`
+  de Android Studio, que va firmado con la clave de depuración), Android no la deja actualizar:
+  hay que desinstalar la anterior primero, y eso borra sus datos.
+
+---
+
 ## ✅ Tests
 
 ```bash
