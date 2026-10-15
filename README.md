@@ -8,7 +8,11 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 
 ## ✨ Características
 
-- 🐶 **Gestión de mascotas**: ficha con datos básicos (nombre, especie, raza, fecha de nacimiento, sexo, color, microchip) y **peso ideal** opcional. Las acciones de cada mascota (editar, eliminar) están en un menú **⋮**, tanto en la lista como en su ficha.
+- 🐶 **Gestión de mascotas**: ficha con datos básicos (nombre, especie, raza, fecha de nacimiento, sexo, color, microchip) y **peso ideal** opcional.
+- ✏️ **Un solo menú de acciones (⋮) en toda la app**: editar y eliminar están siempre en el mismo
+  sitio —la lista de mascotas, las hojas de la ficha (vacunas, preventivos, tratamientos,
+  informes, visitas y notas) y las tarjetas de veterinario—, en vez de un lápiz y una papelera
+  sueltos que cambiaban de una pantalla a otra.
 - 📷 **Foto de la mascota**: se puede elegir de los archivos o **hacer con la cámara** (Android); se ve en la ficha y en la lista de mascotas.
 - 🏠 **Ficha como panel**: cabecera con la foto, el nombre y la edad, y tarjetas por bloque (peso, vacunas y preventivos, salud y seguimiento, notas) que muestran **un solo aviso** cada una: en ámbar lo que vence pronto y en rojo lo vencido.
 - ⚖️ **Pesos**: registro y evolución en un **gráfico de línea** en la ficha, y una vista detallada con el histórico, filtros (**6 meses** —el de por defecto—, por año, mes actual o por rango de fechas) y el **histórico plegable**. El gráfico enseña cada pesaje en los rangos cortos y agrupa por meses al mirar un año entero, y se arrastra en horizontal cuando la serie no cabe. Al pulsar un pesaje se abre un modal para editarlo o eliminarlo.
@@ -32,33 +36,53 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 
 ### Gestión de mascotas
 
-| Lista de mascotas | Ficha de mascota | Nueva mascota |
-|-------------------|------------------|---------------|
-| ![Mascotas](screenshots/01-mascotas.jpg) | ![Ficha](screenshots/02-ficha-mascota.jpg) | ![Nueva mascota](screenshots/03-nueva-mascota.jpg) |
+| Lista de mascotas | Nueva mascota | Ficha de mascota |
+|-------------------|---------------|------------------|
+| ![Mascotas](screenshots/01-mascotas.jpg) | ![Nueva mascota](screenshots/02-nueva-mascota.jpg) | ![Ficha](screenshots/03-ficha-mascota.jpg) |
+
+La lista enseña, de un vistazo, el último peso de cada mascota frente a su peso ideal (**▼ rojo** si
+está por debajo, **▲ verde** si está por encima). La ficha es un panel: la cabecera con la foto, el
+nombre, la edad y el menú de acciones, y tarjetas por bloque que dan **un solo aviso** cada una.
 
 ### Peso
 
-| Evolución y peso ideal | Histórico |
-|------------------------|-----------|
-| ![Peso](screenshots/04-peso.jpg) | ![Histórico](screenshots/05-peso-historico.jpg) |
+El gráfico se adapta al filtro: un punto por pesaje en los rangos cortos y una media por mes al
+mirar el año entero. El peso ideal va como línea discontinua de referencia.
+
+| Últimos 6 meses | Último año | Mes actual |
+|-----------------|------------|------------|
+| ![Peso 6 meses](screenshots/04-peso-6-meses.jpg) | ![Peso año](screenshots/05-peso-ano.jpg) | ![Peso mes actual](screenshots/06-peso-mes-actual.jpg) |
 
 ### Salud y cuidados
 
-| Vacunas | Preventivos | Visitas y revisiones |
-|---------|-------------|----------------------|
-| ![Vacunas](screenshots/06-vacunas.jpg) | ![Preventivos](screenshots/07-preventivos.jpg) | ![Visitas](screenshots/08-salud-visitas.jpg) |
+Las cinco pestañas de las dos hojas de la ficha, más las notas:
+
+| Vacunas | Preventivos |
+|---------|-------------|
+| ![Vacunas](screenshots/07-vacunas.jpg) | ![Preventivos](screenshots/08-preventivos.jpg) |
+
+| Tratamientos | Informes | Visitas |
+|--------------|----------|---------|
+| ![Tratamientos](screenshots/09-salud-tratamientos.jpg) | ![Informes](screenshots/10-salud-informes.jpg) | ![Visitas](screenshots/11-salud-visitas.jpg) |
+
+| A tener en cuenta |
+|-------------------|
+| ![Notas](screenshots/12-a-tener-en-cuenta.jpg) |
+
+Cada registro lleva su estado (al día, vence pronto, vencida) y sus acciones en el menú **⋮**
+(editar y eliminar), igual que en el resto de la app.
 
 ### Ficha en PDF
 
 | Exportar (versión y destino) | Compartir con otra app |
 |------------------------------|------------------------|
-| ![Exportar](screenshots/10-exportar-pdf.jpg) | ![Compartir](screenshots/11-compartir-pdf.jpg) |
+| ![Exportar](screenshots/14-exportar-pdf.jpg) | ![Compartir](screenshots/15-compartir-pdf.jpg) |
 
 ### Veterinarios
 
 | Urgencias 24h y agenda |
 |------------------------|
-| ![Veterinarios](screenshots/09-veterinarios.jpg) |
+| ![Veterinarios](screenshots/13-veterinarios.jpg) |
 
 ---
 
@@ -204,7 +228,9 @@ especialmente los nombres de raza.
 ### Capturas para la documentación
 
 Las imágenes de este README se generan a partir de una base de datos de ejemplo, para que
-muestren siempre el mismo aspecto (una vacuna vencida, una próxima, un tratamiento activo…):
+muestren siempre el mismo aspecto: dos mascotas (Luna, con la ficha completa, y Nilo), una vacuna
+vencida, una próxima, un preventivo al día, un tratamiento activo y pesajes repartidos por el año
+**y dentro del mes en curso** (si no, el filtro "mes actual" del gráfico saldría vacío):
 
 ```bash
 # 1. Genera una base de datos con datos de ejemplo
@@ -230,6 +256,13 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 - [x] **Peso ideal**: opcional, configurable desde la ficha de la mascota o desde la hoja de peso, con indicador ▲/▼ en la lista. Al cambiarlo, el gráfico y los indicadores se actualizan al momento (el estado es reactivo, no hace falta reiniciar).
 - [x] **Histórico de peso plegable**, con filtros (6 meses / año / mes actual / rango de fechas) y modal para editar o eliminar un pesaje. El gráfico decide por el filtro si dibujar un punto por mes o uno por pesaje, y se desplaza en horizontal cuando la serie no cabe en la pantalla.
 - [x] **Revisiones veterinarias, tratamientos, informes adjuntos y notas**.
+- [x] **Un solo menú de acciones en toda la app**: editar y eliminar viven en el menú **⋮**, igual
+      en la lista de mascotas, en las hojas de la ficha (vacunas, preventivos, tratamientos,
+      informes, visitas y notas) y en las tarjetas de veterinario. Antes cada lista tenía sus
+      propios iconos sueltos (un lápiz y una papelera, o solo el lápiz) y la misma acción se veía
+      distinta según la pantalla; además, la papelera a la vista se pulsa sin querer y borrar es lo
+      que menos se hace. Los iconos que sí se quedan (llamar, mapa, añadir al calendario) son
+      acciones directas de un toque.
 - [x] **Agenda de veterinarios** con urgencias 24 h, llamada directa y navegación con Google Maps.
 - [x] **Exportar la ficha a PDF** en dos versiones pensadas para lectores distintos, y **pensada
       para imprimirse** (una sección sin datos no se pinta, y el histórico de peso no se vuelca):
@@ -282,11 +315,7 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
       (`shared/.../util/TraduccionesDatos.kt` y `values-de|fr|it|pt/strings.xml`).
 - [ ] **Comprobar el diseño en alemán en un dispositivo real**: es el idioma con textos más
       largos. Las filas de pastillas y de chips ya usan `FlowRow` para saltar de línea, pero
-      no se ha podido ver en pantalla porque el emulador de pruebas tiene la región fija en
-      inglés (Estados Unidos).
-- [ ] **Unificar el menú ⋮ en las tarjetas de veterinario**: hoy conservan sus iconos propios
-      (llamada, mapa, editar, borrar) en vez de un único menú, como ya se hizo en las de
-      mascota.
+      no se ha podido ver en pantalla porque las capturas del README se hacen en español.
 - [ ] **Línea de peso ideal en los extremos**: si el peso ideal coincide con el máximo o el
       mínimo de los datos, la referencia queda pegada al borde del gráfico y se ve poco.
       Habría que darle un margen extra en ese caso.

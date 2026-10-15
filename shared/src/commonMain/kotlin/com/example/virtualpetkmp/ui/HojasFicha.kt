@@ -5,20 +5,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.Card
@@ -62,8 +57,6 @@ import com.example.virtualpetkmp.util.textoEstadoDosis
 import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
 import virtualpetkmp.shared.generated.resources.accion_abrir
-import virtualpetkmp.shared.generated.resources.accion_editar
-import virtualpetkmp.shared.generated.resources.accion_eliminar
 import virtualpetkmp.shared.generated.resources.calendario_preventivo_descripcion
 import virtualpetkmp.shared.generated.resources.calendario_preventivo_descripcion_fin
 import virtualpetkmp.shared.generated.resources.calendario_preventivo_titulo
@@ -228,23 +221,15 @@ fun TarjetaContenidoHoja(
                     )
                 }
             }
-            if (onEditar != null) {
-                IconButton(onClick = onEditar) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(Res.string.accion_editar),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            if (onBorrar != null) {
-                IconButton(onClick = onBorrar) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(Res.string.accion_eliminar),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
+            // Editar y borrar van en el menú de tres puntos, igual que en el resto de la app:
+            // antes eran un lápiz y una papelera sueltos, y la papelera a la vista se pulsa sin
+            // querer.
+            if (onEditar != null || onBorrar != null) {
+                MenuAccionesItem(
+                    nombre = titulo,
+                    onEditar = onEditar,
+                    onBorrar = onBorrar
+                )
             }
         }
     }

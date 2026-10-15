@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
@@ -27,8 +25,6 @@ import com.example.virtualpetkmp.Veterinario
 import com.example.virtualpetkmp.ui.theme.LocalExtrasColors
 import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
-import virtualpetkmp.shared.generated.resources.accion_editar
-import virtualpetkmp.shared.generated.resources.accion_eliminar
 import virtualpetkmp.shared.generated.resources.a11y_llamar
 import virtualpetkmp.shared.generated.resources.a11y_mapa
 
@@ -99,16 +95,14 @@ fun VeterinarioCard(
                 IconButton(onClick = onAbrirMapa) {
                     Icon(Icons.Default.Place, contentDescription = stringResource(Res.string.a11y_mapa))
                 }
-                IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.accion_editar))
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = stringResource(Res.string.accion_eliminar),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
+                // Editar y borrar, en el menú de tres puntos como en el resto de la app. La
+                // llamada y el mapa se quedan como iconos: son las acciones que se usan de verdad
+                // y no deben costar dos toques.
+                MenuAccionesItem(
+                    nombre = veterinario.nombreClinica,
+                    onEditar = onEdit,
+                    onBorrar = onDelete
+                )
             }
         }
     }

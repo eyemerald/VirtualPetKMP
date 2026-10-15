@@ -6,9 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -23,10 +20,8 @@ import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
 import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
-import virtualpetkmp.shared.generated.resources.a11y_acciones_de
 import virtualpetkmp.shared.generated.resources.a11y_agregar_mascota
 import virtualpetkmp.shared.generated.resources.accion_cancelar
-import virtualpetkmp.shared.generated.resources.accion_editar
 import virtualpetkmp.shared.generated.resources.accion_eliminar
 import virtualpetkmp.shared.generated.resources.borrar_mascota_mensaje
 import virtualpetkmp.shared.generated.resources.borrar_mascota_mensaje_sin_nombre
@@ -214,8 +209,6 @@ fun MascotaCard(
     onDelete: () -> Unit,
     ultimoPeso: Double? = null
 ) {
-    var menuAbierto by remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -280,52 +273,13 @@ fun MascotaCard(
                 }
             }
 
-            Box {
-                IconButton(onClick = { menuAbierto = true }) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(
-                            Res.string.a11y_acciones_de,
-                            mascota.nombre
-                        )
-                    )
-                }
-
-                DropdownMenu(
-                    expanded = menuAbierto,
-                    onDismissRequest = { menuAbierto = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.accion_editar)) },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Edit, contentDescription = null)
-                        },
-                        onClick = {
-                            menuAbierto = false
-                            onEdit()
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = stringResource(Res.string.accion_eliminar),
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        },
-                        onClick = {
-                            menuAbierto = false
-                            onDelete()
-                        }
-                    )
-                }
-            }
+            // Mismo menú que en el resto de la app (ver MenuAcciones.kt): este fue el primero y
+            // ahora todos comparten implementación, así no se separan con el tiempo.
+            MenuAccionesItem(
+                nombre = mascota.nombre,
+                onEditar = onEdit,
+                onBorrar = onDelete
+            )
         }
     }
 }

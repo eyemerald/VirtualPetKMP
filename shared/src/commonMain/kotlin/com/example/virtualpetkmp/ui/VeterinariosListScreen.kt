@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Icon
@@ -56,10 +55,8 @@ import com.example.virtualpetkmp.viewmodel.VeterinarioViewModel
 import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
 import virtualpetkmp.shared.generated.resources.accion_cancelar
-import virtualpetkmp.shared.generated.resources.accion_editar
 import virtualpetkmp.shared.generated.resources.accion_eliminar
 import virtualpetkmp.shared.generated.resources.accion_reintentar
-import virtualpetkmp.shared.generated.resources.a11y_llamar
 import virtualpetkmp.shared.generated.resources.a11y_mapa
 import virtualpetkmp.shared.generated.resources.vet_anadir
 import virtualpetkmp.shared.generated.resources.vet_borrar_mensaje
@@ -213,7 +210,8 @@ fun VeterinariosListScreen(
                                     veterinario = veterinario,
                                     onLlamar = { llamar(veterinario.telefono) },
                                     onAbrirMapa = { abrirMapa(veterinario.direccion) },
-                                    onEditar = { veterinario.id?.let { onVeterinarioClick(it) } }
+                                    onEditar = { veterinario.id?.let { onVeterinarioClick(it) } },
+                                    onBorrar = { veterinario.id?.let { showDeleteDialog = it } }
                                 )
                             }
                         }
@@ -282,7 +280,8 @@ fun VeterinarioUrgenciaCard(
     veterinario: Veterinario,
     onLlamar: () -> Unit,
     onAbrirMapa: () -> Unit,
-    onEditar: () -> Unit
+    onEditar: () -> Unit,
+    onBorrar: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -343,9 +342,13 @@ fun VeterinarioUrgenciaCard(
                     IconButton(onClick = onAbrirMapa) {
                         Icon(Icons.Default.Place, contentDescription = stringResource(Res.string.a11y_mapa))
                     }
-                    IconButton(onClick = onEditar) {
-                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.accion_editar))
-                    }
+                    // El mismo menú que en las demás tarjetas: aquí también se puede borrar, que
+                    // antes solo se podía desde la tarjeta normal de la lista de abajo.
+                    MenuAccionesItem(
+                        nombre = veterinario.nombreClinica,
+                        onEditar = onEditar,
+                        onBorrar = onBorrar
+                    )
                 }
             }
 

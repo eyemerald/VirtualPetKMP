@@ -16,7 +16,9 @@ import kotlinx.datetime.todayIn
  * `./gradlew :shared:generarDatosEjemplo -PejemploSalida=<ruta>`.
  *
  * Todas las fechas se calculan a partir de HOY, para que el ejemplo muestre siempre el mismo
- * aspecto: una vacuna vencida, una próxima, preventivo al día y un tratamiento activo.
+ * aspecto: una vacuna vencida, una próxima, un preventivo al día, un tratamiento activo y
+ * pesajes repartidos por el año **y dentro del mes en curso** (si no, el filtro "mes actual"
+ * del gráfico saldría vacío).
  */
 fun main(args: Array<String>) {
     val salida = File(args.firstOrNull() ?: "datos-ejemplo.db")
@@ -36,153 +38,201 @@ fun main(args: Array<String>) {
     fun hoyMenos(dias: Int) = LocalDate.fromEpochDays(hoy.toEpochDays() - dias)
     fun hoyMas(dias: Int) = LocalDate.fromEpochDays(hoy.toEpochDays() + dias)
 
-    // --- Mascota -------------------------------------------------------------
-    // La ruta de la foto es la del almacenamiento interno de la app en Android. Si el
-    // fichero no existe, la app muestra la inicial del nombre, así que no rompe nada.
-    val rutaFoto = "/data/data/com.example.virtualpetkmp/files/luna.jpg"
-    driver.execute(
-        null,
-        """
-        INSERT INTO mascotas(nombre, especie, raza, fechaNacimiento, sexo, color, microchip, foto, peso_ideal)
-        VALUES ('Luna', 'Perro', 'Labrador Retriever', '${hoyMenos(920)}', 'Hembra', 'Dorado',
-                '981000123456789', '$rutaFoto', 27.0)
-        """.trimIndent(),
-        0
-    )
-    // El id se lee por nombre y no con last_insert_rowid(): el driver JDBC puede usar otra
-    // conexión y esa función devolvería 0.
-    val idMascota = db.mascotasQueries.selectAll().executeAsList()
-        .first { it.nombre == "Luna" }
-        .id
+    fun ejecutar(sql: String) = driver.execute(null, sql.trimIndent(), 0)
 
-    // --- Vacunas: una pasada, una próxima y una al día ------------------------
-    fun vacuna(nombre: String, aplicadaHace: Int, venceEn: Int, vet: String, lote: String) {
-        driver.execute(
-            null,
+    // --- Ayudas para escribir los datos de cada mascota ------------------------
+    // La mascota se crea SIN foto a propósito: el ejemplo no trae ninguna imagen, y con una
+    // ruta que no existe la app intenta cargarla y deja el hueco del avatar vacío. Sin foto
+    // dibuja el avatar de la especie, que es lo que sale en las capturas del README.
+    fun insertarMascota(
+        nombre: String,
+        especie: String,
+        raza: String,
+        nacimientoHace: Int,
+        sexo: String,
+        color: String,
+        microchip: String?,
+        pesoIdeal: Double
+    ): Long {
+        ejecutar(
+            """
+            INSERT INTO mascotas(nombre, especie, raza, fechaNacimiento, sexo, color, microchip, foto, peso_ideal)
+            VALUES ('$nombre', '$especie', '$raza', '${hoyMenos(nacimientoHace)}', '$sexo', '$color',
+                    ${microchip?.let { "'$it'" } ?: "NULL"}, NULL, $pesoIdeal)
+            """
+        )
+        // El id se lee por nombre y no con last_insert_rowid(): el driver JDBC puede usar otra
+        // conexión y esa función devolvería 0.
+        return db.mascotasQueries.selectAll().executeAsList().first { it.nombre == nombre }.id
+    }
+
+    fun vacuna(mascota: Long, nombre: String, aplicadaHace: Int, venceEn: Int, vet: String, lote: String) =
+        ejecutar(
             """
             INSERT INTO vacunas(mascotaId, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote)
-            VALUES ($idMascota, '$nombre', '${hoyMenos(aplicadaHace)}', '${hoyMas(venceEn)}', '$vet', '$lote')
-            """.trimIndent(),
-            0
+            VALUES ($mascota, '$nombre', '${hoyMenos(aplicadaHace)}', '${hoyMas(venceEn)}', '$vet', '$lote')
+            """
         )
+
+    fun preventivo(mascota: Long, tipo: String, nombre: String, aplicadoHace: Int, venceEn: Int, lote: String) =
+        ejecutar(
+            """
+            INSERT INTO preventivos(mascotaId, tipo, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote)
+            VALUES ($mascota, '$tipo', '$nombre', '${hoyMenos(aplicadoHace)}', '${hoyMas(venceEn)}', 'Dra. Ruiz', '$lote')
+            """
+        )
+
+    fun peso(mascota: Long, fecha: LocalDate, kilos: Double, notas: String? = null) =
+        ejecutar(
+            """
+            INSERT INTO pesos(mascotaId, fecha, peso, notas)
+            VALUES ($mascota, '$fecha', $kilos, ${notas?.let { "'$it'" } ?: "NULL"})
+            """
+        )
+
+    fun tratamiento(mascota: Long, medicamento: String, dosis: String, frecuencia: String, desdeHace: Int, hastaEn: Int) =
+        ejecutar(
+            """
+            INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin)
+            VALUES ($mascota, '$medicamento', '$dosis', '$frecuencia', '${hoyMenos(desdeHace)}', '${hoyMas(hastaEn)}')
+            """
+        )
+
+    fun tratamientoTerminado(mascota: Long, medicamento: String, dosis: String, frecuencia: String, desdeHace: Int, hastaHace: Int) =
+        ejecutar(
+            """
+            INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin)
+            VALUES ($mascota, '$medicamento', '$dosis', '$frecuencia', '${hoyMenos(desdeHace)}', '${hoyMenos(hastaHace)}')
+            """
+        )
+
+    fun revision(mascota: Long, hace: Int, motivo: String, diagnostico: String, notas: String) =
+        ejecutar(
+            """
+            INSERT INTO revisiones(mascotaId, fecha, motivo, diagnostico, notas, veterinario)
+            VALUES ($mascota, '${hoyMenos(hace)}', '$motivo', '$diagnostico', '$notas', 'Dra. Ruiz')
+            """
+        )
+
+    fun nota(mascota: Long, texto: String) =
+        ejecutar("INSERT INTO notas(mascotaId, texto) VALUES ($mascota, '$texto')")
+
+    fun informe(mascota: Long, hace: Int, tipo: String, descripcion: String, archivo: String) =
+        ejecutar(
+            """
+            INSERT INTO informes(mascotaId, tipo, descripcion, fecha, nombreArchivo, rutaArchivo)
+            VALUES ($mascota, '$tipo', '$descripcion', '${hoyMenos(hace)}', '$archivo',
+                    '/data/data/com.example.virtualpetkmp/files/informes/$archivo')
+            """
+        )
+
+    /**
+     * Pesajes del mes en curso, repartidos por lo que llevamos de mes.
+     *
+     * Se calculan así y no con días fijos para que el filtro "Mes actual" del gráfico tenga
+     * varios puntos se genere el ejemplo el día 3 o el 28.
+     */
+    fun diasDelMesEnCurso(cuantos: Int): List<Int> {
+        val pasados = (1 until hoy.dayOfMonth).toList()
+        if (pasados.size <= cuantos) return pasados
+        return (0 until cuantos).map { i -> pasados[i * (pasados.size - 1) / (cuantos - 1)] }.distinct()
     }
+
+    // =========================================================================
+    // Luna: la mascota con la ficha completa (es la que sale en las capturas)
+    // =========================================================================
+    val luna = insertarMascota(
+        nombre = "Luna",
+        especie = "Perro",
+        raza = "Labrador Retriever",
+        nacimientoHace = 920,
+        sexo = "Hembra",
+        color = "Dorado",
+        microchip = "981000123456789",
+        pesoIdeal = 27.0
+    )
+
     // Rabia: dosis anual pasada (vencida). Polivalente: vence dentro de 11 días (próxima).
-    // Tos de las perreras: reciente y al día. Así la tarjeta muestra las tres situaciones.
-    vacuna("Rabia", aplicadaHace = 365, venceEn = -1, vet = "Dra. Ruiz", lote = "R-2291")
-    vacuna("Polivalente (DHPPi + Lepto)", aplicadaHace = 354, venceEn = 11, vet = "Dra. Ruiz", lote = "P-8842")
-    vacuna("Tos de las perreras", aplicadaHace = 40, venceEn = 320, vet = "Dr. López", lote = "T-1073")
+    // Tos de las perreras: reciente y al día. Así la lista muestra las tres situaciones.
+    vacuna(luna, "Rabia", aplicadaHace = 365, venceEn = -1, vet = "Dra. Ruiz", lote = "R-2291")
+    vacuna(luna, "Polivalente (DHPPi + Lepto)", aplicadaHace = 354, venceEn = 11, vet = "Dra. Ruiz", lote = "P-8842")
+    vacuna(luna, "Tos de las perreras", aplicadaHace = 40, venceEn = 320, vet = "Dr. López", lote = "T-1073")
 
-    // --- Preventivos ----------------------------------------------------------
-    driver.execute(
-        null,
-        """
-        INSERT INTO preventivos(mascotaId, tipo, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote)
-        VALUES ($idMascota, 'Pipeta', 'Frontline Tri-Act', '${hoyMenos(22)}', '${hoyMas(8)}', 'Dra. Ruiz', 'FT-5521')
-        """.trimIndent(),
-        0
-    )
-    driver.execute(
-        null,
-        """
-        INSERT INTO preventivos(mascotaId, tipo, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote)
-        VALUES ($idMascota, 'Desparasitación interna', 'Drontal Plus', '${hoyMenos(95)}', '${hoyMas(85)}', 'Dra. Ruiz', 'DP-3310')
-        """.trimIndent(),
-        0
-    )
+    preventivo(luna, "Pipeta", "Frontline Tri-Act", aplicadoHace = 22, venceEn = 8, lote = "FT-5521")
+    preventivo(luna, "Desparasitación interna", "Drontal Plus", aplicadoHace = 95, venceEn = 85, lote = "DP-3310")
 
-    // --- Pesos: subida realista, con el último por DEBAJO del ideal -----------
-    // (días transcurridos hasta hoy, kilos)
-    val pesadas = listOf(
+    // Evolución del último año: subida realista desde 24,8 kg hasta los 26,4 kg de hoy, con el
+    // último peso por debajo del ideal (27 kg) para que la lista enseñe el indicador ▼.
+    listOf(
         -330 to 24.8,
         -270 to 25.1,
         -210 to 25.4,
         -150 to 25.9,
         -95 to 26.2,
-        -40 to 26.4,
-        -6 to 26.4
-    )
-    pesadas.forEach { (hace, kilos) ->
-        driver.execute(
-            null,
-            "INSERT INTO pesos(mascotaId, fecha, peso, notas) VALUES ($idMascota, '${hoyMenos(-hace)}', $kilos, NULL)",
-            0
-        )
+        -40 to 26.2
+    ).forEach { (hace, kilos) -> peso(luna, hoyMenos(-hace), kilos, if (hace == -95) "Pesada en casa" else null) }
+
+    val delMes = diasDelMesEnCurso(cuantos = 4)
+    val kilosDelMes = listOf(26.3, 26.5, 26.4, 26.4)
+    delMes.forEachIndexed { indice, dias ->
+        peso(luna, hoyMenos(dias), kilosDelMes.getOrElse(indice) { 26.4 })
     }
 
-    driver.execute(
-        null,
-        "UPDATE pesos SET notas = 'Pesada en casa' WHERE mascotaId = $idMascota AND fecha = '${hoyMenos(95)}'",
-        0
+    tratamiento(luna, "Oticoear", "4 gotas", "Cada 12 horas", desdeHace = 5, hastaEn = 9)
+    tratamientoTerminado(luna, "Metacam", "1,5 ml", "Cada 24 horas", desdeHace = 120, hastaHace = 110)
+
+    revision(
+        luna, hace = 350, motivo = "Revisión anual", diagnostico = "Todo correcto",
+        notas = "Peso y dentadura bien. Se actualiza la polivalente."
+    )
+    revision(
+        luna, hace = 5, motivo = "Sacude la cabeza y se rasca el oído",
+        diagnostico = "Otitis externa leve en el oído derecho", notas = "Se pauta tratamiento ótico 14 días."
     )
 
-    // --- Tratamiento activo y uno terminado ----------------------------------
-    driver.execute(
-        null,
-        """
-        INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin)
-        VALUES ($idMascota, 'Oticoear', '4 gotas', 'Cada 12 horas', '${hoyMenos(5)}', '${hoyMas(9)}')
-        """.trimIndent(),
-        0
-    )
-    driver.execute(
-        null,
-        """
-        INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin)
-        VALUES ($idMascota, 'Metacam', '1,5 ml', 'Cada 24 horas', '${hoyMenos(120)}', '${hoyMenos(110)}')
-        """.trimIndent(),
-        0
+    informe(luna, hace = 5, tipo = "Analítica", descripcion = "Hemograma y bioquímica", archivo = "analitica-luna.pdf")
+    informe(luna, hace = 349, tipo = "Radiografía", descripcion = "Cadera, control anual", archivo = "radiografia-cadera.jpg")
+
+    nota(luna, "Alergia a la proteína de pollo: evitar piensos con pollo como primer ingrediente.")
+    nota(luna, "Le asustan los petardos: en verano conviene dejarle un sitio tranquilo y cerrar persianas.")
+
+    // =========================================================================
+    // Nilo: segunda mascota, para que la lista no salga con una sola
+    // =========================================================================
+    val nilo = insertarMascota(
+        nombre = "Nilo",
+        especie = "Gato",
+        raza = "Europeo común",
+        nacimientoHace = 400,
+        sexo = "Macho",
+        color = "Negro",
+        microchip = null,
+        pesoIdeal = 4.5
     )
 
-    // --- Revisiones -----------------------------------------------------------
-    driver.execute(
-        null,
-        """
-        INSERT INTO revisiones(mascotaId, fecha, motivo, diagnostico, notas, veterinario)
-        VALUES ($idMascota, '${hoyMenos(350)}', 'Revisión anual', 'Todo correcto',
-                'Peso y dentadura bien. Se actualiza la polivalente.', 'Dra. Ruiz')
-        """.trimIndent(),
-        0
-    )
-    driver.execute(
-        null,
-        """
-        INSERT INTO revisiones(mascotaId, fecha, motivo, diagnostico, notas, veterinario)
-        VALUES ($idMascota, '${hoyMenos(5)}', 'Sacude la cabeza y se rasca el oído',
-                'Otitis externa leve en el oído derecho', 'Se pauta tratamiento ótico 14 días.', 'Dra. Ruiz')
-        """.trimIndent(),
-        0
-    )
-
-    // --- Notas ---------------------------------------------------------------
-    driver.execute(
-        null,
-        "INSERT INTO notas(mascotaId, texto) VALUES ($idMascota, 'Alergia a la proteína de pollo: evitar piensos con pollo como primer ingrediente.')",
-        0
-    )
-    driver.execute(
-        null,
-        "INSERT INTO notas(mascotaId, texto) VALUES ($idMascota, 'Le asustan los petardos: en verano conviene dejarle un sitio tranquilo y cerrar persianas.')",
-        0
-    )
+    vacuna(nilo, "Trivalente felina", aplicadaHace = 300, venceEn = 65, vet = "Dra. Ruiz", lote = "F-4410")
+    preventivo(nilo, "Pipeta", "Advantage", aplicadoHace = 30, venceEn = 1, lote = "AD-9902")
+    // Acaba un poco por encima de su peso ideal, para que la lista enseñe el indicador ▲ verde
+    // (Luna sale con ▼ rojo) y las dos situaciones se vean en la misma captura.
+    listOf(-240 to 4.2, -150 to 4.5, -60 to 4.6, -3 to 4.7).forEach { (hace, kilos) ->
+        peso(nilo, hoyMenos(-hace), kilos)
+    }
+    nota(nilo, "Come pienso de gato esterilizado; el húmedo le sienta mal.")
 
     // --- Veterinarios --------------------------------------------------------
-    driver.execute(
-        null,
+    ejecutar(
         """
         INSERT INTO veterinarios(nombreClinica, nombreVeterinario, telefono, direccion, esUrgencias)
         VALUES ('Hospital Veterinario 24h', 'Dra. Ruiz', '911234567', 'Calle Mayor 12, Madrid', 1)
-        """.trimIndent(),
-        0
+        """
     )
-    driver.execute(
-        null,
+    ejecutar(
         """
         INSERT INTO veterinarios(nombreClinica, nombreVeterinario, telefono, direccion, esUrgencias)
         VALUES ('Clínica del Barrio', 'Dr. López', '918765432', 'Avenida del Parque 4, Madrid', 0)
-        """.trimIndent(),
-        0
+        """
     )
 
     driver.close()
-    println("Datos de ejemplo generados en ${salida.absolutePath} (mascota id=$idMascota, hoy=$hoy)")
+    println("Datos de ejemplo generados en ${salida.absolutePath} (Luna id=$luna, Nilo id=$nilo, hoy=$hoy)")
 }
