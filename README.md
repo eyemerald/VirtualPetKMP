@@ -2,7 +2,7 @@
 
 **VirtualPetKMP** es una aplicación multiplataforma (Android y Escritorio) para llevar un registro completo de la salud y los cuidados de tus mascotas: vacunas, desparasitaciones, peso, revisiones veterinarias, tratamientos e informes, todo en un solo lugar.
 
-Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartiendo toda la lógica y la interfaz de usuario entre Android y escritorio. Funciona **sin conexión**: todos los datos viven en una base de datos SQLite del propio dispositivo, con migraciones versionadas. Está **traducida a seis idiomas** (español, inglés, portugués, francés, alemán e italiano) y se adapta sola al idioma y a la región del dispositivo, incluidos el formato de fecha y la unidad de peso. **El código es privado**; si estás interesado en él, puedes contactar con el autor.
+Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartiendo toda la lógica y la interfaz de usuario entre Android y escritorio. Funciona **sin conexión**: todos los datos viven en una base de datos SQLite del propio dispositivo, con migraciones versionadas. Está **traducida a seis idiomas** (español, inglés, portugués, francés, alemán e italiano) y se adapta sola al idioma y a la región del dispositivo, incluidos el formato de fecha y la unidad de peso. El código está **publicado para que se pueda leer**, pero **todos los derechos están reservados**: leerlo no da derecho a copiarlo ni a reutilizarlo (ver la [licencia](#-licencia)).
 
 ---
 
@@ -332,9 +332,14 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 
 ## 📜 Licencia
 
-**Todos los derechos reservados.** El código fuente de este proyecto es privado y no se permite su uso, copia, modificación ni distribución sin autorización expresa del autor.
+**Todos los derechos reservados.** El código de este repositorio es **público para que se pueda
+leer**: sirve de muestra de cómo está hecho el proyecto. Eso **no** da derecho a copiarlo. Sin
+autorización previa y por escrito del autor, no se permite reutilizarlo (ni completo ni en parte),
+modificarlo, crear obras derivadas, redistribuirlo, publicarlo, venderlo ni ofrecerlo como
+servicio, ni usar el nombre, el logotipo o los iconos del proyecto.
 
-Si estás interesado en el código, puedes contactar con el autor.
+Las condiciones completas están en [`LICENSE`](LICENSE). Si te interesa el código para algo más
+que leerlo, escribe al autor y se habla.
 
 ---
 
