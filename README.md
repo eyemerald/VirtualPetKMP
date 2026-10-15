@@ -2,7 +2,7 @@
 
 **VirtualPetKMP** es una aplicación multiplataforma (Android y Escritorio) para llevar un registro completo de la salud y los cuidados de tus mascotas: vacunas, desparasitaciones, peso, revisiones veterinarias, tratamientos e informes, todo en un solo lugar.
 
-Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartiendo toda la lógica y la interfaz de usuario entre Android y escritorio. Funciona **sin conexión**: todos los datos viven en una base de datos SQLite del propio dispositivo, con migraciones versionadas. **El código es privado**; si estás interesado en él, puedes contactar con el autor.
+Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartiendo toda la lógica y la interfaz de usuario entre Android y escritorio. Funciona **sin conexión**: todos los datos viven en una base de datos SQLite del propio dispositivo, con migraciones versionadas. Está **traducida a seis idiomas** (español, inglés, portugués, francés, alemán e italiano) y se adapta sola al idioma y a la región del dispositivo, incluidos el formato de fecha y la unidad de peso. **El código es privado**; si estás interesado en él, puedes contactar con el autor.
 
 ---
 
@@ -26,6 +26,7 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 - 🏥 **Veterinarios**: agenda con urgencias (botón directo de llamada), llamada normal y navegación con Google Maps.
 - 📤 **Exportar la ficha a PDF**: dos documentos distintos, **completo** (para el veterinario) y **resumido** (para quien se queda cuidando a la mascota), y al generarlo se puede **compartir** por WhatsApp, correo o donde haga falta, o **guardar una copia**.
 - 🖼️ **Un icono propio**: el corazón del logo, sin el texto, para el lanzador de Android (icono normal y adaptativo) y para el instalable de Windows (`.ico`). El nombre que se ve bajo el icono es **Virtual Pet**, no el del proyecto.
+- 🌍 **Seis idiomas**: **español, inglés, portugués, francés, alemán e italiano**, elegidos solos según el idioma del dispositivo, con las **unidades** (kg o lb) y el **formato de fecha** de la región. Los seis catálogos de textos se mantienen sincronizados con un test de paridad de claves, y hay otro que comprueba qué idioma resuelve la app en tiempo de ejecución.
 - 🔔 **Notificaciones locales**: para no olvidar las próximas dosis.
 - 🌓 **Tema claro / oscuro**: se adapta a la configuración del sistema.
 - 📱 **Multiplataforma**: misma experiencia en Android y Escritorio.
