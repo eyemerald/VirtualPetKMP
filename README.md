@@ -14,7 +14,7 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
   informes, visitas y notas) y las tarjetas de veterinario—, en vez de un lápiz y una papelera
   sueltos que cambiaban de una pantalla a otra.
 - 📷 **Foto de la mascota**: se puede elegir de los archivos o **hacer con la cámara** (Android); se ve en la ficha y en la lista de mascotas.
-- 🏠 **Ficha como panel**: cabecera con la foto, el nombre y la edad, y tarjetas por bloque (peso, vacunas y preventivos, salud y seguimiento, notas) que muestran **un solo aviso** cada una: en ámbar lo que vence pronto y en rojo lo vencido.
+- 🏠 **Ficha como panel**: cabecera con la foto, el nombre y la edad, y tarjetas por bloque (peso, vacunas y preventivos, salud y seguimiento, notas) que muestran **un solo aviso** cada una: en ámbar lo que vence pronto, en rojo lo vencido y, en "A tener en cuenta", cuántos apuntes hay.
 - ⚖️ **Pesos**: registro y evolución en un **gráfico de línea** en la ficha, y una vista detallada con el histórico, filtros (**6 meses** —el de por defecto—, por año, mes actual o por rango de fechas) y el **histórico plegable**. El gráfico enseña cada pesaje en los rangos cortos y agrupa por meses al mirar un año entero, y se arrastra en horizontal cuando la serie no cabe. Al pulsar un pesaje se abre un modal para editarlo o eliminarlo.
 - 🎯 **Peso ideal**: se fija desde la ficha de la mascota o desde la propia hoja de peso. Se dibuja como **línea discontinua** de referencia en el gráfico y, en la lista, el último peso lleva un indicador **▲ verde** si está por encima o **▼ rojo** si está por debajo.
 - 💉 **Vacunas**: registro con próxima dosis, **notificaciones locales** 15 días antes y **añadir el recordatorio al calendario** del teléfono.
@@ -42,7 +42,9 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 
 La lista enseña, de un vistazo, el último peso de cada mascota frente a su peso ideal (**▼ rojo** si
 está por debajo, **▲ verde** si está por encima). La ficha es un panel: la cabecera con la foto, el
-nombre, la edad y el menú de acciones, y tarjetas por bloque que dan **un solo aviso** cada una.
+nombre, la edad y el menú de acciones, y tarjetas por bloque que dan **un solo aviso** cada una (las
+dosis vencidas o próximas, los tratamientos activos y **cuántos apuntes** hay en "A tener en
+cuenta").
 
 ### Peso
 
@@ -70,7 +72,9 @@ Las cinco pestañas de las dos hojas de la ficha, más las notas:
 | ![Notas](screenshots/12-a-tener-en-cuenta.jpg) |
 
 Cada registro lleva su estado (al día, vence pronto, vencida) y sus acciones en el menú **⋮**
-(editar y eliminar), igual que en el resto de la app.
+(editar y eliminar), igual que en el resto de la app. **Tocar la tarjeta abre su formulario para
+editarla** (en las notas, la carga arriba; solo los informes se abren fuera, con la app del
+sistema), así que editar no obliga a pasar por el menú.
 
 ### Ficha en PDF
 

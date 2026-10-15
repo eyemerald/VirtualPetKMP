@@ -89,6 +89,7 @@ import virtualpetkmp.shared.generated.resources.ficha_exportar_pdf
 import virtualpetkmp.shared.generated.resources.ficha_modificar_datos
 import virtualpetkmp.shared.generated.resources.ficha_peso_actual
 import virtualpetkmp.shared.generated.resources.ficha_peso_ideal
+import virtualpetkmp.shared.generated.resources.ficha_notas
 import virtualpetkmp.shared.generated.resources.ficha_proximas
 import virtualpetkmp.shared.generated.resources.ficha_sin_datos
 import virtualpetkmp.shared.generated.resources.ficha_tarjeta_notas
@@ -393,8 +394,27 @@ fun FichaMascotaScreen(
             titulo = stringResource(Res.string.ficha_tarjeta_notas),
             colorFondo = colores.tarjetaAzul,
             colorIcono = colores.iconoTarjetaAzul,
-            // Sin recuento: aquí interesa saber que dentro hay apuntes importantes.
-            detalle = stringResource(Res.string.ficha_tarjeta_notas_detalle),
+            // Con apuntes, cuántos hay (la cifra se compone aparte porque
+            // `pluralStringResource` elige la forma pero no sustituye argumentos). Sin ninguno,
+            // la frase que invita a añadirlos: un recuento de cero no dice nada.
+            badges = if (resumen.totalNotas > 0) {
+                listOf(
+                    BadgeEstado(
+                        "${resumen.totalNotas} " + pluralStringResource(
+                            Res.plurals.ficha_notas,
+                            resumen.totalNotas
+                        ),
+                        EstadoBadge.NEUTRO
+                    )
+                )
+            } else {
+                emptyList()
+            },
+            detalle = if (resumen.totalNotas == 0) {
+                stringResource(Res.string.ficha_tarjeta_notas_detalle)
+            } else {
+                null
+            },
             hoja = "notas"
         )
     )

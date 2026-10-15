@@ -73,6 +73,10 @@
         <item quantity="one">aktiv</item>
         <item quantity="other">aktiv</item>
     </plurals>
+    <plurals name="ficha_notas">
+        <item quantity="one">Notiz</item>
+        <item quantity="other">Notizen</item>
+    </plurals>
 
     <!-- Karte: Fotooptionen -->
     <string name="foto_titulo">Foto von %1$s</string>

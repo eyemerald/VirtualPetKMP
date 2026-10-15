@@ -72,6 +72,10 @@
         <item quantity="one">ativo</item>
         <item quantity="other">ativos</item>
     </plurals>
+    <plurals name="ficha_notas">
+        <item quantity="one">nota</item>
+        <item quantity="other">notas</item>
+    </plurals>
 
     <!-- Ficha: opções de foto -->
     <string name="foto_titulo">Foto de %1$s</string>

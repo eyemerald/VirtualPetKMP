@@ -156,13 +156,25 @@ private fun TituloSeccion(texto: String) {
     )
 }
 
-/** Tarjeta simple de contenido dentro de una hoja (título, subtítulo y detalle). */
+/**
+ * Tarjeta simple de contenido dentro de una hoja (título, subtítulo y detalle).
+ *
+ * Dos formas de hacerla pulsable, y la diferencia importa:
+ *
+ * @param onAbrir **abre** el contenido en otra app (un informe adjunto, por ejemplo): hace la
+ *   tarjeta pulsable y dibuja el icono de "abrir fuera".
+ * @param onPulsar acción de la tarjeta **sin icono**, para todo lo que no es abrir: cargar una
+ *   nota arriba para editarla, abrir el formulario de un tratamiento o de una visita. Ahí el
+ *   icono de "abrir" engañaba: parecía que iba a sacar el contenido de la app, cuando en
+ *   realidad abría el formulario para editarlo. Sin icono, la tarjeta se toca y ya está.
+ */
 @Composable
 fun TarjetaContenidoHoja(
     titulo: String,
     subtitulo: String? = null,
     detalle: String? = null,
     onAbrir: (() -> Unit)? = null,
+    onPulsar: (() -> Unit)? = null,
     onCalendario: (() -> Unit)? = null,
     onEditar: (() -> Unit)? = null,
     onBorrar: (() -> Unit)? = null
@@ -170,7 +182,7 @@ fun TarjetaContenidoHoja(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = LocalExtrasColors.current.tarjetaFondo),
-        onClick = onAbrir ?: {}
+        onClick = onAbrir ?: onPulsar ?: {}
     ) {
         Row(
             modifier = Modifier
@@ -487,7 +499,9 @@ fun HojaSaludYSeguimiento(
                                     formato.formatearFecha(tratamiento.fechaFin)
                                 )
                             },
-                            onAbrir = { onEditarTratamiento(tratamiento) },
+                            // Tocar la tarjeta abre el formulario para editarlo (la acción está
+                            // en el propio toque, sin icono).
+                            onPulsar = { onEditarTratamiento(tratamiento) },
                             onBorrar = tratamiento.id?.let { id -> { onBorrarTratamiento(id) } }
                         )
                     }
@@ -522,7 +536,7 @@ fun HojaSaludYSeguimiento(
                                     tratamiento.fechaFin?.let { formato.formatearFecha(it) }
                                         ?: stringResource(Res.string.hoja_sin_fecha)
                                 ),
-                                onAbrir = { onEditarTratamiento(tratamiento) },
+                                onPulsar = { onEditarTratamiento(tratamiento) },
                                 onBorrar = tratamiento.id?.let { id -> { onBorrarTratamiento(id) } }
                             )
                         }
@@ -544,8 +558,8 @@ fun HojaSaludYSeguimiento(
                         }
                     }
                     items(informes, key = { it.id ?: 0 }) { informe ->
-                        // Tocar el informe lo abre con la app del sistema; para modificarlo
-                        // está el botón de editar de la tarjeta.
+                        // El informe SÍ se abre fuera, con la app del sistema, así que aquí el
+                        // icono de abrir tiene sentido y se queda. Para modificarlo, el menú ⋮.
                         TarjetaContenidoHoja(
                             // El tipo de informe lo escribe el usuario, así que se muestra tal cual.
                             titulo = "${informe.tipo} · ${formato.formatearFecha(informe.fecha)}",
@@ -575,7 +589,7 @@ fun HojaSaludYSeguimiento(
                             detalle = listOfNotNull(revision.veterinario, revision.notas)
                                 .joinToString(" · ")
                                 .ifBlank { null },
-                            onAbrir = { onEditarRevision(revision) },
+                            onPulsar = { onEditarRevision(revision) },
                             onBorrar = revision.id?.let { id -> { onBorrarRevision(id) } }
                         )
                     }
@@ -699,8 +713,9 @@ fun HojaNotas(
             items(notas, key = { it.id ?: 0 }) { nota ->
                 TarjetaContenidoHoja(
                     titulo = nota.texto,
-                    // Tocar la nota la carga arriba para poder modificarla
-                    onAbrir = {
+                    // Tocar la nota la carga arriba para modificarla. Va en `onPulsar` y no en
+                    // `onAbrir`: no se abre nada fuera, así que no lleva icono.
+                    onPulsar = {
                         notaEditando = nota.id
                         texto = nota.texto
                     },
