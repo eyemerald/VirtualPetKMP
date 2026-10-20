@@ -92,7 +92,9 @@ fun App(databaseFactory: DatabaseFactory) {
     // Un único ViewModel de ficha por mascota, compartido por todas las hojas: así el
     // resumen, las listas y los avisos son los mismos en toda la pantalla.
     val fichaViewModel = selectedMascotaId?.let { mascotaId ->
-        remember(mascotaId) {
+        // La clave incluye el nombre: el ViewModel lo necesita para los recordatorios de
+        // tratamiento, así que si se renombra la mascota se recrea con el nombre nuevo.
+        remember(mascotaId, mascotaActual?.nombre) {
             FichaMascotaViewModel(
                 mascotaId = mascotaId,
                 vacunaRepository = vacunaRepository,
@@ -103,6 +105,7 @@ fun App(databaseFactory: DatabaseFactory) {
                 notaRepository = notaRepository,
                 preventivoRepository = preventivoRepository,
                 programador = programador,
+                nombreMascota = mascotaActual?.nombre.orEmpty(),
                 localizacion = localizacion
             )
         }

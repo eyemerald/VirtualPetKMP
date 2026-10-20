@@ -96,6 +96,7 @@ import virtualpetkmp.shared.generated.resources.hoja_sin_visitas
 import virtualpetkmp.shared.generated.resources.hoja_tratamiento_cronico
 import virtualpetkmp.shared.generated.resources.hoja_tratamiento_finalizado
 import virtualpetkmp.shared.generated.resources.hoja_tratamiento_hasta
+import virtualpetkmp.shared.generated.resources.hoja_tratamiento_recordatorio
 import virtualpetkmp.shared.generated.resources.hoja_vacunas_pestana
 import virtualpetkmp.shared.generated.resources.hoja_vacunas_titulo
 import virtualpetkmp.shared.generated.resources.hoja_visitas_titulo
@@ -483,22 +484,32 @@ fun HojaSaludYSeguimiento(
                         item { Text(stringResource(Res.string.hoja_sin_tratamientos)) }
                     }
                     items(activos, key = { it.id ?: 0 }) { tratamiento ->
+                        // El recordatorio, si lo tiene, se añade a la línea de fechas: es lo que
+                        // el usuario necesita ver para saber a qué hora le van a avisar.
+                        val recordatorio = if (tratamiento.notificar && tratamiento.hora != null) {
+                            stringResource(Res.string.hoja_tratamiento_recordatorio, tratamiento.hora)
+                        } else {
+                            null
+                        }
                         TarjetaContenidoHoja(
                             titulo = tratamiento.nombreMedicamento,
                             subtitulo = listOfNotNull(tratamiento.dosis, tratamiento.frecuencia)
                                 .joinToString(" · ")
                                 .ifBlank { null },
-                            detalle = if (tratamiento.fechaFin == null) {
-                                stringResource(
-                                    Res.string.hoja_tratamiento_cronico,
-                                    formato.formatearFecha(tratamiento.fechaInicio)
-                                )
-                            } else {
-                                stringResource(
-                                    Res.string.hoja_tratamiento_hasta,
-                                    formato.formatearFecha(tratamiento.fechaFin)
-                                )
-                            },
+                            detalle = listOfNotNull(
+                                if (tratamiento.fechaFin == null) {
+                                    stringResource(
+                                        Res.string.hoja_tratamiento_cronico,
+                                        formato.formatearFecha(tratamiento.fechaInicio)
+                                    )
+                                } else {
+                                    stringResource(
+                                        Res.string.hoja_tratamiento_hasta,
+                                        formato.formatearFecha(tratamiento.fechaFin)
+                                    )
+                                },
+                                recordatorio
+                            ).joinToString(" · "),
                             // Tocar la tarjeta abre el formulario para editarlo (la acción está
                             // en el propio toque, sin icono).
                             onPulsar = { onEditarTratamiento(tratamiento) },

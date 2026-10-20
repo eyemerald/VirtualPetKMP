@@ -31,6 +31,7 @@
     <string name="a11y_volver">Volver</string>
     <string name="a11y_mas_acciones">Más acciones</string>
     <string name="a11y_elegir_calendario">Elegir del calendario</string>
+    <string name="a11y_elegir_hora">Elegir la hora</string>
     <string name="a11y_historial_mostrar">Mostrar histórico</string>
     <string name="a11y_historial_ocultar">Ocultar histórico</string>
     <string name="a11y_foto_mascota">Foto de la mascota</string>
@@ -198,6 +199,7 @@
     <string name="hoja_proxima_dosis">Próxima dosis: %1$s</string>
     <string name="hoja_tratamiento_cronico">Crónico · desde %1$s</string>
     <string name="hoja_tratamiento_hasta">Hasta %1$s</string>
+    <string name="hoja_tratamiento_recordatorio">Aviso a las %1$s</string>
     <string name="hoja_tratamiento_finalizado">Finalizado: %1$s</string>
     <string name="hoja_sin_fecha">sin fecha</string>
 
@@ -239,6 +241,11 @@
     <string name="form_medicamento">Medicamento</string>
     <string name="form_dosis">Dosis (ej: ½ comprimido)</string>
     <string name="form_frecuencia">Frecuencia (ej: cada 24h)</string>
+    <string name="form_hora">Hora</string>
+    <string name="form_hora_anadir">Añadir hora</string>
+    <string name="form_recordarme">Recordarme</string>
+    <string name="form_recordarme_ayuda">Un aviso cada día a esa hora, mientras dure el tratamiento.</string>
+    <string name="form_recordarme_sin_permiso">Las notificaciones están desactivadas para la app: actívalas en los ajustes del móvil para recibir el aviso.</string>
     <string name="form_fecha_inicio">Fecha de inicio (%1$s)</string>
     <string name="form_fecha_fin">Fecha de fin (%1$s)</string>
     <string name="form_cronico">Crónico</string>
@@ -331,6 +338,8 @@
     <string name="aviso_vacuna_mensaje">A tu mascota le toca la vacuna %1$s el %2$s</string>
     <string name="aviso_preventivo_titulo">Preventivo pendiente</string>
     <string name="aviso_preventivo_mensaje">A tu mascota le toca el preventivo %1$s el %2$s</string>
+    <string name="aviso_tratamiento_titulo">Hora de la medicina</string>
+    <string name="aviso_tratamiento_mensaje">Para %1$s: %2$s</string>
 
     <string name="error_cargar_mascotas">Error al cargar mascotas: %1$s</string>
     <string name="error_cargar_veterinarios">Error al cargar veterinarios: %1$s</string>

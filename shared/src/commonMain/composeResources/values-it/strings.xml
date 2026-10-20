@@ -31,6 +31,7 @@
     <string name="a11y_volver">Indietro</string>
     <string name="a11y_mas_acciones">Altre azioni</string>
     <string name="a11y_elegir_calendario">Scegli dal calendario</string>
+    <string name="a11y_elegir_hora">Scegli l'ora</string>
     <string name="a11y_historial_mostrar">Mostra cronologia</string>
     <string name="a11y_historial_ocultar">Nascondi cronologia</string>
     <string name="a11y_foto_mascota">Foto dell\'animale</string>
@@ -199,6 +200,7 @@
     <string name="hoja_proxima_dosis">Prossima dose: %1$s</string>
     <string name="hoja_tratamiento_cronico">Cronico · dal %1$s</string>
     <string name="hoja_tratamiento_hasta">Fino al %1$s</string>
+    <string name="hoja_tratamiento_recordatorio">Promemoria alle %1$s</string>
     <string name="hoja_tratamiento_finalizado">Concluso: %1$s</string>
     <string name="hoja_sin_fecha">senza data</string>
 
@@ -240,6 +242,11 @@
     <string name="form_medicamento">Farmaco</string>
     <string name="form_dosis">Dose (es. ½ compressa)</string>
     <string name="form_frecuencia">Frequenza (es. ogni 24h)</string>
+    <string name="form_hora">Ora</string>
+    <string name="form_hora_anadir">Aggiungi un'ora</string>
+    <string name="form_recordarme">Ricordamelo</string>
+    <string name="form_recordarme_ayuda">Un promemoria ogni giorno a quell'ora, finché dura il trattamento.</string>
+    <string name="form_recordarme_sin_permiso">Le notifiche sono disattivate per l'app: attivale nelle impostazioni del telefono per ricevere il promemoria.</string>
     <string name="form_fecha_inicio">Data di inizio (%1$s)</string>
     <string name="form_fecha_fin">Data di fine (%1$s)</string>
     <string name="form_cronico">Cronico</string>
@@ -330,6 +337,8 @@
     <string name="aviso_vacuna_mensaje">Il tuo animale deve fare il vaccino %1$s il %2$s</string>
     <string name="aviso_preventivo_titulo">Preventivo in scadenza</string>
     <string name="aviso_preventivo_mensaje">Il tuo animale deve fare il preventivo %1$s il %2$s</string>
+    <string name="aviso_tratamiento_titulo">Ora della medicina</string>
+    <string name="aviso_tratamiento_mensaje">Per %1$s: %2$s</string>
 
     <string name="error_cargar_mascotas">Errore durante il caricamento degli animali: %1$s</string>
     <string name="error_cargar_veterinarios">Errore durante il caricamento dei veterinari: %1$s</string>

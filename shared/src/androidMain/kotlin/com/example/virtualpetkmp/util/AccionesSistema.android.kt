@@ -1,16 +1,19 @@
 package com.example.virtualpetkmp.util
 
+import android.Manifest
 import android.app.AlarmManager
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import com.example.virtualpetkmp.NotificacionReceiver
+import androidx.core.content.ContextCompat
 
 @Composable
 actual fun rememberLlamador(): (String) -> Boolean {
@@ -49,45 +52,37 @@ actual fun rememberAbridorMapa(): (String) -> Boolean {
 @Composable
 actual fun rememberProgramadorNotificaciones(): ProgramadorNotificaciones {
     val context = LocalContext.current
-    return remember(context) {
-        object : ProgramadorNotificaciones {
-            override fun programar(id: Long, titulo: String, mensaje: String, fechaDisparoMillis: Long) {
-                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                val intent = Intent(context, NotificacionReceiver::class.java).apply {
-                    putExtra(NotificacionReceiver.EXTRA_TITULO, titulo)
-                    putExtra(NotificacionReceiver.EXTRA_MENSAJE, mensaje)
-                    putExtra(NotificacionReceiver.EXTRA_NOTIFICACION_ID, id.toInt())
-                }
-                val pendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    id.toInt(),
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
+    // La implementación vive fuera de la composición (ver AlarmasAndroid.kt) porque también la
+    // usa el receptor de arranque del móvil, que corre sin interfaz.
+    return remember(context) { crearProgramadorNotificaciones(context) }
+}
 
-                // En Android 12+, si el usuario no ha concedido SCHEDULE_EXACT_ALARM,
-                // usamos set() (flexible) en lugar de setExactAndAllowWhileIdle() (exacto).
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S &&
-                    !alarmManager.canScheduleExactAlarms()) {
-                    alarmManager.set(AlarmManager.RTC_WAKEUP, fechaDisparoMillis, pendingIntent)
-                } else {
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, fechaDisparoMillis, pendingIntent)
-                }
-            }
+/**
+ * Pide el permiso de notificaciones de Android 13+ si no está concedido.
+ *
+ * Devuelve `true` cuando ya se puede notificar; si lanza la petición devuelve `false`, porque la
+ * respuesta del usuario llega por su cuenta (y no hay nada que hacer con ella: si dice que no,
+ * la app sigue funcionando sin avisos, y el formulario se lo dice).
+ */
+@Composable
+actual fun rememberPermisoNotificaciones(): () -> Boolean {
+    val context = LocalContext.current
+    val lanzador = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { /* da igual la respuesta aquí: se comprueba al programar */ }
 
-            override fun cancelar(id: Long) {
-                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                val intent = Intent(context, NotificacionReceiver::class.java)
-                val pendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    id.toInt(),
-                    intent,
-                    PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
-                )
-                if (pendingIntent != null) {
-                    alarmManager.cancel(pendingIntent)
-                    pendingIntent.cancel()
-                }
+    return remember(context, lanzador) {
+        {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                true
+            } else if (
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                true
+            } else {
+                lanzador.launch(Manifest.permission.POST_NOTIFICATIONS)
+                false
             }
         }
     }

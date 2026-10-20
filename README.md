@@ -20,7 +20,7 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 - 💉 **Vacunas**: registro con próxima dosis, **notificaciones locales** 15 días antes y **añadir el recordatorio al calendario** del teléfono.
 - 💊 **Preventivos**: pipetas, desparasitaciones y otros tratamientos preventivos, con aviso 1 día antes y también añadibles al calendario.
 - 🩺 **Revisiones veterinarias**: historial con motivo, diagnóstico, notas y veterinario.
-- 💊 **Tratamientos**: medicamentos con dosis, frecuencia y fechas, con los activos separados del historial.
+- 💊 **Tratamientos**: medicamentos con dosis, frecuencia y fechas, con los activos separados del historial, y **recordatorio diario a la hora que elijas** (un interruptor por tratamiento, el permiso de notificaciones se pide al activarlo, y el aviso se repite cada día mientras dure y se reprograma solo si reinicias el móvil).
 - 📄 **Informes**: adjuntar informes veterinarios con tipo, descripción y archivo, y abrirlos desde la app.
 - 📝 **Notas**: apuntes rápidos de interés sobre cada mascota.
 - 🏥 **Veterinarios**: agenda con urgencias (botón directo de llamada), llamada normal y navegación con Google Maps.
@@ -68,9 +68,9 @@ Las cinco pestañas de las dos hojas de la ficha, más las notas:
 |--------------|----------|---------|
 | ![Tratamientos](screenshots/09-salud-tratamientos.jpg) | ![Informes](screenshots/10-salud-informes.jpg) | ![Visitas](screenshots/11-salud-visitas.jpg) |
 
-| A tener en cuenta |
-|-------------------|
-| ![Notas](screenshots/12-a-tener-en-cuenta.jpg) |
+| A tener en cuenta | Recordatorio de tratamiento |
+|-------------------|-----------------------------|
+| ![Notas](screenshots/12-a-tener-en-cuenta.jpg) | ![Recordatorio](screenshots/16-tratamiento-recordatorio.jpg) |
 
 Cada registro lleva su estado (al día, vence pronto, vencida) y sus acciones en el menú **⋮**
 (editar y eliminar), igual que en el resto de la app. **Tocar la tarjeta abre su formulario para
@@ -261,6 +261,12 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 - [x] **Peso ideal**: opcional, configurable desde la ficha de la mascota o desde la hoja de peso, con indicador ▲/▼ en la lista. Al cambiarlo, el gráfico y los indicadores se actualizan al momento (el estado es reactivo, no hace falta reiniciar).
 - [x] **Histórico de peso plegable**, con filtros (6 meses / año / mes actual / rango de fechas) y modal para editar o eliminar un pesaje. El gráfico decide por el filtro si dibujar un punto por mes o uno por pesaje, y se desplaza en horizontal cuando la serie no cabe en la pantalla.
 - [x] **Revisiones veterinarias, tratamientos, informes adjuntos y notas**.
+- [x] **Recordatorio de tratamientos** (idea de un tester): cada tratamiento puede avisar **todos
+      los días a la hora que elijas** mientras dure, con un interruptor por tratamiento y el
+      **permiso de notificaciones** pedido al activarlo. El aviso se repite solo (cuando salta
+      programa el del día siguiente, con la app cerrada), tiene **su propio canal** para poder
+      silenciarlo sin silenciar las vacunas, y **se reprograma al reiniciar el móvil** o al
+      actualizar la app, que es cuando Android borra las alarmas.
 - [x] **Un solo menú de acciones en toda la app**: editar y eliminar viven en el menú **⋮**, igual
       en la lista de mascotas, en las hojas de la ficha (vacunas, preventivos, tratamientos,
       informes, visitas y notas) y en las tarjetas de veterinario. Antes cada lista tenía sus

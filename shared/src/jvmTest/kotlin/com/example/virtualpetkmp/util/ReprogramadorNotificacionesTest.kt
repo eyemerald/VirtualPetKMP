@@ -1,10 +1,12 @@
 package com.example.virtualpetkmp.util
 
 import com.example.virtualpetkmp.Preventivo
+import com.example.virtualpetkmp.Tratamiento
 import com.example.virtualpetkmp.Vacuna
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.test.Test
@@ -32,9 +34,24 @@ class ReprogramadorNotificacionesTest {
         val canceladas = mutableListOf<Long>()
         val textos = mutableMapOf<Long, Pair<String, String>>()
 
+        /** Recordatorios de tratamiento: a qué hora y con qué fecha de fin se programaron. */
+        val recordatorios = mutableMapOf<Long, Pair<String, String?>>()
+
         override fun programar(id: Long, titulo: String, mensaje: String, fechaDisparoMillis: Long) {
             programadas[id] = fechaDisparoMillis
             textos[id] = titulo to mensaje
+        }
+
+        override fun programarTratamiento(
+            id: Long,
+            titulo: String,
+            mensaje: String,
+            fechaDisparoMillis: Long,
+            hora: String,
+            fechaFin: String?
+        ) {
+            programar(id, titulo, mensaje, fechaDisparoMillis)
+            recordatorios[id] = hora to fechaFin
         }
 
         override fun cancelar(id: Long) {
@@ -166,5 +183,66 @@ class ReprogramadorNotificacionesTest {
         } finally {
             java.util.Locale.setDefault(idiomaOriginal)
         }
+    }
+
+    @Test
+    fun `un tratamiento con aviso se programa a su hora y con la mascota en el texto`() = runBlocking {
+        val programador = ProgramadorFalso()
+        val ahora = LocalDateTime(2026, 5, 20, 7, 0)
+        val tratamiento = Tratamiento(
+            id = 3L,
+            mascotaId = 1L,
+            nombreMedicamento = "Oticoear",
+            dosis = "4 gotas",
+            fechaInicio = ahora.date,
+            fechaFin = LocalDate.parse("2026-05-30"),
+            hora = "08:30",
+            notificar = true
+        )
+
+        ReprogramadorNotificaciones.programarTratamiento(programador, tratamiento, "Luna", ahora)
+
+        val id = RecordatoriosTratamiento.idNotificacion(3L)
+        assertTrue(programador.programadas.containsKey(id), "no se programó el recordatorio")
+
+        val (hora, fin) = programador.recordatorios.getValue(id)
+        assertEquals("08:30", hora, "la alarma de mañana necesita la hora, ya normalizada")
+        assertEquals("2026-05-30", fin, "la fecha de fin va en el aviso para no pasarse de día")
+
+        val mensaje = programador.textos.getValue(id).second
+        assertTrue(mensaje.contains("Luna"), "falta la mascota: [$mensaje]")
+        assertTrue(mensaje.contains("Oticoear"), "falta el medicamento: [$mensaje]")
+        assertTrue(mensaje.contains("4 gotas"), "falta la dosis: [$mensaje]")
+    }
+
+    @Test
+    fun `un tratamiento sin aviso no programa nada`() = runBlocking {
+        val programador = ProgramadorFalso()
+        val ahora = LocalDateTime(2026, 5, 20, 7, 0)
+
+        ReprogramadorNotificaciones.programarTratamiento(
+            programador,
+            Tratamiento(
+                id = 4L,
+                mascotaId = 1L,
+                nombreMedicamento = "Metacam",
+                fechaInicio = ahora.date,
+                hora = "08:30",
+                notificar = false
+            ),
+            "Luna",
+            ahora
+        )
+
+        assertTrue(programador.programadas.isEmpty())
+    }
+
+    @Test
+    fun `cancelar un tratamiento usa el id desplazado con el que se programo`() = runBlocking {
+        val programador = ProgramadorFalso()
+
+        ReprogramadorNotificaciones.cancelarTratamiento(programador, 5L)
+
+        assertEquals(listOf(RecordatoriosTratamiento.idNotificacion(5L)), programador.canceladas)
     }
 }

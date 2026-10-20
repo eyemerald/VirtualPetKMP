@@ -199,12 +199,28 @@ logo completo (`drawable/logo_virtualpet.png`).
 ### Notificaciones
 
 Se programan con `AlarmManager` y un `BroadcastReceiver`. El id de la notificación es el
-**id de la fila**, con un detalle que hay que respetar: vacunas y preventivos son tablas
-distintas y ambas numeran desde 1, así que los preventivos suman un desplazamiento
-(`DESPLAZAMIENTO_PREVENTIVO`) para no pisar la alarma de una vacuna. Si añades otro tipo de
-aviso, dale su propio rango.
+**id de la fila**, con un detalle que hay que respetar: vacunas, preventivos y tratamientos son
+tablas distintas y todas numeran desde 1, así que cada tipo suma su propio desplazamiento
+(`DESPLAZAMIENTO_PREVENTIVO` y el de `RecordatoriosTratamiento`) para no pisar la alarma de otro.
+Si añades un cuarto tipo de aviso, dale su rango.
 
-Las notificaciones se **reprograman al abrir la ficha de una mascota y al arrancar la app**.
+Hay **dos clases de aviso**, y no se comportan igual:
+
+- **Vacunas y preventivos**: un aviso **único**, con días de antelación (15 y 1) a las 9 de la
+  mañana. Lo calcula `ReprogramadorNotificaciones` y se programa una sola vez.
+- **Tratamientos**: un recordatorio **diario** a la hora que elija el usuario, mientras dure el
+  tratamiento. Aquí una alarma no basta: cuando salta, `NotificacionReceiver` **programa la del
+  día siguiente** con los datos que lleva el propio intent (hora y fecha de fin), porque en ese
+  momento la app puede estar cerrada. La regla de "cuándo toca" está en
+  `util/RecordatoriosTratamiento.kt`, con tests, y la usan los dos extremos: quien programa y
+  quien encadena.
+
+Las notificaciones se **reprograman al abrir la ficha de una mascota** (cancelar y volver a
+programar: así un tratamiento borrado o terminado pierde su aviso sin código aparte), **al
+arrancar la app** y, para los tratamientos, **al reiniciar el móvil o actualizar la app**:
+Android borra las alarmas al apagar, y sin el receptor de `BOOT_COMPLETED`
+(`ReinicioReceiver`) un recordatorio de medicina dejaría de sonar para siempre.
+
 No hay servicio en segundo plano: es un equilibrio consciente entre simplicidad y precisión.
 
 ---

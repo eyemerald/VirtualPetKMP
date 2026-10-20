@@ -1,0 +1,8 @@
+-- Migración de la versión 12 a la 13: recordatorios de tratamientos.
+--
+-- Solo AÑADE dos columnas, así que los tratamientos que ya existen se conservan tal cual y
+-- quedan SIN recordatorio (que es lo que había hasta ahora: nadie empieza a recibir avisos que
+-- no ha pedido). `notificar` lleva valor por defecto porque SQLite no admite añadir una columna
+-- NOT NULL sin él.
+ALTER TABLE tratamientos ADD COLUMN hora TEXT;
+ALTER TABLE tratamientos ADD COLUMN notificar INTEGER NOT NULL DEFAULT 0;

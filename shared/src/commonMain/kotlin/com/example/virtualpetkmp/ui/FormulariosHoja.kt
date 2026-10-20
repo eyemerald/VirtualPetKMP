@@ -28,11 +28,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.virtualpetkmp.util.Localizacion
+import com.example.virtualpetkmp.util.RecordatoriosTratamiento
 import com.example.virtualpetkmp.util.TraduccionesDatos
 import com.example.virtualpetkmp.util.UnidadPeso
 import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.util.parseFechaLocalizada
 import com.example.virtualpetkmp.util.parseKilos
+import com.example.virtualpetkmp.util.rememberPermisoNotificaciones
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -72,6 +74,11 @@ import virtualpetkmp.shared.generated.resources.form_fecha_aplicacion
 import virtualpetkmp.shared.generated.resources.form_fecha_fin
 import virtualpetkmp.shared.generated.resources.form_fecha_inicio
 import virtualpetkmp.shared.generated.resources.form_frecuencia
+import virtualpetkmp.shared.generated.resources.form_hora
+import virtualpetkmp.shared.generated.resources.form_hora_anadir
+import virtualpetkmp.shared.generated.resources.form_recordarme
+import virtualpetkmp.shared.generated.resources.form_recordarme_ayuda
+import virtualpetkmp.shared.generated.resources.form_recordarme_sin_permiso
 import virtualpetkmp.shared.generated.resources.form_lote_opcional
 import virtualpetkmp.shared.generated.resources.form_medicamento
 import virtualpetkmp.shared.generated.resources.form_motivo_consulta
@@ -385,7 +392,15 @@ fun FormularioPreventivo(
 fun FormularioTratamiento(
     tratamiento: com.example.virtualpetkmp.Tratamiento? = null,
     onCancelar: () -> Unit,
-    onGuardar: (nombre: String, dosis: String?, frecuencia: String?, inicio: LocalDate, fin: LocalDate?) -> Unit
+    onGuardar: (
+        nombre: String,
+        dosis: String?,
+        frecuencia: String?,
+        inicio: LocalDate,
+        fin: LocalDate?,
+        hora: String?,
+        notificar: Boolean
+    ) -> Unit
 ) {
     val formato = localizacion
     val fechaHoy = hoyTexto(formato)
@@ -397,9 +412,15 @@ fun FormularioTratamiento(
     val textoErrorPeso = textos.errorPeso
     val textoErrorFecha = textos.errorFecha
     val textoErrorFechas = textos.errorFechas
+    // Se pide el permiso de notificaciones al encender el interruptor: es cuando el usuario
+    // pide avisos, no al abrir la app sin venir a cuento.
+    val pedirPermisoNotificaciones = rememberPermisoNotificaciones()
+    var sinPermiso by remember { mutableStateOf(false) }
     var nombre by rememberSaveable { mutableStateOf(tratamiento?.nombreMedicamento ?: "") }
     var dosis by rememberSaveable { mutableStateOf(tratamiento?.dosis ?: "") }
     var frecuencia by rememberSaveable { mutableStateOf(tratamiento?.frecuencia ?: "") }
+    var hora by rememberSaveable { mutableStateOf(tratamiento?.hora ?: "") }
+    var notificar by rememberSaveable { mutableStateOf(tratamiento?.notificar ?: false) }
     var inicio by rememberSaveable {
         mutableStateOf(tratamiento?.fechaInicio?.let { formato.formatearFecha(it) } ?: fechaHoy)
     }
@@ -465,6 +486,53 @@ fun FormularioTratamiento(
                         esError = error != null
                     )
                 }
+                CampoHora(
+                    valor = hora,
+                    // Si se borra la hora, el recordatorio se apaga solo: sin hora no hay aviso.
+                    onValorCambia = {
+                        hora = it
+                        if (it.isBlank()) notificar = false
+                    },
+                    etiqueta = stringResource(Res.string.form_hora),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                androidx.compose.foundation.layout.Row(
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    androidx.compose.foundation.layout.Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(Res.string.form_recordarme),
+                            style = androidx.compose.material3.MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = stringResource(Res.string.form_recordarme_ayuda),
+                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    androidx.compose.material3.Switch(
+                        checked = notificar,
+                        onCheckedChange = { activo ->
+                            if (activo) {
+                                // Sin hora no se puede avisar: se propone una y el usuario la
+                                // cambia si quiere.
+                                if (hora.isBlank()) hora = HORA_RECORDATORIO_POR_DEFECTO
+                                sinPermiso = !pedirPermisoNotificaciones()
+                            } else {
+                                sinPermiso = false
+                            }
+                            notificar = activo
+                        }
+                    )
+                }
+                if (sinPermiso) {
+                    Text(
+                        text = stringResource(Res.string.form_recordarme_sin_permiso),
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.error,
+                        style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                    )
+                }
                 if (error != null) {
                     Text(
                         text = error!!,
@@ -487,7 +555,13 @@ fun FormularioTratamiento(
                             dosis.ifBlank { null },
                             frecuencia.ifBlank { null },
                             parseFechaLocalizada(inicio, formato.ordenFechaMostrada)!!,
-                            if (cronico || fin.isBlank()) null else parseFechaLocalizada(fin, formato.ordenFechaMostrada)!!
+                            if (cronico || fin.isBlank()) null else parseFechaLocalizada(fin, formato.ordenFechaMostrada)!!,
+                            // Se guarda normalizada ("8:30" → "08:30"); si no es una hora válida,
+                            // no se guarda hora y por tanto no hay recordatorio.
+                            RecordatoriosTratamiento.leerHora(hora)?.let {
+                                RecordatoriosTratamiento.formatearHora(it.first, it.second)
+                            },
+                            notificar && RecordatoriosTratamiento.leerHora(hora) != null
                         )
                     } catch (e: Exception) {
                         error = textoErrorFechas

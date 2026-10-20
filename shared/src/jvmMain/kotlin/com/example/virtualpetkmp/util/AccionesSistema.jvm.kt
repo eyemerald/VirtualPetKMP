@@ -50,12 +50,34 @@ actual fun rememberProgramadorNotificaciones(): ProgramadorNotificaciones {
                 println("[Notificación programada] id=$id | $titulo | $mensaje | disparo a las $fechaDisparoMillis")
             }
 
+            override fun programarTratamiento(
+                id: Long,
+                titulo: String,
+                mensaje: String,
+                fechaDisparoMillis: Long,
+                hora: String,
+                fechaFin: String?
+            ) {
+                // En escritorio no hay alarmas del sistema; queda el rastro en consola.
+                println(
+                    "[Recordatorio de tratamiento] id=$id | $titulo | $mensaje | a las $hora " +
+                        "hasta ${fechaFin ?: "sin fecha de fin"}"
+                )
+            }
+
             override fun cancelar(id: Long) {
                 println("[Notificación cancelada] id=$id")
             }
         }
     }
 }
+
+/**
+ * En escritorio no hay permiso de notificaciones que pedir: se responde que sí para que el
+ * interruptor del formulario no se quede bloqueado.
+ */
+@Composable
+actual fun rememberPermisoNotificaciones(): () -> Boolean = remember { { true } }
 
 @Composable
 actual fun rememberComprobadorPermisoExacto(): ComprobadorPermisoExacto {

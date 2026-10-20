@@ -90,11 +90,21 @@ fun main(args: Array<String>) {
             """
         )
 
-    fun tratamiento(mascota: Long, medicamento: String, dosis: String, frecuencia: String, desdeHace: Int, hastaEn: Int) =
+    fun tratamiento(
+        mascota: Long,
+        medicamento: String,
+        dosis: String,
+        frecuencia: String,
+        desdeHace: Int,
+        hastaEn: Int,
+        hora: String? = null,
+        notificar: Boolean = false
+    ) =
         ejecutar(
             """
-            INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin)
-            VALUES ($mascota, '$medicamento', '$dosis', '$frecuencia', '${hoyMenos(desdeHace)}', '${hoyMas(hastaEn)}')
+            INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin, hora, notificar)
+            VALUES ($mascota, '$medicamento', '$dosis', '$frecuencia', '${hoyMenos(desdeHace)}', '${hoyMas(hastaEn)}',
+                    ${hora?.let { "'$it'" } ?: "NULL"}, ${if (notificar) 1 else 0})
             """
         )
 
@@ -178,7 +188,12 @@ fun main(args: Array<String>) {
         peso(luna, hoyMenos(dias), kilosDelMes.getOrElse(indice) { 26.4 })
     }
 
-    tratamiento(luna, "Oticoear", "4 gotas", "Cada 12 horas", desdeHace = 5, hastaEn = 9)
+    // El tratamiento activo lleva recordatorio a las 9 de la mañana: es el caso que aparece en
+    // las capturas del README y conviene que los datos de ejemplo lo representen.
+    tratamiento(
+        luna, "Oticoear", "4 gotas", "Cada 12 horas",
+        desdeHace = 5, hastaEn = 9, hora = "09:00", notificar = true
+    )
     tratamientoTerminado(luna, "Metacam", "1,5 ml", "Cada 24 horas", desdeHace = 120, hastaHace = 110)
 
     revision(

@@ -1,6 +1,7 @@
 package com.example.virtualpetkmp.util
 
 import com.example.virtualpetkmp.Preventivo
+import com.example.virtualpetkmp.Tratamiento
 import com.example.virtualpetkmp.Vacuna
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
@@ -9,10 +10,13 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.getString
 import virtualpetkmp.shared.generated.resources.Res
 import virtualpetkmp.shared.generated.resources.aviso_preventivo_mensaje
 import virtualpetkmp.shared.generated.resources.aviso_preventivo_titulo
+import virtualpetkmp.shared.generated.resources.aviso_tratamiento_mensaje
+import virtualpetkmp.shared.generated.resources.aviso_tratamiento_titulo
 import virtualpetkmp.shared.generated.resources.aviso_vacuna_mensaje
 import virtualpetkmp.shared.generated.resources.aviso_vacuna_titulo
 
@@ -106,6 +110,54 @@ object ReprogramadorNotificaciones {
     /** Cancela el aviso de una vacuna. */
     fun cancelar(programador: ProgramadorNotificaciones, id: Long) {
         programador.cancelar(id)
+    }
+
+    /**
+     * Programa el recordatorio diario de un tratamiento.
+     *
+     * A diferencia de las dosis, que avisan **una vez** con días de antelación, un tratamiento se
+     * recuerda **cada día a su hora** mientras dure: es una medicina, y el aviso sirve para el día
+     * en que toca, no para prepararse. Por eso la alarma se vuelve a programar sola al saltar
+     * (ver `NotificacionReceiver`), y aquí solo se calcula la primera.
+     *
+     * No programa nada si el tratamiento no pide aviso, si no tiene hora o si ya ha terminado:
+     * la comprobación está en `RecordatoriosTratamiento`, que tiene sus propios tests.
+     */
+    suspend fun programarTratamiento(
+        programador: ProgramadorNotificaciones,
+        tratamiento: Tratamiento,
+        nombreMascota: String,
+        ahora: LocalDateTime = Clock.System.now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+    ) {
+        val id = tratamiento.id ?: return
+        val (hora, minuto) = RecordatoriosTratamiento.leerHora(tratamiento.hora) ?: return
+        val proximo = RecordatoriosTratamiento.proximoAviso(tratamiento, ahora) ?: return
+        val millis = proximo.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+
+        // El medicamento y su dosis en una sola línea: "Oticoear · 4 gotas".
+        val medicamento = listOfNotNull(
+            tratamiento.nombreMedicamento,
+            tratamiento.dosis?.takeIf { it.isNotBlank() }
+        ).joinToString(" · ")
+
+        try {
+            programador.programarTratamiento(
+                id = RecordatoriosTratamiento.idNotificacion(id),
+                titulo = getString(Res.string.aviso_tratamiento_titulo),
+                mensaje = getString(Res.string.aviso_tratamiento_mensaje, nombreMascota, medicamento),
+                fechaDisparoMillis = millis,
+                hora = RecordatoriosTratamiento.formatearHora(hora, minuto),
+                fechaFin = tratamiento.fechaFin?.toString()
+            )
+        } catch (e: Exception) {
+            println("Error programando el recordatorio del tratamiento: ${e.message}")
+        }
+    }
+
+    /** Cancela el recordatorio de un tratamiento. */
+    fun cancelarTratamiento(programador: ProgramadorNotificaciones, id: Long) {
+        programador.cancelar(RecordatoriosTratamiento.idNotificacion(id))
     }
 
     private fun programar(

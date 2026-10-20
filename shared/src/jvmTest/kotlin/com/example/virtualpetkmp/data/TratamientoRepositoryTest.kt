@@ -138,4 +138,119 @@ class TratamientoRepositoryTest {
         assertEquals(1, todos.size)
         assertEquals(null, todos.first().fechaFin)
     }
+
+    // --- Recordatorio ---------------------------------------------------------
+
+    @Test
+    fun `el recordatorio se guarda y se recupera tal cual`() = runBlocking {
+        repository.insertTratamiento(
+            mascotaId = 1L,
+            nombreMedicamento = "Oticoear",
+            dosis = "4 gotas",
+            frecuencia = "Cada 12 horas",
+            fechaInicio = LocalDate(2026, 5, 20),
+            fechaFin = LocalDate(2026, 6, 3),
+            hora = "08:30",
+            notificar = true
+        )
+
+        val guardado = repository.getTratamientosByMascotaId(1L).first()
+        assertEquals("08:30", guardado.hora)
+        assertTrue(guardado.notificar, "el aviso tiene que seguir encendido al releerlo")
+    }
+
+    @Test
+    fun `un tratamiento sin recordatorio se guarda apagado y sin hora`() = runBlocking {
+        repository.insertTratamiento(
+            mascotaId = 1L,
+            nombreMedicamento = "Antibiótico",
+            dosis = null,
+            frecuencia = null,
+            fechaInicio = LocalDate(2026, 5, 20),
+            fechaFin = null
+        )
+
+        val guardado = repository.getTratamientosByMascotaId(1L).first()
+        assertEquals(null, guardado.hora)
+        assertEquals(false, guardado.notificar)
+    }
+
+    @Test
+    fun `editar puede apagar el recordatorio`() = runBlocking {
+        repository.insertTratamiento(
+            mascotaId = 1L,
+            nombreMedicamento = "Oticoear",
+            dosis = null,
+            frecuencia = null,
+            fechaInicio = LocalDate(2026, 5, 20),
+            fechaFin = null,
+            hora = "08:30",
+            notificar = true
+        )
+        val id = repository.getTratamientosByMascotaId(1L).first().id!!
+
+        repository.updateTratamiento(
+            id = id,
+            nombreMedicamento = "Oticoear",
+            dosis = null,
+            frecuencia = null,
+            fechaInicio = LocalDate(2026, 5, 20),
+            fechaFin = null,
+            hora = null,
+            notificar = false
+        )
+
+        val guardado = repository.getTratamientosByMascotaId(1L).first()
+        assertEquals(null, guardado.hora)
+        assertEquals(false, guardado.notificar)
+    }
+
+    @Test
+    fun `la consulta de recordatorios trae solo los que avisan, con el nombre de la mascota`() =
+        runBlocking {
+            val driver: SqlDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+            VirtualPetDatabase.Schema.create(driver)
+            val database = VirtualPetDatabase(driver)
+            val repositorio = TratamientoRepository(database)
+
+            // Dos mascotas, porque para unirse con `mascotas` tienen que existir de verdad.
+            database.mascotasQueries.insert(
+                nombre = "Luna",
+                especie = "Perro",
+                raza = "mestizo",
+                fechaNacimiento = "2020-03-15",
+                sexo = "Hembra",
+                color = "Dorado",
+                microchip = null,
+                foto = null,
+                peso_ideal = null
+            )
+            val luna = database.mascotasQueries.selectAll().executeAsList().first().id
+
+            repositorio.insertTratamiento(
+                mascotaId = luna,
+                nombreMedicamento = "Con aviso",
+                dosis = null,
+                frecuencia = null,
+                fechaInicio = LocalDate(2026, 5, 20),
+                fechaFin = null,
+                hora = "08:30",
+                notificar = true
+            )
+            repositorio.insertTratamiento(
+                mascotaId = luna,
+                nombreMedicamento = "Sin aviso",
+                dosis = null,
+                frecuencia = null,
+                fechaInicio = LocalDate(2026, 5, 20),
+                fechaFin = null,
+                hora = "20:00",
+                notificar = false
+            )
+
+            val conAviso = repositorio.getTratamientosConRecordatorio()
+            assertEquals(1, conAviso.size, "el que tiene el aviso apagado no debe salir")
+            assertEquals("Con aviso", conAviso.first().first.nombreMedicamento)
+            assertEquals("Luna", conAviso.first().second, "hace falta el nombre para el aviso")
+        }
 }

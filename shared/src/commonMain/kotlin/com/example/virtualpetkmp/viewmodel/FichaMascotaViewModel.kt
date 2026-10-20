@@ -122,6 +122,12 @@ class FichaMascotaViewModel(
     /** Programador de avisos: la ficha es ahora quien da de alta vacunas y preventivos. */
     private val programador: ProgramadorNotificaciones? = null,
     /**
+     * Nombre de la mascota, para el texto de los recordatorios de tratamiento ("Luna · Oticoear").
+     * Se pasa ya resuelto porque el aviso se monta fuera de la composición, donde no se puede
+     * consultar el listado de mascotas.
+     */
+    private val nombreMascota: String = "",
+    /**
      * Configuración regional activa. La necesita el texto de las **notificaciones**, que se
      * monta fuera de la composición y tiene que escribir la fecha como la espera el usuario.
      */
@@ -281,6 +287,15 @@ class FichaMascotaViewModel(
                     preventivo.id?.let { id ->
                         ReprogramadorNotificaciones.cancelarPreventivo(prog, id)
                         ReprogramadorNotificaciones.programarPreventivo(prog, preventivo, localizacion)
+                    }
+                }
+                // Los tratamientos se reprograman igual: cancelar y volver a programar deja el
+                // recordatorio de cada día en su hora, y es lo que quita el aviso de un
+                // tratamiento borrado o terminado sin tener que hacer nada especial.
+                tratamientos.forEach { tratamiento ->
+                    tratamiento.id?.let { id ->
+                        ReprogramadorNotificaciones.cancelarTratamiento(prog, id)
+                        ReprogramadorNotificaciones.programarTratamiento(prog, tratamiento, nombreMascota)
                     }
                 }
             }
@@ -466,7 +481,9 @@ class FichaMascotaViewModel(
         dosis: String?,
         frecuencia: String?,
         fechaInicio: LocalDate,
-        fechaFin: LocalDate?
+        fechaFin: LocalDate?,
+        hora: String? = null,
+        notificar: Boolean = false
     ) {
         if (nombreMedicamento.isBlank()) return
         scope.launch {
@@ -477,7 +494,9 @@ class FichaMascotaViewModel(
                     dosis = dosis,
                     frecuencia = frecuencia,
                     fechaInicio = fechaInicio,
-                    fechaFin = fechaFin
+                    fechaFin = fechaFin,
+                    hora = hora,
+                    notificar = notificar
                 )
             }
             cerrarOperacion(resultado, Res.string.error_guardar_dato)
@@ -504,10 +523,14 @@ class FichaMascotaViewModel(
         }
     }
 
-    /** Borra un tratamiento desde la hoja de la ficha. */
+    /** Borra un tratamiento desde la hoja de la ficha y cancela su recordatorio. */
     fun borrarTratamiento(id: Long) {
         scope.launch {
             val resultado = conResultado { tratamientoRepository.deleteTratamiento(id) }
+            // El aviso se cancela aquí porque, al borrar, la recarga del resumen ya no ve este
+            // tratamiento y no podría quitarlo: la alarma seguiría sonando por un medicamento
+            // que ya no existe.
+            programador?.let { prog -> ReprogramadorNotificaciones.cancelarTratamiento(prog, id) }
             cerrarOperacion(resultado, Res.string.error_borrar_dato)
         }
     }
@@ -608,7 +631,9 @@ class FichaMascotaViewModel(
         dosis: String?,
         frecuencia: String?,
         fechaInicio: LocalDate,
-        fechaFin: LocalDate?
+        fechaFin: LocalDate?,
+        hora: String? = null,
+        notificar: Boolean = false
     ) {
         if (nombreMedicamento.isBlank()) return
         scope.launch {
@@ -619,7 +644,9 @@ class FichaMascotaViewModel(
                     dosis = dosis,
                     frecuencia = frecuencia,
                     fechaInicio = fechaInicio,
-                    fechaFin = fechaFin
+                    fechaFin = fechaFin,
+                    hora = hora,
+                    notificar = notificar
                 )
             }
             cerrarOperacion(resultado, Res.string.error_guardar_dato)

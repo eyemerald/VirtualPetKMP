@@ -6,19 +6,33 @@ CREATE TABLE tratamientos (
     frecuencia TEXT,
     fechaInicio TEXT NOT NULL,
     fechaFin TEXT,
+    -- Hora del aviso, en formato "HH:mm". NULL = sin hora.
+    hora TEXT,
+    -- 0/1: 1 = el usuario quiere que se le avise a esa hora mientras dure el tratamiento.
+    -- SQLite no tiene booleanos: se guarda como entero y el repositorio lo convierte.
+    notificar INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
 );
 
 selectByMascotaId:
 SELECT * FROM tratamientos WHERE mascotaId = ? ORDER BY fechaInicio DESC;
 
+-- Tratamientos de todas las mascotas que piden aviso, con el nombre de su mascota.
+-- Es lo que necesita el receptor de arranque del móvil para volver a programar las alarmas
+-- que Android borra al apagar el dispositivo.
+selectConRecordatorio:
+SELECT tratamientos.*, mascotas.nombre AS nombreMascota
+FROM tratamientos
+JOIN mascotas ON mascotas.id = tratamientos.mascotaId
+WHERE tratamientos.notificar = 1;
+
 insert:
-INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin)
-VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin, hora, notificar)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE tratamientos 
-SET nombreMedicamento = ?, dosis = ?, frecuencia = ?, fechaInicio = ?, fechaFin = ?
+SET nombreMedicamento = ?, dosis = ?, frecuencia = ?, fechaInicio = ?, fechaFin = ?, hora = ?, notificar = ?
 WHERE id = ?;
 
 delete:

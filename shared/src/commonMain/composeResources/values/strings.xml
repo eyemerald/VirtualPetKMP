@@ -35,6 +35,7 @@
     <string name="a11y_volver">Back</string>
     <string name="a11y_mas_acciones">More actions</string>
     <string name="a11y_elegir_calendario">Pick from calendar</string>
+    <string name="a11y_elegir_hora">Choose the time</string>
     <string name="a11y_historial_mostrar">Show history</string>
     <string name="a11y_historial_ocultar">Hide history</string>
     <string name="a11y_foto_mascota">Pet photo</string>
@@ -202,6 +203,7 @@
     <string name="hoja_proxima_dosis">Next dose: %1$s</string>
     <string name="hoja_tratamiento_cronico">Chronic · since %1$s</string>
     <string name="hoja_tratamiento_hasta">Until %1$s</string>
+    <string name="hoja_tratamiento_recordatorio">Reminder at %1$s</string>
     <string name="hoja_tratamiento_finalizado">Finished: %1$s</string>
     <string name="hoja_sin_fecha">no date</string>
 
@@ -243,6 +245,11 @@
     <string name="form_medicamento">Medication</string>
     <string name="form_dosis">Dose (e.g. ½ tablet)</string>
     <string name="form_frecuencia">Frequency (e.g. every 24h)</string>
+    <string name="form_hora">Time</string>
+    <string name="form_hora_anadir">Add a time</string>
+    <string name="form_recordarme">Remind me</string>
+    <string name="form_recordarme_ayuda">A reminder every day at that time, while the treatment lasts.</string>
+    <string name="form_recordarme_sin_permiso">Notifications are turned off for this app: enable them in the phone settings to get the reminder.</string>
     <string name="form_fecha_inicio">Start date (%1$s)</string>
     <string name="form_fecha_fin">End date (%1$s)</string>
     <string name="form_cronico">Chronic</string>
@@ -335,6 +342,8 @@
     <string name="aviso_vacuna_mensaje">Your pet is due for the %1$s vaccine on %2$s</string>
     <string name="aviso_preventivo_titulo">Preventive due</string>
     <string name="aviso_preventivo_mensaje">Your pet is due for the %1$s preventive treatment on %2$s</string>
+    <string name="aviso_tratamiento_titulo">Time for the medicine</string>
+    <string name="aviso_tratamiento_mensaje">For %1$s: %2$s</string>
 
     <string name="error_cargar_mascotas">Error loading pets: %1$s</string>
     <string name="error_cargar_veterinarios">Error loading vets: %1$s</string>

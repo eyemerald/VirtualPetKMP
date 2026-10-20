@@ -4,6 +4,9 @@
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <!-- Android borra las alarmas al apagar el móvil: este permiso es para volver a programar
+         los recordatorios de tratamiento cuando el dispositivo arranca. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <!--
       La biblioteca compartida arrastra tres permisos heredados que esta app no usa: los archivos
@@ -45,6 +48,21 @@
         <receiver
             android:name=".NotificacionReceiver"
             android:exported="false"/>
+
+        <!--
+          Reprograma los recordatorios de tratamiento al arrancar el móvil (Android borra las
+          alarmas al apagar) y al actualizar la app. `exported="false"` porque solo lo manda el
+          sistema, y BOOT_COMPLETED es un broadcast protegido: ninguna app puede falsificarlo.
+        -->
+        <receiver
+            android:name=".ReinicioReceiver"
+            android:exported="false"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

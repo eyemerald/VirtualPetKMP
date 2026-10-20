@@ -35,6 +35,25 @@ interface ProgramadorNotificaciones {
     fun programar(id: Long, titulo: String, mensaje: String, fechaDisparoMillis: Long)
 
     /**
+     * Programa un recordatorio **de tratamiento**, que es un aviso que se repite cada día.
+     *
+     * Va aparte de [programar] porque Android necesita más datos para repetirlo solo: cuando la
+     * alarma salta, la app puede estar cerrada, así que el aviso lleva dentro la hora y la fecha
+     * de fin para saber si tiene que programarse otra vez para mañana.
+     *
+     * @param hora "HH:mm" del aviso, ya normalizada.
+     * @param fechaFin último día del tratamiento (ISO), o `null` si es crónico.
+     */
+    fun programarTratamiento(
+        id: Long,
+        titulo: String,
+        mensaje: String,
+        fechaDisparoMillis: Long,
+        hora: String,
+        fechaFin: String?
+    )
+
+    /**
      * Cancela la notificación previamente programada con ese id.
      */
     fun cancelar(id: Long)
@@ -47,6 +66,19 @@ interface ProgramadorNotificaciones {
  */
 @Composable
 expect fun rememberComprobadorPermisoExacto(): ComprobadorPermisoExacto
+
+/**
+ * Devuelve una función que **pide el permiso de notificaciones** si aún no está concedido.
+ *
+ * Devuelve `true` si ya se puede notificar en ese mismo momento (permiso concedido, versión de
+ * Android que no lo pide, o plataforma sin permisos como el escritorio) y `false` si acaba de
+ * lanzar la petición al sistema, en cuyo caso la respuesta llega después.
+ *
+ * La llama el formulario de tratamientos al encender "Recordarme": si el usuario va a pedir
+ * avisos, es el momento de pedir el permiso, no al abrir la app sin venir a cuento.
+ */
+@Composable
+expect fun rememberPermisoNotificaciones(): () -> Boolean
 
 interface ComprobadorPermisoExacto {
     /** True si podemos programar alarmas exactas en este dispositivo. */
