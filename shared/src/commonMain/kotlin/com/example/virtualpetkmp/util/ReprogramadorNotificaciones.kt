@@ -5,6 +5,7 @@ import com.example.virtualpetkmp.Tratamiento
 import com.example.virtualpetkmp.Vacuna
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -124,18 +125,38 @@ object ReprogramadorNotificaciones {
      *
      * No programa nada si el tratamiento no pide aviso, si no tiene hora o si ya ha terminado:
      * la comprobación está en `RecordatoriosTratamiento`, que tiene sus propios tests.
+     *
+     * **Si el usuario lo pospuso y esa posposición sigue viva, se programa ESA hora** y no la del
+     * día siguiente: si no, reiniciar el móvil (o abrir la ficha) se comía el aviso pospuesto. Ver
+     * [Posposiciones].
+     *
+     * @param posposicion posposición viva de un tratamiento. Se puede sustituir en las pruebas para
+     *   no depender del fichero real.
      */
     suspend fun programarTratamiento(
         programador: ProgramadorNotificaciones,
         tratamiento: Tratamiento,
         nombreMascota: String,
         ahora: LocalDateTime = Clock.System.now()
-            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .toLocalDateTime(TimeZone.currentSystemDefault()),
+        posposicion: (Long) -> Long? = { Posposiciones.leer(it) }
     ) {
         val id = tratamiento.id ?: return
         val (hora, minuto) = RecordatoriosTratamiento.leerHora(tratamiento.hora) ?: return
-        val proximo = RecordatoriosTratamiento.proximoAviso(tratamiento, ahora) ?: return
-        val millis = proximo.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+        val zona = TimeZone.currentSystemDefault()
+
+        val pospuestoMillis = posposicion(id)?.takeIf { millis ->
+            // Solo vale si cae dentro del tratamiento: posponer no puede alargar una medicación.
+            RecordatoriosTratamiento.dentroDelTratamiento(
+                Instant.fromEpochMilliseconds(millis).toLocalDateTime(zona).date,
+                tratamiento.fechaFin
+            )
+        }
+
+        val millis = pospuestoMillis ?: run {
+            val proximo = RecordatoriosTratamiento.proximoAviso(tratamiento, ahora) ?: return
+            proximo.toInstant(zona).toEpochMilliseconds()
+        }
 
         // El medicamento y su dosis en una sola línea: "Oticoear · 4 gotas".
         val medicamento = listOfNotNull(

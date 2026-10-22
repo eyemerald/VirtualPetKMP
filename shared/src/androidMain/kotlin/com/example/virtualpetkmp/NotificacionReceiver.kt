@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.virtualpetkmp.util.AvisoTratamiento
+import com.example.virtualpetkmp.util.Posposiciones
 import com.example.virtualpetkmp.util.RecordatoriosTratamiento
 import com.example.virtualpetkmp.util.crearProgramadorNotificaciones
 import kotlinx.datetime.Clock
@@ -65,7 +66,13 @@ class NotificacionReceiver : BroadcastReceiver() {
 
         gestor.notify(notificacionId, builder.build())
 
-        aviso?.let { programarSiguiente(context, it) }
+        aviso?.let {
+            // El aviso ha vuelto a salir: la posposición ya está consumida. Se limpia ANTES de
+            // programar el de mañana, porque `programarSiguiente` escribe en la misma alarma y
+            // no debe encontrarse la posposición todavía viva.
+            Posposiciones.borrar(it.tratamientoId)
+            programarSiguiente(context, it)
+        }
     }
 
     /**

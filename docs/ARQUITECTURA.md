@@ -274,7 +274,13 @@ tratamiento trae tres cosas que el de una vacuna no tiene:
   del día siguiente ya está programado desde que sonó este.
 - **Posponer 30 min**: cierra el aviso y lo vuelve a programar. No hay límite de veces, y
   posponer **no puede perder** el aviso de mañana: la posposición usa el mismo id de alarma y, al
-  sonar, el receptor vuelve a encadenar el día siguiente. Si el tratamiento ya se acabó (la
+  sonar, el receptor vuelve a encadenar el día siguiente.
+- **La posposición se guarda en disco** (`util/Posposiciones.kt`, un fichero de texto en la carpeta
+  de datos). Sin eso solo vivía en `AlarmManager`, y como Android vacía las alarmas al reiniciar,
+  el aviso pospuesto se perdía hasta el día siguiente —lo encontró una prueba del usuario: aviso
+  pospuesto, reinicio, y nada hasta mañana—. Ahora, al reprogramar un tratamiento se mira primero
+  si hay una posposición viva y se usa esa hora; se borra cuando el aviso vuelve a salir o cuando
+  se acepta. Si el tratamiento ya se acabó (la
   posposición caería después de su fecha de fin), no se programa nada.
 
 Los dos botones los atiende `AccionRecordatorioReceiver`, aparte del que pinta el aviso, para que

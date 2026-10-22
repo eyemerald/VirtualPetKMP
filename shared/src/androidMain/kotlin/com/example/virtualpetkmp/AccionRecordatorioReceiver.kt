@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.example.virtualpetkmp.util.AvisoTratamiento
+import com.example.virtualpetkmp.util.Posposiciones
 import com.example.virtualpetkmp.util.RecordatoriosTratamiento
 import com.example.virtualpetkmp.util.crearProgramadorNotificaciones
 import kotlinx.datetime.Clock
@@ -36,6 +37,9 @@ class AccionRecordatorioReceiver : BroadcastReceiver() {
 
         if (intent.action == NotificacionReceiver.ACCION_POSPONER) {
             posponer(context, aviso)
+        } else {
+            // Aceptar: no hay nada pendiente de este tratamiento.
+            Posposiciones.borrar(aviso.tratamientoId)
         }
     }
 
@@ -45,6 +49,10 @@ class AccionRecordatorioReceiver : BroadcastReceiver() {
      * La comprobación con la fecha de fin es lo que evita el aviso fantasma: si el último día del
      * tratamiento era hoy y el usuario pospone a las 23:50, el aviso saltaría mañana, cuando ya no
      * hay nada que dar.
+     *
+     * **La posposición se guarda en disco** ([Posposiciones]) además de en la alarma: Android borra
+     * las alarmas al reiniciar, y con el aviso solo dentro de `AlarmManager` el recordatorio
+     * pospuesto se perdía hasta el día siguiente.
      */
     private fun posponer(context: Context, aviso: AvisoTratamiento) {
         val ahoraMillis = Clock.System.now().toEpochMilliseconds()
@@ -53,8 +61,13 @@ class AccionRecordatorioReceiver : BroadcastReceiver() {
         val destino = Instant.fromEpochMilliseconds(nuevo.fechaDisparoMillis)
             .toLocalDateTime(TimeZone.currentSystemDefault())
 
-        if (!RecordatoriosTratamiento.dentroDelTratamiento(destino.date, aviso.fechaFin)) return
+        if (!RecordatoriosTratamiento.dentroDelTratamiento(destino.date, aviso.fechaFin)) {
+            // Se acabó el tratamiento: se limpia lo que hubiera y no se programa nada.
+            Posposiciones.borrar(aviso.tratamientoId)
+            return
+        }
 
+        Posposiciones.guardar(aviso.tratamientoId, nuevo.fechaDisparoMillis)
         crearProgramadorNotificaciones(context).programarTratamiento(nuevo)
     }
 }
