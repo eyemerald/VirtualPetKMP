@@ -404,4 +404,33 @@
     <string name="pdf_nada_que_hacer">Aucun traitement ni aucune dose programmée.</string>
     <string name="pdf_proximas_dosis">Prochaines doses</string>
     <string name="pdf_resumen_aviso">Résumé pour les soins quotidiens. Pour la fiche complète, demandez la version vétérinaire.</string>
+
+    <!-- Copia de seguridad y restauración -->
+    <string name="copia_menu">Sauvegarde</string>
+    <string name="copia_menu_restaurar">Restaurer une sauvegarde</string>
+    <string name="copia_explicacion">Tout est enregistré dans un seul fichier : animaux, historique complet, photos et PDF.</string>
+    <string name="copia_guardar">Enregistrer la sauvegarde</string>
+    <string name="copia_guardando">Enregistrement…</string>
+    <string name="copia_ok">Sauvegarde enregistrée</string>
+    <string name="copia_ok_detalle">%1$d enregistrements et %2$d fichiers</string>
+    <string name="copia_error">Impossible d'enregistrer la sauvegarde : %1$s</string>
+    <string name="copia_faltaban">Remarque : %1$d fichiers n'étaient plus sur l'appareil et ne sont pas inclus.</string>
+    <string name="restaurar_explicacion">Choisis le fichier de sauvegarde. Une copie de l'état actuel est enregistrée avant tout changement.</string>
+    <string name="restaurar_elegir">Choisir un fichier…</string>
+    <string name="restaurar_vista_titulo">Contenu de la sauvegarde</string>
+    <string name="restaurar_vista_detalle">%1$d animaux · %2$d enregistrements · %3$d fichiers</string>
+    <string name="restaurar_vista_mascotas">Animaux : %1$s</string>
+    <string name="restaurar_aviso">Tout ce qui est actuellement dans l'app sera remplacé. Tes données actuelles sont d'abord enregistrées dans une sauvegarde automatique.</string>
+    <string name="restaurar_confirmar">Restaurer maintenant</string>
+    <string name="restaurar_en_curso">Restauration…</string>
+    <string name="restaurar_ok">Restauré : %1$d animaux et %2$d enregistrements</string>
+    <string name="restaurar_ok_copia">La copie des données précédentes est ici : %1$s</string>
+    <string name="restaurar_error_ilegible">Ce fichier ne peut pas être lu comme une sauvegarde.</string>
+    <string name="restaurar_error_ajeno">Ce fichier n'a pas été créé par Virtual Pet.</string>
+    <string name="restaurar_error_nuevo">La sauvegarde vient d'une version plus récente de l'app. Mets-la à jour pour la restaurer.</string>
+    <string name="restaurar_error_datos">La sauvegarde est incomplète ou endommagée.</string>
+    <string name="restaurar_error_guardando">Impossible d'enregistrer : rien n'a été modifié.</string>
+    <string name="comun_cerrar">Fermer</string>
+    <string name="comun_cancelar">Annuler</string>
+    <string name="a11y_menu_sistema">Menu de l'application</string>
 </resources>

@@ -2,9 +2,6 @@ package com.example.virtualpetkmp.util
 
 import android.content.Context
 import com.example.virtualpetkmp.data.DatabaseFactory
-import com.example.virtualpetkmp.data.PreventivoRepository
-import com.example.virtualpetkmp.data.TratamientoRepository
-import com.example.virtualpetkmp.data.VacunaRepository
 
 /**
  * Vuelve a programar **todos** los recordatorios (dosis y tratamientos) de todas las mascotas.
@@ -19,35 +16,14 @@ import com.example.virtualpetkmp.data.VacunaRepository
  * días de antelación, el usuario podía pasarse semanas sin abrirla y no recibir nada. Lo encontró
  * una prueba real: cinco alarmas antes de reiniciar, una sola después.
  *
- * Cancelar antes de programar es lo que hace que sea idempotente: si el arranque se repite o
- * quedara alguna alarma viva, no se duplican los avisos.
+ * La lógica está en `reprogramarAvisosDeTodo` (commonMain), compartida con el arranque de la app y
+ * con la restauración de una copia: así no puede volver a haber dos versiones que se separen.
  */
 suspend fun reprogramarRecordatorios(context: Context) {
-    val baseDatos = DatabaseFactory(context).createDatabase()
-    val programador = crearProgramadorNotificaciones(context)
-    // La fecha de la notificación se escribe en el idioma y el formato del móvil: se decide aquí
-    // una vez y se usa en los tres tipos de aviso. Es la variante sin composición, porque esto
-    // corre dentro de un receptor y no hay interfaz.
-    val localizacion = localizacionFueraDeComposicion()
-
-    TratamientoRepository(baseDatos).getTratamientosConRecordatorio().forEach { (tratamiento, nombreMascota) ->
-        tratamiento.id?.let { id ->
-            ReprogramadorNotificaciones.cancelarTratamiento(programador, id)
-            ReprogramadorNotificaciones.programarTratamiento(programador, tratamiento, nombreMascota)
-        }
-    }
-
-    VacunaRepository(baseDatos).getAllVacunas().forEach { vacuna ->
-        vacuna.id?.let { id ->
-            ReprogramadorNotificaciones.cancelar(programador, id)
-            ReprogramadorNotificaciones.programarVacuna(programador, vacuna, localizacion)
-        }
-    }
-
-    PreventivoRepository(baseDatos).getAllPreventivos().forEach { preventivo ->
-        preventivo.id?.let { id ->
-            ReprogramadorNotificaciones.cancelarPreventivo(programador, id)
-            ReprogramadorNotificaciones.programarPreventivo(programador, preventivo, localizacion)
-        }
-    }
+    reprogramarAvisosDeTodo(
+        programador = crearProgramadorNotificaciones(context),
+        db = DatabaseFactory(context).createDatabase(),
+        // Sin composición: este código corre dentro de un receptor y no hay interfaz.
+        localizacion = localizacionFueraDeComposicion()
+    )
 }

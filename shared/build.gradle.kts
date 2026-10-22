@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.sqldelight)
 }
 
@@ -55,6 +56,11 @@ kotlin {
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.kotlinx.datetime)
+            // El paquete de copia de seguridad guarda los datos en JSON: ver
+            // `docs/TRASPASO_DE_DATOS.md`. Se eligió kotlinx-serialization en vez de escribir y
+            // parsear JSON a mano porque un formato mal parseado es justo lo que no puede pasar
+            // cuando están en juego los datos de alguien.
+            implementation(libs.kotlinx.serialization.json)
             implementation(libs.sqldelight.coroutines.extensions)
             implementation(libs.compose.material3)
             implementation(libs.compose.materialIconsExtended)

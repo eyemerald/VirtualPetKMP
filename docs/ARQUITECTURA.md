@@ -103,6 +103,28 @@ y `ahoraMillis`), y se pueden pasar a mano porque la importación tendrá que co
 paquete original. La migración `13.sqm` los añade y rellena las filas que ya existían, sin tocar
 ningún dato. Los detalles del traspaso están en `docs/TRASPASO_DE_DATOS.md`.
 
+### Copia de seguridad (`.vpet`)
+
+El menú de sistema (icono de ajustes junto a las pestañas) ofrece **Copia de seguridad** y
+**Restaurar copia**. El paquete es un ZIP con `manifiesto.json`, `datos.json` y una carpeta
+`archivos/` con las fotos y los PDFs; se puede abrir con cualquier descompresor y el JSON se lee a
+mano, a propósito.
+
+Tres reglas que no se pueden romper al tocar esto:
+
+1. **Las relaciones van por `uuid`**, nunca por `id`: el id se recalcula al restaurar, así que una
+   vacuna que apunte a `mascotaId = 1` podría acabar colgando de otra mascota.
+2. **Los adjuntos se referencian por su nombre dentro del ZIP**, no por su ruta en el dispositivo:
+   la ruta de un móvil no existe en el ordenador.
+3. **La restauración reemplaza la base entera en una sola transacción**, y antes guarda sola una
+   copia de lo que había (se conservan las 3 últimas). Los archivos se escriben antes de la
+   transacción y se borran si la transacción falla.
+
+En Android el destino que devuelve el selector del sistema es un `content://`, que **no es un
+fichero**: por eso el paquete se escribe en la caché y se copia con `copiarArchivoA` (en
+streaming). Y el MIME al guardar es `application/octet-stream`, no `application/zip`, porque el
+sistema añadiría `.zip` al nombre y el archivo dejaría de reconocerse por su extensión.
+
 ### Los drivers aplican las migraciones (importante)
 
 Esto **estuvo roto** y es un fallo fácil de repetir: los drivers se construían con el esquema

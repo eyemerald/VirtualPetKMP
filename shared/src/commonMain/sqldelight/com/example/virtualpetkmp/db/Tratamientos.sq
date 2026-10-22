@@ -40,3 +40,14 @@ WHERE id = ?;
 
 delete:
 DELETE FROM tratamientos WHERE id = ?;
+
+
+-- Todas las filas, para la copia de seguridad (la exportación no va mascota a mascota).
+selectAll:
+SELECT * FROM tratamientos;
+
+
+-- Vaciar la tabla. Solo lo usa la restauración de una copia, que reemplaza el contenido entero
+-- dentro de una transacción; en el uso normal nada borra filas por esta consulta.
+deleteAll:
+DELETE FROM tratamientos;

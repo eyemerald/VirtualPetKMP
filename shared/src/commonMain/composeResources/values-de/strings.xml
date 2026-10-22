@@ -404,4 +404,33 @@
     <string name="pdf_nada_que_hacer">Keine Behandlungen und keine anstehenden Dosen.</string>
     <string name="pdf_proximas_dosis">Nächste Dosen</string>
     <string name="pdf_resumen_aviso">Zusammenfassung für die tägliche Pflege. Für die vollständige Akte die Tierarztversion anfordern.</string>
+
+    <!-- Copia de seguridad y restauración -->
+    <string name="copia_menu">Sicherung</string>
+    <string name="copia_menu_restaurar">Sicherung wiederherstellen</string>
+    <string name="copia_explicacion">Alles wird in einer einzigen Datei gesichert: Tiere, kompletter Verlauf, Fotos und PDFs.</string>
+    <string name="copia_guardar">Sicherung speichern</string>
+    <string name="copia_guardando">Wird gespeichert…</string>
+    <string name="copia_ok">Sicherung gespeichert</string>
+    <string name="copia_ok_detalle">%1$d Einträge und %2$d Dateien</string>
+    <string name="copia_error">Sicherung konnte nicht gespeichert werden: %1$s</string>
+    <string name="copia_faltaban">Hinweis: %1$d Dateien waren nicht mehr auf dem Gerät und sind nicht enthalten.</string>
+    <string name="restaurar_explicacion">Wähle die Sicherungsdatei. Vor jeder Änderung wird eine Sicherung des aktuellen Stands angelegt.</string>
+    <string name="restaurar_elegir">Datei wählen…</string>
+    <string name="restaurar_vista_titulo">Inhalt der Sicherung</string>
+    <string name="restaurar_vista_detalle">%1$d Tiere · %2$d Einträge · %3$d Dateien</string>
+    <string name="restaurar_vista_mascotas">Tiere: %1$s</string>
+    <string name="restaurar_aviso">Alles, was jetzt in der App ist, wird ersetzt. Die aktuellen Daten werden vorher automatisch gesichert.</string>
+    <string name="restaurar_confirmar">Jetzt wiederherstellen</string>
+    <string name="restaurar_en_curso">Wird wiederhergestellt…</string>
+    <string name="restaurar_ok">Wiederhergestellt: %1$d Tiere und %2$d Einträge</string>
+    <string name="restaurar_ok_copia">Die Sicherung des vorherigen Stands liegt hier: %1$s</string>
+    <string name="restaurar_error_ilegible">Die Datei lässt sich nicht als Sicherung lesen.</string>
+    <string name="restaurar_error_ajeno">Die Datei wurde nicht von Virtual Pet erstellt.</string>
+    <string name="restaurar_error_nuevo">Die Sicherung stammt aus einer neueren App-Version. Aktualisiere die App zum Wiederherstellen.</string>
+    <string name="restaurar_error_datos">Die Sicherung ist unvollständig oder beschädigt.</string>
+    <string name="restaurar_error_guardando">Speichern fehlgeschlagen: es wurde nichts geändert.</string>
+    <string name="comun_cerrar">Schließen</string>
+    <string name="comun_cancelar">Abbrechen</string>
+    <string name="a11y_menu_sistema">App-Menü</string>
 </resources>

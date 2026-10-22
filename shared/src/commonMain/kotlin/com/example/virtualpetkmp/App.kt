@@ -13,6 +13,11 @@ import com.example.virtualpetkmp.data.RevisionRepository
 import com.example.virtualpetkmp.data.TratamientoRepository
 import com.example.virtualpetkmp.data.VacunaRepository
 import com.example.virtualpetkmp.data.VeterinarioRepository
+import com.example.virtualpetkmp.ui.DialogoCopia
+import com.example.virtualpetkmp.ui.DialogoGuardarCopia
+import com.example.virtualpetkmp.ui.DialogoRestaurarCopia
+import com.example.virtualpetkmp.util.rememberCarpetasApp
+import com.example.virtualpetkmp.util.reprogramarAvisosDeTodo
 import com.example.virtualpetkmp.ui.FichaMascotaScreen
 import com.example.virtualpetkmp.ui.MainScreen
 import com.example.virtualpetkmp.ui.MascotaFormScreen
@@ -64,21 +69,11 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
 
     // Al arrancar se reprograman los avisos de todas las mascotas. Abrir la ficha de una
     // mascota también los reprograma, así que esto es la red de seguridad para el caso de
-    // que el usuario no entre en ninguna ficha.
+    // que el usuario no entre en ninguna ficha. Es la misma función que usa el receptor de
+    // reinicio del móvil: antes había dos copias y una se olvidó de las dosis.
     LaunchedEffect(Unit) {
         try {
-            vacunaRepository.getAllVacunas().forEach { vacuna ->
-                vacuna.id?.let { id ->
-                    ReprogramadorNotificaciones.cancelar(programador, id)
-                    ReprogramadorNotificaciones.programarVacuna(programador, vacuna, localizacion)
-                }
-            }
-            preventivoRepository.getAllPreventivos().forEach { preventivo ->
-                preventivo.id?.let { id ->
-                    ReprogramadorNotificaciones.cancelarPreventivo(programador, id)
-                    ReprogramadorNotificaciones.programarPreventivo(programador, preventivo, localizacion)
-                }
-            }
+            reprogramarAvisosDeTodo(programador, database, localizacion)
         } catch (e: Exception) {
             println("Error reprogramando notificaciones al arrancar: ${e.message}")
         }
@@ -104,6 +99,10 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
 
     val mascotas by viewModel.mascotas.collectAsState()
     val mascotaActual = mascotas.find { it.id == selectedMascotaId }
+
+    // Carpetas privadas de la app (fotos, informes y copias) y qué diálogo de copia está abierto.
+    val carpetas = rememberCarpetasApp()
+    var dialogoCopia by remember { mutableStateOf<DialogoCopia?>(null) }
 
     // Un único ViewModel de ficha por mascota, compartido por todas las hojas: así el
     // resumen, las listas y los avisos son los mismos en toda la pantalla.
@@ -151,6 +150,8 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
             MainScreen(
             mostrarAcciones = enDetalleMascota,
             onVolver = volverAtras,
+            onGuardarCopia = { dialogoCopia = DialogoCopia.GUARDAR },
+            onRestaurarCopia = { dialogoCopia = DialogoCopia.RESTAURAR },
             contenidoMascotas = {
                 when (currentScreen) {
                     "list" -> {
@@ -223,6 +224,39 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
                 }
             }
         )
+
+        // Los diálogos de copia van aquí, dentro del tema y de la configuración regional, para que
+        // sus textos salgan en el idioma activo aunque se abran desde la barra superior.
+        when (dialogoCopia) {
+            DialogoCopia.GUARDAR -> {
+                DialogoGuardarCopia(
+                    db = database,
+                    carpetas = carpetas,
+                    onCerrar = { dialogoCopia = null }
+                )
+            }
+
+            DialogoCopia.RESTAURAR -> {
+                DialogoRestaurarCopia(
+                    db = database,
+                    carpetas = carpetas,
+                    alRestaurar = {
+                        // Los datos han cambiado por completo: se reprograman los avisos para que
+                        // no queden alarmas de mascotas que ya no existen ni falten las nuevas.
+                        reprogramarAvisosDeTodo(programador, database, localizacion)
+                    },
+                    onCerrar = {
+                        dialogoCopia = null
+                        // La lista que se veía ya no es la de la base de datos.
+                        selectedMascotaId = null
+                        currentScreen = "list"
+                        viewModel.loadMascotas()
+                    }
+                )
+            }
+
+            null -> Unit
+        }
         }
     }
 }

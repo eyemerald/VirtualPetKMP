@@ -77,3 +77,62 @@ actual fun rememberSelectorDestino(
         }
     }
 }
+
+/** Escritorio: el paquete se lee directamente de donde esté, sin copiarlo. */
+@Composable
+actual fun rememberSelectorCopia(
+    onElegida: (nombreArchivo: String, rutaArchivo: String) -> Unit
+): () -> Unit {
+    return {
+        try {
+            val selector = JFileChooser().apply {
+                dialogTitle = "Elegir copia de seguridad"
+                fileSelectionMode = JFileChooser.FILES_ONLY
+                // Filtro por extensión, pero sin impedir elegir otro fichero: así se puede abrir un
+                // paquete renombrado y se le da un error claro en vez de no dejarlo ni intentar.
+                fileFilter = javax.swing.filechooser.FileNameExtensionFilter("Copia de Virtual Pet (*.vpet)", "vpet")
+                currentDirectory = File(System.getProperty("user.home"))
+            }
+            if (selector.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                val archivo = selector.selectedFile
+                if (archivo != null && archivo.isFile) {
+                    onElegida(archivo.name, archivo.absolutePath)
+                }
+            }
+        } catch (e: Exception) {
+            println("Error abriendo selector de copia JVM: ${e.message}")
+        }
+    }
+}
+
+@Composable
+actual fun rememberSelectorDestinoCopia(
+    nombreSugerido: String,
+    onElegido: (nombreArchivo: String, rutaArchivo: String) -> Unit
+): () -> Unit {
+    return {
+        try {
+            val sugerido = nombreSugerido.ifBlank { "VirtualPet-copia.vpet" }
+            val selector = JFileChooser().apply {
+                dialogTitle = "Guardar copia de seguridad"
+                fileSelectionMode = JFileChooser.FILES_ONLY
+                selectedFile = File(System.getProperty("user.home"), sugerido)
+            }
+            if (selector.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+                val elegido = selector.selectedFile
+                if (elegido != null) {
+                    // Sin extensión, el fichero no se reconocería después al elegirlo para
+                    // restaurar, así que se añade.
+                    val rutaFinal = if (elegido.absolutePath.lowercase().endsWith(".vpet")) {
+                        elegido
+                    } else {
+                        File(elegido.parentFile ?: File(System.getProperty("user.home")), "${elegido.name}.vpet")
+                    }
+                    onElegido(rutaFinal.name, rutaFinal.absolutePath)
+                }
+            }
+        } catch (e: Exception) {
+            println("Error abriendo selector destino de copia JVM: ${e.message}")
+        }
+    }
+}

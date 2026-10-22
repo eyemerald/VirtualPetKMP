@@ -200,32 +200,58 @@ identificador es un recorrido completo de la tabla. Con el tamaño de datos de e
 nota, pero cuando exista el importador conviene añadir un índice por tabla (no se añadió ahora
 para no meter un objeto más en la migración sin necesidad).
 
-### Fase 2 — Exportar e importar, con tests (sin interfaz todavía)
+### Fase 2 — Copia de seguridad y restauración — **hecha en la 1.5**
 
-- `ExportadorDatos`: lee la base de datos y escribe el ZIP (JSON + ficheros).
-- `ImportadorDatos`: lee el ZIP, valida `formato`, fusiona en una transacción y devuelve un
-  **resumen** (cuántas mascotas nuevas, cuántas actualizadas, cuántas se quedan como están,
-  ficheros copiados, avisos).
-- Tests, con dos bases de datos en memoria:
+Lo que se ha entregado es la mitad **conservadora**: guardar todo y volver a cargarlo, sin fusionar
+nada. Cubre "no perder los datos" y "dejar un móvil nuevo como estaba el viejo".
+
+- **Formato `.vpet`**: un ZIP con `manifiesto.json` (formato, versión del formato, versión de la
+  app, versión del esquema, plataforma, número de adjuntos y **SHA-256 del JSON de datos**),
+  `datos.json` (las nueve tablas) y `archivos/` con las fotos y los PDFs. Se abre con cualquier
+  descompresor y el JSON se puede leer a mano: si algún día hubiera que rescatar datos, se puede.
+- **Las relaciones se guardan por `uuid`**, no por `id`, porque el id se recalcula al restaurar; y
+  los adjuntos se referencian **por su nombre dentro del ZIP**, no por su ruta en el dispositivo
+  (la ruta del móvil no existe en el ordenador). Los nombres dentro del paquete se derivan del
+  `uuid` de su fila.
+- **`ExportadorCopia`**: lee las nueve tablas y escribe el ZIP en streaming (una copia con PDFs de
+  varias decenas de megas no se carga en memoria). Cuenta los adjuntos que la base de datos
+  menciona pero ya no están en disco.
+- **`ImportadorCopia`**: valida el paquete (formato, versión y huella del manifiesto) **antes** de
+  tocar nada, guarda una copia automática de lo actual, escribe los adjuntos y reemplaza la base de
+  datos **en una sola transacción** con remapeo de ids. Si algo falla, la transacción se deshace y
+  los archivos recién copiados se borran.
+- **Se conservan las 3 últimas copias automáticas.** El nombre lleva milisegundos: sin ellos, dos
+  restauraciones en el mismo segundo se pisaban.
+- **Interfaz**: menú de sistema (icono de ajustes, junto a las pestañas) → *Copia de seguridad* /
+  *Restaurar copia*. Restaurar tiene tres pasos: elegir, **ver qué trae** y confirmar.
+- **Tests** (9 nuevos, en `CopiaDatosTest`): ida y vuelta con foto y PDF de verdad, contenido byte
+  a byte igual, rutas nuevas, restaurar dos veces sin duplicar, reemplazo de lo que había, paquete
+  cortado a la mitad → base intacta, ZIP ajeno rechazado, retención de 3 copias, vista previa sin
+  escribir nada y adjuntos ausentes sin romper la exportación.
+- **Verificado en el emulador**: exportar desde la interfaz (34 registros y 3 archivos), `pm clear`
+  para dejar la app vacía, restaurar desde la interfaz y comprobar que la base vuelve con las
+  mismas 34 filas, los mismos `uuid`, los PDFs y la foto en su sitio y el recordatorio del
+  tratamiento intacto.
+
+### Fase 2b — Fusión entre dispositivos (pendiente)
+
+- `ImportadorDatos` con **fusión**: lo que ya existe (mismo `uuid`) se actualiza y gana el más
+  reciente por `actualizadoEn`; lo nuevo se añade; nunca se borra.
+- Tests con dos bases de datos en memoria:
   1. Exportar de A, importar en B vacía → queda igual.
   2. Reimportar el mismo paquete → **no duplica nada**.
   3. Cambiar un peso en A, exportar, importar en B → se actualiza esa fila, no se duplica.
   4. Cambiar la misma fila en A y en B con fechas distintas → gana la más reciente.
   5. Importar un paquete **más viejo** que lo local → no revierte nada.
-  6. Importar una mascota de A en B, donde B tiene otra mascota con el mismo nombre → avisa.
+  6. Importar una mascota de A en B, donde B tiene otra mascota con el mismo nombre → **pregunta**
+     si sobrescribir o renombrar (decisión tomada con el usuario).
   7. Paquete corrupto o `formato` desconocido → error claro y **la base de datos intacta**.
 
-### Fase 3 — Interfaz
+### Fase 3 — Lo que queda de interfaz
 
-- En la lista de mascotas, menú ⋮: **"Pasar datos"** → *Exportar todo* / *Importar*.
-- En el menú ⋮ de cada mascota: **"Exportar esta mascota"**.
-- Flujo de importar: elegir fichero → **enseñar el resumen** ("2 mascotas nuevas, 1
-  actualizada, 3 vacunas nuevas…") → confirmar → aplicar.
-- Antes de aplicar, **copia de seguridad automática** de la base de datos local en un fichero
-  con fecha, y decir dónde queda.
-- Se reutiliza lo que ya existe: `rememberSelectorArchivo` (elegir fichero),
-  `rememberGuardarArchivo` (guardar), `rememberCompartidorArchivo` (compartir) y
-  `rememberAbridorArchivo` (abrir). El "transporte" del fichero ya está resuelto.
+- Exportar **una sola mascota** (el paquete completo ya se hace).
+- Diálogo de conflictos de la fase de fusión y **deshacer** una importación.
+- Índice sobre `uuid` en las nueve tablas, cuando exista el importador con fusión.
 
 ### Fase 4 — Probarlo de verdad
 

@@ -102,3 +102,64 @@ actual fun rememberSelectorDestino(
         }
     }
 }
+
+/**
+ * Elige un `.vpet`. El sistema devuelve un `content://`, así que se copia a la caché de la app y se
+ * trabaja con una ruta normal: los lectores de ZIP y de SQLite de este proyecto esperan ficheros.
+ *
+ * La copia va a `cacheDir/pendientes` y no a `filesDir`: es un fichero temporal que se puede
+ * regenerar en cualquier momento y Android puede borrarlo si se queda sin espacio.
+ */
+@Composable
+actual fun rememberSelectorCopia(
+    onElegida: (nombreArchivo: String, rutaArchivo: String) -> Unit
+): () -> Unit {
+    val context = LocalContext.current
+
+    val launcher = rememberLauncherForActivityResult(
+        // Genérico a propósito: un `.vpet` no está registrado como tipo conocido en el sistema.
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                val nombre = obtenerNombreArchivo(context, uri) ?: "copia-${System.currentTimeMillis()}.vpet"
+                val carpeta = java.io.File(context.cacheDir, "pendientes").apply { mkdirs() }
+                val destino = java.io.File(carpeta, "${System.currentTimeMillis()}_${nombre.replace(Regex("[^A-Za-z0-9._-]"), "_")}")
+                if (copiarArchivoA(destino.absolutePath, uri.toString())) {
+                    onElegida(nombre, destino.absolutePath)
+                } else {
+                    println("[SelectorCopia] no se pudo copiar el paquete elegido")
+                }
+            } catch (e: Exception) {
+                println("[SelectorCopia] error: ${e.message}")
+            }
+        }
+    }
+
+    return { launcher.launch(arrayOf("*/*")) }
+}
+
+@Composable
+actual fun rememberSelectorDestinoCopia(
+    nombreSugerido: String,
+    onElegido: (nombreArchivo: String, rutaArchivo: String) -> Unit
+): () -> Unit {
+    val launcher = rememberLauncherForActivityResult(
+        // `application/octet-stream` y no `application/zip`: es un ZIP por dentro, pero el sistema
+        // añade la extensión de su tipo al nombre (**.vpet.zip**), y entonces el fichero deja de
+        // reconocerse por su nombre. Con el tipo genérico se guarda como `.vpet`.
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            onElegido(nombreSugerido.ifBlank { "VirtualPet-copia.vpet" }, uri.toString())
+        }
+    }
+
+    return {
+        try {
+            launcher.launch(nombreSugerido.ifBlank { "VirtualPet-copia.vpet" })
+        } catch (e: Exception) {
+            println("[SelectorDestinoCopia] error: ${e.message}")
+        }
+    }
+}

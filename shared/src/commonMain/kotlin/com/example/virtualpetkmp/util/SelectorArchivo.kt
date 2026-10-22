@@ -25,3 +25,27 @@ expect fun rememberSelectorDestino(
     nombreSugerido: String,
     onDestinoSeleccionado: (nombreArchivo: String, rutaArchivo: String) -> Unit
 ): () -> Unit
+
+/**
+ * Elige un **fichero de copia de seguridad** (`.vpet`) y devuelve una ruta que la app pueda leer.
+ *
+ * Va aparte de [rememberSelectorArchivo] por dos motivos: aquel copia lo elegido a la carpeta de
+ * informes (guardar ahí una copia de 40 MB sería un desperdicio) y el MIME tiene que ser genérico,
+ * porque un `.vpet` no está registrado en el sistema como ningún tipo conocido.
+ */
+@Composable
+expect fun rememberSelectorCopia(
+    onElegida: (nombreArchivo: String, rutaArchivo: String) -> Unit
+): () -> Unit
+
+/**
+ * Diálogo nativo para **guardar** la copia de seguridad.
+ *
+ * La ruta que devuelve en Android es un `content://`, así que el paquete se escribe primero en la
+ * caché y luego se copia ahí ([copiarArchivoA]).
+ */
+@Composable
+expect fun rememberSelectorDestinoCopia(
+    nombreSugerido: String,
+    onElegido: (nombreArchivo: String, rutaArchivo: String) -> Unit
+): () -> Unit

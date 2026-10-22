@@ -407,4 +407,33 @@
     <string name="pdf_nada_que_hacer">No treatments and no doses scheduled.</string>
     <string name="pdf_proximas_dosis">Upcoming doses</string>
     <string name="pdf_resumen_aviso">Daily care summary. For the full record, ask for the veterinary version.</string>
+
+    <!-- Copia de seguridad y restauración -->
+    <string name="copia_menu">Backup</string>
+    <string name="copia_menu_restaurar">Restore backup</string>
+    <string name="copia_explicacion">Everything is saved in a single file: pets, full history, photos and PDFs.</string>
+    <string name="copia_guardar">Save backup</string>
+    <string name="copia_guardando">Saving…</string>
+    <string name="copia_ok">Backup saved</string>
+    <string name="copia_ok_detalle">%1$d records and %2$d files</string>
+    <string name="copia_error">Could not save the backup: %1$s</string>
+    <string name="copia_faltaban">Note: %1$d files were no longer on the device and are not included.</string>
+    <string name="restaurar_explicacion">Choose the backup file. A copy of what you have now is saved before anything changes.</string>
+    <string name="restaurar_elegir">Choose file…</string>
+    <string name="restaurar_vista_titulo">What the backup contains</string>
+    <string name="restaurar_vista_detalle">%1$d pets · %2$d records · %3$d files</string>
+    <string name="restaurar_vista_mascotas">Pets: %1$s</string>
+    <string name="restaurar_aviso">Everything currently in the app will be replaced. Your current data is saved in an automatic backup first.</string>
+    <string name="restaurar_confirmar">Restore now</string>
+    <string name="restaurar_en_curso">Restoring…</string>
+    <string name="restaurar_ok">Restored: %1$d pets and %2$d records</string>
+    <string name="restaurar_ok_copia">The copy of the previous data is at: %1$s</string>
+    <string name="restaurar_error_ilegible">That file cannot be read as a backup.</string>
+    <string name="restaurar_error_ajeno">That file was not created by Virtual Pet.</string>
+    <string name="restaurar_error_nuevo">The backup comes from a newer version of the app. Update it to restore.</string>
+    <string name="restaurar_error_datos">The backup is incomplete or damaged.</string>
+    <string name="restaurar_error_guardando">Could not save: nothing has been changed.</string>
+    <string name="comun_cerrar">Close</string>
+    <string name="comun_cancelar">Cancel</string>
+    <string name="a11y_menu_sistema">App menu</string>
 </resources>

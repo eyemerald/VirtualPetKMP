@@ -33,3 +33,9 @@ SELECT last_insert_rowid() AS id;
 
 selectAll:
 SELECT * FROM vacunas ORDER BY fechaAplicacion DESC;
+
+
+-- Vaciar la tabla. Solo lo usa la restauración de una copia, que reemplaza el contenido entero
+-- dentro de una transacción; en el uso normal nada borra filas por esta consulta.
+deleteAll:
+DELETE FROM vacunas;

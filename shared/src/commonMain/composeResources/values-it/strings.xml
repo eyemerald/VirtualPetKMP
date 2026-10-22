@@ -400,4 +400,33 @@
     <string name="pdf_nada_que_hacer">Nessun trattamento e nessuna dose programmata.</string>
     <string name="pdf_proximas_dosis">Prossime dosi</string>
     <string name="pdf_resumen_aviso">Riepilogo per la cura quotidiana. Per la scheda completa, chiedi la versione veterinaria.</string>
+
+    <!-- Copia de seguridad y restauración -->
+    <string name="copia_menu">Backup</string>
+    <string name="copia_menu_restaurar">Ripristina copia</string>
+    <string name="copia_explicacion">Tutto viene salvato in un unico file: animali, cronologia completa, foto e PDF.</string>
+    <string name="copia_guardar">Salva copia</string>
+    <string name="copia_guardando">Salvataggio…</string>
+    <string name="copia_ok">Copia salvata</string>
+    <string name="copia_ok_detalle">%1$d record e %2$d file</string>
+    <string name="copia_error">Impossibile salvare la copia: %1$s</string>
+    <string name="copia_faltaban">Nota: %1$d file non erano più sul dispositivo e non sono stati inclusi.</string>
+    <string name="restaurar_explicacion">Scegli il file di copia. Prima di cambiare qualcosa viene salvata una copia di com'è adesso.</string>
+    <string name="restaurar_elegir">Scegli file…</string>
+    <string name="restaurar_vista_titulo">Contenuto della copia</string>
+    <string name="restaurar_vista_detalle">%1$d animali · %2$d record · %3$d file</string>
+    <string name="restaurar_vista_mascotas">Animali: %1$s</string>
+    <string name="restaurar_aviso">Tutto ciò che c'è ora nell'app verrà sostituito. I dati attuali vengono prima salvati in una copia automatica.</string>
+    <string name="restaurar_confirmar">Ripristina ora</string>
+    <string name="restaurar_en_curso">Ripristino…</string>
+    <string name="restaurar_ok">Ripristinato: %1$d animali e %2$d record</string>
+    <string name="restaurar_ok_copia">La copia dei dati precedenti è in: %1$s</string>
+    <string name="restaurar_error_ilegible">Il file non può essere letto come copia di sicurezza.</string>
+    <string name="restaurar_error_ajeno">Il file non è stato creato da Virtual Pet.</string>
+    <string name="restaurar_error_nuevo">La copia proviene da una versione più recente dell'app. Aggiornala per ripristinarla.</string>
+    <string name="restaurar_error_datos">La copia è incompleta o danneggiata.</string>
+    <string name="restaurar_error_guardando">Impossibile salvare: non è stato modificato nulla.</string>
+    <string name="comun_cerrar">Chiudi</string>
+    <string name="comun_cancelar">Annulla</string>
+    <string name="a11y_menu_sistema">Menu dell'app</string>
 </resources>
