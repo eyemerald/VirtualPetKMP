@@ -4,6 +4,8 @@ import com.example.virtualpetkmp.Veterinario
 import com.example.virtualpetkmp.db.VirtualPetDatabase
 import com.example.virtualpetkmp.util.ErrorApp
 import com.example.virtualpetkmp.util.ErrorAppException
+import com.example.virtualpetkmp.util.ahoraMillis
+import com.example.virtualpetkmp.util.nuevoIdentificadorUniversal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -33,14 +35,20 @@ class VeterinarioRepository(private val database: VirtualPetDatabase) {
             .map { it.toVeterinario() }
     }
 
-    suspend fun insertVeterinario(veterinario: Veterinario): Result<Long> = withContext(Dispatchers.IO) {
+    suspend fun insertVeterinario(
+        veterinario: Veterinario,
+        uuid: String = nuevoIdentificadorUniversal(),
+        actualizadoEn: Long = ahoraMillis()
+    ): Result<Long> = withContext(Dispatchers.IO) {
         try {
             database.veterinariosQueries.insert(
                 nombreClinica = veterinario.nombreClinica,
                 nombreVeterinario = veterinario.nombreVeterinario,
                 telefono = veterinario.telefono,
                 direccion = veterinario.direccion,
-                esUrgencias = if (veterinario.esUrgencias) 1L else 0L
+                esUrgencias = if (veterinario.esUrgencias) 1L else 0L,
+                uuid = uuid,
+                actualizadoEn = actualizadoEn
             )
 
             val idInsertado = database.veterinariosQueries.getLastInsertedId()
@@ -52,7 +60,10 @@ class VeterinarioRepository(private val database: VirtualPetDatabase) {
         }
     }
 
-    suspend fun updateVeterinario(veterinario: Veterinario): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun updateVeterinario(
+        veterinario: Veterinario,
+        actualizadoEn: Long = ahoraMillis()
+    ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             if (veterinario.id == null) {
                 return@withContext Result.failure(ErrorAppException(ErrorApp.ID_REQUERIDO))
@@ -64,6 +75,7 @@ class VeterinarioRepository(private val database: VirtualPetDatabase) {
                 telefono = veterinario.telefono,
                 direccion = veterinario.direccion,
                 esUrgencias = if (veterinario.esUrgencias) 1L else 0L,
+                actualizadoEn = actualizadoEn,
                 id = veterinario.id
             )
 

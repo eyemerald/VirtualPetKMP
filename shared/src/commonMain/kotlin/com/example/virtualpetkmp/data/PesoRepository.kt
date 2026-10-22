@@ -2,6 +2,8 @@ package com.example.virtualpetkmp.data
 
 import com.example.virtualpetkmp.Peso
 import com.example.virtualpetkmp.db.VirtualPetDatabase
+import com.example.virtualpetkmp.util.ahoraMillis
+import com.example.virtualpetkmp.util.nuevoIdentificadorUniversal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
@@ -39,13 +41,22 @@ class PesoRepository(private val database: VirtualPetDatabase) {
             .associate { fila -> fila.mascotaId to fila.peso }
     }
 
-    suspend fun insertPeso(mascotaId: Long, fecha: LocalDate, peso: Double, notas: String?): Result<Unit> =        withContext(Dispatchers.IO) {
+    suspend fun insertPeso(
+        mascotaId: Long,
+        fecha: LocalDate,
+        peso: Double,
+        notas: String?,
+        uuid: String = nuevoIdentificadorUniversal(),
+        actualizadoEn: Long = ahoraMillis()
+    ): Result<Unit> = withContext(Dispatchers.IO) {
             try {
                 database.pesosQueries.insert(
                     mascotaId = mascotaId,
                     fecha = fecha.toString(),
                     peso = peso,
-                    notas = notas
+                    notas = notas,
+                    uuid = uuid,
+                    actualizadoEn = actualizadoEn
                 )
                 Result.success(Unit)
             } catch (e: Exception) {
@@ -53,13 +64,20 @@ class PesoRepository(private val database: VirtualPetDatabase) {
             }
         }
 
-    suspend fun updatePeso(id: Long, fecha: LocalDate, peso: Double, notas: String?): Result<Unit> =
+    suspend fun updatePeso(
+        id: Long,
+        fecha: LocalDate,
+        peso: Double,
+        notas: String?,
+        actualizadoEn: Long = ahoraMillis()
+    ): Result<Unit> =
         withContext(Dispatchers.IO) {
             try {
                 database.pesosQueries.update(
                     fecha = fecha.toString(),
                     peso = peso,
                     notas = notas,
+                    actualizadoEn = actualizadoEn,
                     id = id
                 )
                 Result.success(Unit)

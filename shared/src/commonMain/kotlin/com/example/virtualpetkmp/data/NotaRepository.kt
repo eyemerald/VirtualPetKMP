@@ -2,6 +2,8 @@ package com.example.virtualpetkmp.data
 
 import com.example.virtualpetkmp.Nota
 import com.example.virtualpetkmp.db.VirtualPetDatabase
+import com.example.virtualpetkmp.util.ahoraMillis
+import com.example.virtualpetkmp.util.nuevoIdentificadorUniversal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -19,18 +21,32 @@ class NotaRepository(private val database: VirtualPetDatabase) {
             .map { fila -> Nota(id = fila.id, mascotaId = fila.mascotaId, texto = fila.texto) }
     }
 
-    suspend fun insertNota(mascotaId: Long, texto: String): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun insertNota(
+        mascotaId: Long,
+        texto: String,
+        uuid: String = nuevoIdentificadorUniversal(),
+        actualizadoEn: Long = ahoraMillis()
+    ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            database.notasQueries.insert(mascotaId = mascotaId, texto = texto)
+            database.notasQueries.insert(
+                mascotaId = mascotaId,
+                texto = texto,
+                uuid = uuid,
+                actualizadoEn = actualizadoEn
+            )
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun updateNota(id: Long, texto: String): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun updateNota(
+        id: Long,
+        texto: String,
+        actualizadoEn: Long = ahoraMillis()
+    ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            database.notasQueries.update(texto = texto, id = id)
+            database.notasQueries.update(texto = texto, actualizadoEn = actualizadoEn, id = id)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

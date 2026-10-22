@@ -176,18 +176,29 @@ adivinar.
 
 ## 7. Plan por fases
 
-### Fase 1 — Identidad en el esquema (la base de todo)
+### Fase 1 — Identidad en el esquema (la base de todo) — **hecha en la 1.4**
 
-- Migración `12.sqm`: añadir `uuid` y `actualizadoEn` a `mascotas`, `vacunas`, `preventivos`,
-  `revisiones`, `tratamientos`, `pesos`, `informes`, `notas` y `veterinarios`, con índice único
-  por `uuid`.
-- **Rellenar el `uuid` de las filas que ya existen** (`UPDATE … SET uuid = …` fila a fila) y
-  poner un `actualizadoEn` de partida. Sin esto, la app instalada se quedaría con filas sin
-  identidad y el primer traspaso las duplicaría.
-- Los repositorios generan `uuid` y `actualizadoEn` en cada `insert` y refrescan
-  `actualizadoEn` en cada `update`. Es la parte pesada: hay que tocar los siete repositorios.
-- Extender `MigracionesTest` (migrar desde **cualquier** versión anterior sigue siendo la regla
-  del proyecto).
+- Migración `13.sqm` (versión 13 → **14**): añade `uuid` y `actualizadoEn` a `mascotas`,
+  `vacunas`, `preventivos`, `revisiones`, `tratamientos`, `pesos`, `informes`, `notas` y
+  `veterinarios`. Es **solo aditiva**: dos `ALTER TABLE … ADD COLUMN` por tabla y un `UPDATE`
+  que rellena las filas existentes con `lower(hex(randomblob(16)))` y la hora actual. Ninguna
+  fila se borra, se renombra ni se recrea.
+- `uuid`: 32 caracteres hexadecimales en minúscula (el mismo formato que genera la app con
+  `java.util.UUID.randomUUID()`). `actualizadoEn`: milisegundos desde epoch, en `INTEGER` y no
+  como texto, para comparar con `<` sin depender de los decimales que escriba cada plataforma.
+- Los nueve repositorios generan ambos valores en cada `insert` y refrescan `actualizadoEn` en
+  cada `update`, y los dos se pueden pasar a mano: la importación tendrá que conservar los del
+  paquete original.
+- Verificado: `MigracionesTest` migra desde **todas** las versiones anteriores y comprueba que
+  el esquema migrado es idéntico al de una instalación nueva; una prueba con las bases reales de
+  `build/` (v12 y v13, con 34 filas entre las dos) confirma que no se pierde nada; y se migró en
+  el emulador una base v13 de verdad, quedando `user_version = 14`, las 34 filas intactas y
+  todas con identificador.
+
+**Pendiente para la fase de importación:** sin índice sobre `uuid`, cada búsqueda por
+identificador es un recorrido completo de la tabla. Con el tamaño de datos de esta app no se
+nota, pero cuando exista el importador conviene añadir un índice por tabla (no se añadió ahora
+para no meter un objeto más en la migración sin necesidad).
 
 ### Fase 2 — Exportar e importar, con tests (sin interfaz todavía)
 

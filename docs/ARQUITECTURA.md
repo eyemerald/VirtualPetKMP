@@ -87,6 +87,22 @@ Todo el esquema se declara en ficheros `.sq` y el acceso se genera en compilaci�
    migraciones se aplican en orden y son la única forma de no perder los datos del usuario.
 3. La versión del esquema la determina el número de migraciones, no un número escrito a mano.
 
+### Identidad de cada fila (`uuid` y `actualizadoEn`)
+
+Desde la versión **14** del esquema, todas las tablas llevan dos columnas más:
+
+- `uuid`: identificador universal de la fila, 32 caracteres hexadecimales en minúscula. El `id`
+  es un autonumérico **local**, así que la vacuna 3 de un móvil y la vacuna 3 de otro son cosas
+  distintas; el `uuid`, en cambio, no cambia nunca y es lo que permitirá reconocer el mismo
+  registro en otro dispositivo al exportar e importar.
+- `actualizadoEn`: milisegundos desde epoch de la última modificación. Sirve para decidir qué
+  versión es la más nueva cuando la misma fila existe en dos dispositivos.
+
+Los dos los rellenan los repositorios (`util/Identificadores.kt`: `nuevoIdentificadorUniversal`
+y `ahoraMillis`), y se pueden pasar a mano porque la importación tendrá que conservar los del
+paquete original. La migración `13.sqm` los añade y rellena las filas que ya existían, sin tocar
+ningún dato. Los detalles del traspaso están en `docs/TRASPASO_DE_DATOS.md`.
+
 ### Los drivers aplican las migraciones (importante)
 
 Esto **estuvo roto** y es un fallo fácil de repetir: los drivers se construían con el esquema
@@ -102,7 +118,7 @@ el esquema y lo entrega al driver; Android además necesita
 app con una base de datos de la versión anterior— y eso significaba que nadie lo hacía. El test
 cubre tres cosas:
 
-1. **Los datos sobreviven desde cualquier versión anterior** (de la 1 a la 11, no solo desde la
+1. **Los datos sobreviven desde cualquier versión anterior** (de la 1 a la 13, no solo desde la
    penúltima: quien no actualiza en meses se salta varias de golpe).
 2. **El esquema migrado es idéntico al de una instalación nueva.** Es la comprobación que caza el
    despiste clásico: tocar el `.sq` y olvidar el `.sqm` deja dos rutas que acaban en bases de

@@ -1,3 +1,10 @@
+-- Identificador universal de cada fila: no cambia nunca y no depende del id local. Es lo que
+-- permitirá reconocer la misma mascota en otro dispositivo al exportar e importar (ver
+-- docs/TRASPASO_DE_DATOS.md). 32 caracteres hexadecimales en minúscula, sin guiones, que es el
+-- mismo formato que escribe la migración 13 con `randomblob`.
+--
+-- `actualizadoEn` son milisegundos desde epoch de la última modificación: sirve para decidir qué
+-- versión de un registro es la más nueva cuando la misma mascota existe en dos dispositivos.
 CREATE TABLE mascotas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
@@ -9,7 +16,9 @@ CREATE TABLE mascotas (
     microchip TEXT,
     foto TEXT,
     -- Peso ideal en kilos, opcional: null = el usuario no lo ha configurado.
-    peso_ideal REAL
+    peso_ideal REAL,
+    uuid TEXT NOT NULL,
+    actualizadoEn INTEGER NOT NULL
 );
 
 selectAll:
@@ -22,19 +31,19 @@ checkNombreUnico:
 SELECT id FROM mascotas WHERE LOWER(nombre) = LOWER(?);
 
 insert:
-INSERT INTO mascotas(nombre, especie, raza, fechaNacimiento, sexo, color, microchip, foto, peso_ideal)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO mascotas(nombre, especie, raza, fechaNacimiento, sexo, color, microchip, foto, peso_ideal, uuid, actualizadoEn)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE mascotas
-SET nombre = ?, especie = ?, raza = ?, fechaNacimiento = ?, sexo = ?, color = ?, microchip = ?, foto = ?, peso_ideal = ?
+SET nombre = ?, especie = ?, raza = ?, fechaNacimiento = ?, sexo = ?, color = ?, microchip = ?, foto = ?, peso_ideal = ?, actualizadoEn = ?
 WHERE id = ?;
 
 updateFoto:
-UPDATE mascotas SET foto = ? WHERE id = ?;
+UPDATE mascotas SET foto = ?, actualizadoEn = ? WHERE id = ?;
 
 updatePesoIdeal:
-UPDATE mascotas SET peso_ideal = ? WHERE id = ?;
+UPDATE mascotas SET peso_ideal = ?, actualizadoEn = ? WHERE id = ?;
 
 delete:
 DELETE FROM mascotas WHERE id = ?;

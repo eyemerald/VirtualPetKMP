@@ -1,10 +1,15 @@
+-- `uuid` y `actualizadoEn`: ver la explicación en Mascotas.sq. Los veterinarios también los
+-- llevan aunque no cuelguen de una mascota: son globales, y al importar hay que reconocerlos para
+-- no acabar con la misma clínica repetida en cada importación.
 CREATE TABLE veterinarios (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombreClinica TEXT NOT NULL,
     nombreVeterinario TEXT,
     telefono TEXT NOT NULL,
     direccion TEXT NOT NULL,
-    esUrgencias INTEGER NOT NULL DEFAULT 0
+    esUrgencias INTEGER NOT NULL DEFAULT 0,
+    uuid TEXT NOT NULL,
+    actualizadoEn INTEGER NOT NULL
 );
 
 selectAll:
@@ -17,12 +22,12 @@ selectUrgencias:
 SELECT * FROM veterinarios WHERE esUrgencias = 1;
 
 insert:
-INSERT INTO veterinarios(nombreClinica, nombreVeterinario, telefono, direccion, esUrgencias)
-VALUES (?, ?, ?, ?, ?);
+INSERT INTO veterinarios(nombreClinica, nombreVeterinario, telefono, direccion, esUrgencias, uuid, actualizadoEn)
+VALUES (?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE veterinarios
-SET nombreClinica = ?, nombreVeterinario = ?, telefono = ?, direccion = ?, esUrgencias = ?
+SET nombreClinica = ?, nombreVeterinario = ?, telefono = ?, direccion = ?, esUrgencias = ?, actualizadoEn = ?
 WHERE id = ?;
 
 delete:

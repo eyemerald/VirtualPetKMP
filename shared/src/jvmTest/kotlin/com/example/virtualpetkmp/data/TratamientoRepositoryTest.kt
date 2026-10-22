@@ -223,7 +223,11 @@ class TratamientoRepositoryTest {
                 color = "Dorado",
                 microchip = null,
                 foto = null,
-                peso_ideal = null
+                peso_ideal = null,
+                // Columnas del traspaso de datos: esta prueba escribe con la consulta generada,
+                // así que tiene que dárselas igual que el repositorio.
+                uuid = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                actualizadoEn = 1_000L
             )
             val luna = database.mascotasQueries.selectAll().executeAsList().first().id
 

@@ -2,6 +2,8 @@ package com.example.virtualpetkmp.data
 
 import com.example.virtualpetkmp.Vacuna
 import com.example.virtualpetkmp.db.VirtualPetDatabase
+import com.example.virtualpetkmp.util.ahoraMillis
+import com.example.virtualpetkmp.util.nuevoIdentificadorUniversal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
@@ -51,13 +53,21 @@ class VacunaRepository(private val database: VirtualPetDatabase) {
             }
     }
 
+    /**
+     * Alta de una vacuna.
+     *
+     * [uuid] y [actualizadoEn] se pueden pasar a mano porque la importación de un paquete tiene
+     * que conservar los del archivo original; en el uso normal se generan aquí.
+     */
     suspend fun insertVacuna(
         mascotaId: Long,
         nombre: String,
         fechaAplicacion: LocalDate,
         fechaProximaDosis: LocalDate,
         veterinario: String?,
-        lote: String?
+        lote: String?,
+        uuid: String = nuevoIdentificadorUniversal(),
+        actualizadoEn: Long = ahoraMillis()
     ): Result<Long> = withContext(Dispatchers.IO) {
         try {
             database.vacunasQueries.insert(
@@ -66,7 +76,9 @@ class VacunaRepository(private val database: VirtualPetDatabase) {
                 fechaAplicacion = fechaAplicacion.toString(),
                 fechaProximaDosis = fechaProximaDosis.toString(),
                 veterinario = veterinario,
-                lote = lote
+                lote = lote,
+                uuid = uuid,
+                actualizadoEn = actualizadoEn
             )
 
             val idInsertado = database.vacunasQueries.getLastInsertedId()
@@ -84,7 +96,8 @@ class VacunaRepository(private val database: VirtualPetDatabase) {
         fechaAplicacion: LocalDate,
         fechaProximaDosis: LocalDate,
         veterinario: String?,
-        lote: String?
+        lote: String?,
+        actualizadoEn: Long = ahoraMillis()
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             database.vacunasQueries.update(
@@ -93,6 +106,7 @@ class VacunaRepository(private val database: VirtualPetDatabase) {
                 fechaProximaDosis = fechaProximaDosis.toString(),
                 veterinario = veterinario,
                 lote = lote,
+                actualizadoEn = actualizadoEn,
                 id = id
             )
             Result.success(Unit)

@@ -1,3 +1,4 @@
+-- `uuid` y `actualizadoEn`: ver la explicación en Mascotas.sq.
 CREATE TABLE informes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     mascotaId INTEGER NOT NULL,
@@ -6,6 +7,8 @@ CREATE TABLE informes (
     fecha TEXT NOT NULL,
     nombreArchivo TEXT NOT NULL,
     rutaArchivo TEXT NOT NULL,
+    uuid TEXT NOT NULL,
+    actualizadoEn INTEGER NOT NULL,
     FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
 );
 
@@ -13,12 +16,12 @@ selectByMascotaId:
 SELECT * FROM informes WHERE mascotaId = ? ORDER BY fecha DESC;
 
 insert:
-INSERT INTO informes(mascotaId, tipo, descripcion, fecha, nombreArchivo, rutaArchivo)
-VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO informes(mascotaId, tipo, descripcion, fecha, nombreArchivo, rutaArchivo, uuid, actualizadoEn)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE informes 
-SET tipo = ?, descripcion = ?, fecha = ?
+SET tipo = ?, descripcion = ?, fecha = ?, actualizadoEn = ?
 WHERE id = ?;
 
 delete:

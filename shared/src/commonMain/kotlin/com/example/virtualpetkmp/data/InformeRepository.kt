@@ -2,6 +2,8 @@ package com.example.virtualpetkmp.data
 
 import com.example.virtualpetkmp.Informe
 import com.example.virtualpetkmp.db.VirtualPetDatabase
+import com.example.virtualpetkmp.util.ahoraMillis
+import com.example.virtualpetkmp.util.nuevoIdentificadorUniversal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
@@ -38,7 +40,9 @@ class InformeRepository(private val database: VirtualPetDatabase) {
         descripcion: String?,
         fecha: LocalDate,
         nombreArchivo: String,
-        rutaArchivo: String
+        rutaArchivo: String,
+        uuid: String = nuevoIdentificadorUniversal(),
+        actualizadoEn: Long = ahoraMillis()
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             database.informesQueries.insert(
@@ -47,7 +51,9 @@ class InformeRepository(private val database: VirtualPetDatabase) {
                 descripcion = descripcion,
                 fecha = fecha.toString(),
                 nombreArchivo = nombreArchivo,
-                rutaArchivo = rutaArchivo
+                rutaArchivo = rutaArchivo,
+                uuid = uuid,
+                actualizadoEn = actualizadoEn
             )
             Result.success(Unit)
         } catch (e: Exception) {
@@ -59,13 +65,15 @@ class InformeRepository(private val database: VirtualPetDatabase) {
         id: Long,
         tipo: String,
         descripcion: String?,
-        fecha: LocalDate
+        fecha: LocalDate,
+        actualizadoEn: Long = ahoraMillis()
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             database.informesQueries.update(
                 tipo = tipo,
                 descripcion = descripcion,
                 fecha = fecha.toString(),
+                actualizadoEn = actualizadoEn,
                 id = id
             )
             Result.success(Unit)

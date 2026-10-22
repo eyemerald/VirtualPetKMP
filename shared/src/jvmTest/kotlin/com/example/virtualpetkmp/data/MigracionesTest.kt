@@ -3,10 +3,12 @@ package com.example.virtualpetkmp.data
 import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.db.VirtualPetDatabase
 import java.io.File
 import java.nio.file.Files
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -111,6 +113,26 @@ class MigracionesTest {
                 "se perdieron notas al migrar desde la versión $desde"
             )
         }
+
+        // Las columnas del traspaso de datos (migración 13) se rellenan solas: una mascota sin
+        // identificador universal no se podría reconocer en otro dispositivo, y una sin fecha de
+        // modificación no se podría comparar con la copia del otro lado.
+        val traspaso = driver.consulta("SELECT uuid, actualizadoEn FROM mascotas;", columnas = 2).single()
+        assertEquals(
+            32,
+            traspaso[0]?.length,
+            "la mascota migrada desde la versión $desde se quedó sin identificador universal"
+        )
+        assertTrue(
+            (traspaso[1]?.toLongOrNull() ?: 0L) > 0L,
+            "la mascota migrada desde la versión $desde se quedó sin fecha de modificación"
+        )
+
+        if (conNotas) {
+            val identificadores = driver.consulta("SELECT uuid FROM notas ORDER BY id;")
+                .map { it.first() }
+            assertEquals(2, identificadores.toSet().size, "las notas migradas comparten identificador")
+        }
     }
 
     @Test
@@ -190,7 +212,19 @@ class MigracionesTest {
 
         // Primer arranque: se crea todo y se deja marcado.
         val primera = abrirBaseDeDatos(driver)
-        insertarMascota(driver)
+        // Se guarda por el repositorio y no con SQL a pelo: en una instalación nueva la tabla ya
+        // exige `uuid` y `actualizadoEn`, y así se comprueba también el camino real de escritura.
+        MascotaRepository(primera).insertMascota(
+            Mascota(
+                nombre = "Luna",
+                especie = "Perro",
+                raza = "Labrador Retriever",
+                fechaNacimiento = LocalDate(2024, 2, 4),
+                sexo = "Hembra",
+                color = "Negro",
+                microchip = "941000012345678"
+            )
+        ).getOrThrow()
         assertEquals(1, primera.mascotasQueries.selectAll().executeAsList().size)
         assertEquals(versionFinal, driver.userVersion())
 

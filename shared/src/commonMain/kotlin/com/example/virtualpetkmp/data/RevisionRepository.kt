@@ -2,6 +2,8 @@ package com.example.virtualpetkmp.data
 
 import com.example.virtualpetkmp.Revision
 import com.example.virtualpetkmp.db.VirtualPetDatabase
+import com.example.virtualpetkmp.util.ahoraMillis
+import com.example.virtualpetkmp.util.nuevoIdentificadorUniversal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
@@ -36,7 +38,9 @@ class RevisionRepository(private val database: VirtualPetDatabase) {
         motivo: String,
         diagnostico: String?,
         notas: String?,
-        veterinario: String?
+        veterinario: String?,
+        uuid: String = nuevoIdentificadorUniversal(),
+        actualizadoEn: Long = ahoraMillis()
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             database.revisionesQueries.insert(
@@ -45,7 +49,9 @@ class RevisionRepository(private val database: VirtualPetDatabase) {
                 motivo = motivo,
                 diagnostico = diagnostico,
                 notas = notas,
-                veterinario = veterinario
+                veterinario = veterinario,
+                uuid = uuid,
+                actualizadoEn = actualizadoEn
             )
             Result.success(Unit)
         } catch (e: Exception) {
@@ -59,7 +65,8 @@ class RevisionRepository(private val database: VirtualPetDatabase) {
         motivo: String,
         diagnostico: String?,
         notas: String?,
-        veterinario: String?
+        veterinario: String?,
+        actualizadoEn: Long = ahoraMillis()
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             database.revisionesQueries.update(
@@ -68,6 +75,7 @@ class RevisionRepository(private val database: VirtualPetDatabase) {
                 diagnostico = diagnostico,
                 notas = notas,
                 veterinario = veterinario,
+                actualizadoEn = actualizadoEn,
                 id = id
             )
             Result.success(Unit)

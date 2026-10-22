@@ -2,6 +2,8 @@ package com.example.virtualpetkmp.data
 
 import com.example.virtualpetkmp.Tratamiento
 import com.example.virtualpetkmp.db.VirtualPetDatabase
+import com.example.virtualpetkmp.util.ahoraMillis
+import com.example.virtualpetkmp.util.nuevoIdentificadorUniversal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
@@ -70,7 +72,9 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
         fechaInicio: LocalDate,
         fechaFin: LocalDate?,
         hora: String? = null,
-        notificar: Boolean = false
+        notificar: Boolean = false,
+        uuid: String = nuevoIdentificadorUniversal(),
+        actualizadoEn: Long = ahoraMillis()
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             database.tratamientosQueries.insert(
@@ -81,7 +85,9 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
                 fechaInicio = fechaInicio.toString(),
                 fechaFin = fechaFin?.toString(),
                 hora = hora,
-                notificar = if (notificar) 1L else 0L
+                notificar = if (notificar) 1L else 0L,
+                uuid = uuid,
+                actualizadoEn = actualizadoEn
             )
             Result.success(Unit)
         } catch (e: Exception) {
@@ -97,7 +103,8 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
         fechaInicio: LocalDate,
         fechaFin: LocalDate?,
         hora: String? = null,
-        notificar: Boolean = false
+        notificar: Boolean = false,
+        actualizadoEn: Long = ahoraMillis()
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             database.tratamientosQueries.update(
@@ -108,6 +115,7 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
                 fechaFin = fechaFin?.toString(),
                 hora = hora,
                 notificar = if (notificar) 1L else 0L,
+                actualizadoEn = actualizadoEn,
                 id = id
             )
             Result.success(Unit)

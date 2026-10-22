@@ -1,3 +1,4 @@
+-- `uuid` y `actualizadoEn`: ver la explicación en Mascotas.sq.
 CREATE TABLE tratamientos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     mascotaId INTEGER NOT NULL,
@@ -11,6 +12,8 @@ CREATE TABLE tratamientos (
     -- 0/1: 1 = el usuario quiere que se le avise a esa hora mientras dure el tratamiento.
     -- SQLite no tiene booleanos: se guarda como entero y el repositorio lo convierte.
     notificar INTEGER NOT NULL DEFAULT 0,
+    uuid TEXT NOT NULL,
+    actualizadoEn INTEGER NOT NULL,
     FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
 );
 
@@ -27,12 +30,12 @@ JOIN mascotas ON mascotas.id = tratamientos.mascotaId
 WHERE tratamientos.notificar = 1;
 
 insert:
-INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin, hora, notificar)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin, hora, notificar, uuid, actualizadoEn)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE tratamientos 
-SET nombreMedicamento = ?, dosis = ?, frecuencia = ?, fechaInicio = ?, fechaFin = ?, hora = ?, notificar = ?
+SET nombreMedicamento = ?, dosis = ?, frecuencia = ?, fechaInicio = ?, fechaFin = ?, hora = ?, notificar = ?, actualizadoEn = ?
 WHERE id = ?;
 
 delete:

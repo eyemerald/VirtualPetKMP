@@ -1,7 +1,10 @@
+-- `uuid` y `actualizadoEn`: ver la explicación en Mascotas.sq.
 CREATE TABLE notas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     mascotaId INTEGER NOT NULL,
     texto TEXT NOT NULL,
+    uuid TEXT NOT NULL,
+    actualizadoEn INTEGER NOT NULL,
     FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
 );
 
@@ -9,10 +12,10 @@ selectByMascotaId:
 SELECT * FROM notas WHERE mascotaId = ? ORDER BY id DESC;
 
 insert:
-INSERT INTO notas(mascotaId, texto) VALUES (?, ?);
+INSERT INTO notas(mascotaId, texto, uuid, actualizadoEn) VALUES (?, ?, ?, ?);
 
 update:
-UPDATE notas SET texto = ? WHERE id = ?;
+UPDATE notas SET texto = ?, actualizadoEn = ? WHERE id = ?;
 
 delete:
 DELETE FROM notas WHERE id = ?;

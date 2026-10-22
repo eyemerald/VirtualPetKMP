@@ -1,3 +1,5 @@
+-- `uuid` y `actualizadoEn`: ver la explicación en Mascotas.sq. Todas las tablas las llevan para que
+-- exportar e importar pueda reconocer cada fila en otro dispositivo sin depender del id local.
 CREATE TABLE vacunas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     mascotaId INTEGER NOT NULL,
@@ -6,6 +8,8 @@ CREATE TABLE vacunas (
     fechaProximaDosis TEXT NOT NULL,
     veterinario TEXT,
     lote TEXT,
+    uuid TEXT NOT NULL,
+    actualizadoEn INTEGER NOT NULL,
     FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
 );
 
@@ -13,12 +17,12 @@ selectByMascotaId:
 SELECT * FROM vacunas WHERE mascotaId = ? ORDER BY fechaAplicacion DESC;
 
 insert:
-INSERT INTO vacunas(mascotaId, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote)
-VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO vacunas(mascotaId, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote, uuid, actualizadoEn)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE vacunas 
-SET nombre = ?, fechaAplicacion = ?, fechaProximaDosis = ?, veterinario = ?, lote = ?
+SET nombre = ?, fechaAplicacion = ?, fechaProximaDosis = ?, veterinario = ?, lote = ?, actualizadoEn = ?
 WHERE id = ?;
 
 delete:

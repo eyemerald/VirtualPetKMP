@@ -1,0 +1,64 @@
+-- Migración de la versión 13 a la 14: identificador universal y fecha de modificación.
+--
+-- POR QUÉ: exportar e importar mascotas entre el móvil y el ordenador (o entre dos móviles)
+-- necesita reconocer la MISMA fila en otro dispositivo. El `id` no sirve: es un autonumérico
+-- local, así que la vacuna 3 de un móvil y la vacuna 3 de otro son cosas distintas. A partir de
+-- aquí cada fila lleva su propio `uuid`, que no cambia nunca, y `actualizadoEn`, milisegundos
+-- desde epoch de la última modificación, para decidir qué versión es la más nueva cuando la misma
+-- fila exista en dos sitios.
+--
+-- LOS DATOS NO SE TOCAN: solo se AÑADEN dos columnas por tabla y se rellenan en el sitio. Ninguna
+-- fila se borra, se renombra ni se recrea, así que una actualización no puede perder nada.
+--
+-- Los valores por defecto son obligatorios para poder añadir columnas NOT NULL con `ALTER TABLE`
+-- (SQLite no lo permite sin ellos) y son provisionales: el `UPDATE` de después los sustituye por
+-- valores reales en todas las filas que ya existían.
+--
+-- `randomblob(16)` se evalúa UNA VEZ POR FILA, así que cada registro recibe un identificador
+-- distinto. El formato (32 caracteres hexadecimales en minúscula, sin guiones) es el mismo que
+-- escribe la app al insertar (`nuevoIdentificadorUniversal`).
+
+ALTER TABLE mascotas ADD COLUMN uuid TEXT NOT NULL DEFAULT '';
+ALTER TABLE mascotas ADD COLUMN actualizadoEn INTEGER NOT NULL DEFAULT 0;
+UPDATE mascotas SET uuid = lower(hex(randomblob(16))),
+    actualizadoEn = CAST(strftime('%s', 'now') AS INTEGER) * 1000;
+
+ALTER TABLE vacunas ADD COLUMN uuid TEXT NOT NULL DEFAULT '';
+ALTER TABLE vacunas ADD COLUMN actualizadoEn INTEGER NOT NULL DEFAULT 0;
+UPDATE vacunas SET uuid = lower(hex(randomblob(16))),
+    actualizadoEn = CAST(strftime('%s', 'now') AS INTEGER) * 1000;
+
+ALTER TABLE preventivos ADD COLUMN uuid TEXT NOT NULL DEFAULT '';
+ALTER TABLE preventivos ADD COLUMN actualizadoEn INTEGER NOT NULL DEFAULT 0;
+UPDATE preventivos SET uuid = lower(hex(randomblob(16))),
+    actualizadoEn = CAST(strftime('%s', 'now') AS INTEGER) * 1000;
+
+ALTER TABLE revisiones ADD COLUMN uuid TEXT NOT NULL DEFAULT '';
+ALTER TABLE revisiones ADD COLUMN actualizadoEn INTEGER NOT NULL DEFAULT 0;
+UPDATE revisiones SET uuid = lower(hex(randomblob(16))),
+    actualizadoEn = CAST(strftime('%s', 'now') AS INTEGER) * 1000;
+
+ALTER TABLE tratamientos ADD COLUMN uuid TEXT NOT NULL DEFAULT '';
+ALTER TABLE tratamientos ADD COLUMN actualizadoEn INTEGER NOT NULL DEFAULT 0;
+UPDATE tratamientos SET uuid = lower(hex(randomblob(16))),
+    actualizadoEn = CAST(strftime('%s', 'now') AS INTEGER) * 1000;
+
+ALTER TABLE pesos ADD COLUMN uuid TEXT NOT NULL DEFAULT '';
+ALTER TABLE pesos ADD COLUMN actualizadoEn INTEGER NOT NULL DEFAULT 0;
+UPDATE pesos SET uuid = lower(hex(randomblob(16))),
+    actualizadoEn = CAST(strftime('%s', 'now') AS INTEGER) * 1000;
+
+ALTER TABLE informes ADD COLUMN uuid TEXT NOT NULL DEFAULT '';
+ALTER TABLE informes ADD COLUMN actualizadoEn INTEGER NOT NULL DEFAULT 0;
+UPDATE informes SET uuid = lower(hex(randomblob(16))),
+    actualizadoEn = CAST(strftime('%s', 'now') AS INTEGER) * 1000;
+
+ALTER TABLE notas ADD COLUMN uuid TEXT NOT NULL DEFAULT '';
+ALTER TABLE notas ADD COLUMN actualizadoEn INTEGER NOT NULL DEFAULT 0;
+UPDATE notas SET uuid = lower(hex(randomblob(16))),
+    actualizadoEn = CAST(strftime('%s', 'now') AS INTEGER) * 1000;
+
+ALTER TABLE veterinarios ADD COLUMN uuid TEXT NOT NULL DEFAULT '';
+ALTER TABLE veterinarios ADD COLUMN actualizadoEn INTEGER NOT NULL DEFAULT 0;
+UPDATE veterinarios SET uuid = lower(hex(randomblob(16))),
+    actualizadoEn = CAST(strftime('%s', 'now') AS INTEGER) * 1000;

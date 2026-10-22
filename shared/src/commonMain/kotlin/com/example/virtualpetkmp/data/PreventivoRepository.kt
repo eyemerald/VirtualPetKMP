@@ -2,6 +2,8 @@ package com.example.virtualpetkmp.data
 
 import com.example.virtualpetkmp.Preventivo
 import com.example.virtualpetkmp.db.VirtualPetDatabase
+import com.example.virtualpetkmp.util.ahoraMillis
+import com.example.virtualpetkmp.util.nuevoIdentificadorUniversal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
@@ -72,7 +74,9 @@ class PreventivoRepository(private val database: VirtualPetDatabase) {
         fechaAplicacion: LocalDate,
         fechaProximaDosis: LocalDate,
         veterinario: String?,
-        lote: String?
+        lote: String?,
+        uuid: String = nuevoIdentificadorUniversal(),
+        actualizadoEn: Long = ahoraMillis()
     ): Result<Long> = withContext(Dispatchers.IO) {
         try {
             database.preventivosQueries.insert(
@@ -82,7 +86,9 @@ class PreventivoRepository(private val database: VirtualPetDatabase) {
                 fechaAplicacion = fechaAplicacion.toString(),
                 fechaProximaDosis = fechaProximaDosis.toString(),
                 veterinario = veterinario,
-                lote = lote
+                lote = lote,
+                uuid = uuid,
+                actualizadoEn = actualizadoEn
             )
 
             val idInsertado = database.preventivosQueries.getLastInsertedId()
@@ -101,7 +107,8 @@ class PreventivoRepository(private val database: VirtualPetDatabase) {
         fechaAplicacion: LocalDate,
         fechaProximaDosis: LocalDate,
         veterinario: String?,
-        lote: String?
+        lote: String?,
+        actualizadoEn: Long = ahoraMillis()
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             database.preventivosQueries.update(
@@ -111,6 +118,7 @@ class PreventivoRepository(private val database: VirtualPetDatabase) {
                 fechaProximaDosis = fechaProximaDosis.toString(),
                 veterinario = veterinario,
                 lote = lote,
+                actualizadoEn = actualizadoEn,
                 id = id
             )
             Result.success(Unit)

@@ -4,6 +4,8 @@ import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.db.VirtualPetDatabase
 import com.example.virtualpetkmp.util.ErrorApp
 import com.example.virtualpetkmp.util.ErrorAppException
+import com.example.virtualpetkmp.util.ahoraMillis
+import com.example.virtualpetkmp.util.nuevoIdentificadorUniversal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
@@ -32,7 +34,17 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
             ?.toMascota()
     }
 
-    suspend fun insertMascota(mascota: Mascota): Result<Long> = withContext(Dispatchers.IO) {
+    /**
+     * Alta de una mascota, con su identificador universal.
+     *
+     * [uuid] y [actualizadoEn] se pueden pasar a mano porque la importación de un paquete tiene que
+     * conservar los del archivo original; en el uso normal se generan aquí.
+     */
+    suspend fun insertMascota(
+        mascota: Mascota,
+        uuid: String = nuevoIdentificadorUniversal(),
+        actualizadoEn: Long = ahoraMillis()
+    ): Result<Long> = withContext(Dispatchers.IO) {
         try {
             // Comprobar si el nombre ya existe (sin distinguir mayúsculas/minúsculas)
             val existente = database.mascotasQueries.checkNombreUnico(mascota.nombre)
@@ -52,7 +64,9 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
                 color = mascota.color,
                 microchip = mascota.microchip,
                 foto = mascota.foto,
-                peso_ideal = mascota.pesoIdeal
+                peso_ideal = mascota.pesoIdeal,
+                uuid = uuid,
+                actualizadoEn = actualizadoEn
             )
 
             // Obtener el ID insertado usando last_insert_rowid()
@@ -65,7 +79,10 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
         }
     }
 
-    suspend fun updateMascota(mascota: Mascota): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun updateMascota(
+        mascota: Mascota,
+        actualizadoEn: Long = ahoraMillis()
+    ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             if (mascota.id == null) {
                 return@withContext Result.failure(ErrorAppException(ErrorApp.ID_REQUERIDO))
@@ -90,6 +107,7 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
                 microchip = mascota.microchip,
                 foto = mascota.foto,
                 peso_ideal = mascota.pesoIdeal,
+                actualizadoEn = actualizadoEn,
                 id = mascota.id
             )
 
@@ -112,9 +130,13 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
      * Actualiza solo la foto de una mascota. Se usa desde la ficha para no tener que
      * reenviar (ni volver a validar) el resto de sus datos.
      */
-    suspend fun updateFoto(id: Long, foto: String?): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun updateFoto(
+        id: Long,
+        foto: String?,
+        actualizadoEn: Long = ahoraMillis()
+    ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            database.mascotasQueries.updateFoto(foto = foto, id = id)
+            database.mascotasQueries.updateFoto(foto = foto, actualizadoEn = actualizadoEn, id = id)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -125,9 +147,17 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
      * Actualiza solo el peso ideal. Se llama desde la hoja de Peso, para poder fijarlo o
      * quitarlo sin abrir el formulario completo de la mascota. `null` lo deja sin configurar.
      */
-    suspend fun updatePesoIdeal(id: Long, pesoIdeal: Double?): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun updatePesoIdeal(
+        id: Long,
+        pesoIdeal: Double?,
+        actualizadoEn: Long = ahoraMillis()
+    ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            database.mascotasQueries.updatePesoIdeal(peso_ideal = pesoIdeal, id = id)
+            database.mascotasQueries.updatePesoIdeal(
+                peso_ideal = pesoIdeal,
+                actualizadoEn = actualizadoEn,
+                id = id
+            )
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

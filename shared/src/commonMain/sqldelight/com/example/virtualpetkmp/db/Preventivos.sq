@@ -1,3 +1,4 @@
+-- `uuid` y `actualizadoEn`: ver la explicación en Mascotas.sq.
 CREATE TABLE preventivos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     mascotaId INTEGER NOT NULL,
@@ -7,6 +8,8 @@ CREATE TABLE preventivos (
     fechaProximaDosis TEXT NOT NULL,
     veterinario TEXT,
     lote TEXT,
+    uuid TEXT NOT NULL,
+    actualizadoEn INTEGER NOT NULL,
     FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
 );
 
@@ -17,12 +20,12 @@ selectByMascotaIdAndTipo:
 SELECT * FROM preventivos WHERE mascotaId = ? AND tipo = ? ORDER BY fechaAplicacion DESC;
 
 insert:
-INSERT INTO preventivos(mascotaId, tipo, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT INTO preventivos(mascotaId, tipo, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote, uuid, actualizadoEn)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE preventivos
-SET tipo = ?, nombre = ?, fechaAplicacion = ?, fechaProximaDosis = ?, veterinario = ?, lote = ?
+SET tipo = ?, nombre = ?, fechaAplicacion = ?, fechaProximaDosis = ?, veterinario = ?, lote = ?, actualizadoEn = ?
 WHERE id = ?;
 
 delete:

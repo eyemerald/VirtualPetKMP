@@ -40,6 +40,14 @@ fun main(args: Array<String>) {
 
     fun ejecutar(sql: String) = driver.execute(null, sql.trimIndent(), 0)
 
+    /**
+     * `uuid` y `actualizadoEn` son obligatorios desde la versión 14 del esquema. Aquí se escriben
+     * con funciones de SQLite en vez de generarlos en Kotlin porque este generador escribe con
+     * SQL a pelo y no pasa por los repositorios.
+     */
+    val uuidNuevo = "lower(hex(randomblob(16)))"
+    val ahoraMillis = "CAST(strftime('%s', 'now') AS INTEGER) * 1000"
+
     // --- Ayudas para escribir los datos de cada mascota ------------------------
     // La mascota se crea SIN foto a propósito: el ejemplo no trae ninguna imagen, y con una
     // ruta que no existe la app intenta cargarla y deja el hueco del avatar vacío. Sin foto
@@ -56,9 +64,9 @@ fun main(args: Array<String>) {
     ): Long {
         ejecutar(
             """
-            INSERT INTO mascotas(nombre, especie, raza, fechaNacimiento, sexo, color, microchip, foto, peso_ideal)
+            INSERT INTO mascotas(nombre, especie, raza, fechaNacimiento, sexo, color, microchip, foto, peso_ideal, uuid, actualizadoEn)
             VALUES ('$nombre', '$especie', '$raza', '${hoyMenos(nacimientoHace)}', '$sexo', '$color',
-                    ${microchip?.let { "'$it'" } ?: "NULL"}, NULL, $pesoIdeal)
+                    ${microchip?.let { "'$it'" } ?: "NULL"}, NULL, $pesoIdeal, $uuidNuevo, $ahoraMillis)
             """
         )
         // El id se lee por nombre y no con last_insert_rowid(): el driver JDBC puede usar otra
@@ -69,24 +77,26 @@ fun main(args: Array<String>) {
     fun vacuna(mascota: Long, nombre: String, aplicadaHace: Int, venceEn: Int, vet: String, lote: String) =
         ejecutar(
             """
-            INSERT INTO vacunas(mascotaId, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote)
-            VALUES ($mascota, '$nombre', '${hoyMenos(aplicadaHace)}', '${hoyMas(venceEn)}', '$vet', '$lote')
+            INSERT INTO vacunas(mascotaId, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote, uuid, actualizadoEn)
+            VALUES ($mascota, '$nombre', '${hoyMenos(aplicadaHace)}', '${hoyMas(venceEn)}', '$vet', '$lote',
+                    $uuidNuevo, $ahoraMillis)
             """
         )
 
     fun preventivo(mascota: Long, tipo: String, nombre: String, aplicadoHace: Int, venceEn: Int, lote: String) =
         ejecutar(
             """
-            INSERT INTO preventivos(mascotaId, tipo, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote)
-            VALUES ($mascota, '$tipo', '$nombre', '${hoyMenos(aplicadoHace)}', '${hoyMas(venceEn)}', 'Dra. Ruiz', '$lote')
+            INSERT INTO preventivos(mascotaId, tipo, nombre, fechaAplicacion, fechaProximaDosis, veterinario, lote, uuid, actualizadoEn)
+            VALUES ($mascota, '$tipo', '$nombre', '${hoyMenos(aplicadoHace)}', '${hoyMas(venceEn)}', 'Dra. Ruiz', '$lote',
+                    $uuidNuevo, $ahoraMillis)
             """
         )
 
     fun peso(mascota: Long, fecha: LocalDate, kilos: Double, notas: String? = null) =
         ejecutar(
             """
-            INSERT INTO pesos(mascotaId, fecha, peso, notas)
-            VALUES ($mascota, '$fecha', $kilos, ${notas?.let { "'$it'" } ?: "NULL"})
+            INSERT INTO pesos(mascotaId, fecha, peso, notas, uuid, actualizadoEn)
+            VALUES ($mascota, '$fecha', $kilos, ${notas?.let { "'$it'" } ?: "NULL"}, $uuidNuevo, $ahoraMillis)
             """
         )
 
@@ -102,37 +112,38 @@ fun main(args: Array<String>) {
     ) =
         ejecutar(
             """
-            INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin, hora, notificar)
+            INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin, hora, notificar, uuid, actualizadoEn)
             VALUES ($mascota, '$medicamento', '$dosis', '$frecuencia', '${hoyMenos(desdeHace)}', '${hoyMas(hastaEn)}',
-                    ${hora?.let { "'$it'" } ?: "NULL"}, ${if (notificar) 1 else 0})
+                    ${hora?.let { "'$it'" } ?: "NULL"}, ${if (notificar) 1 else 0}, $uuidNuevo, $ahoraMillis)
             """
         )
 
     fun tratamientoTerminado(mascota: Long, medicamento: String, dosis: String, frecuencia: String, desdeHace: Int, hastaHace: Int) =
         ejecutar(
             """
-            INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin)
-            VALUES ($mascota, '$medicamento', '$dosis', '$frecuencia', '${hoyMenos(desdeHace)}', '${hoyMenos(hastaHace)}')
+            INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin, uuid, actualizadoEn)
+            VALUES ($mascota, '$medicamento', '$dosis', '$frecuencia', '${hoyMenos(desdeHace)}', '${hoyMenos(hastaHace)}',
+                    $uuidNuevo, $ahoraMillis)
             """
         )
 
     fun revision(mascota: Long, hace: Int, motivo: String, diagnostico: String, notas: String) =
         ejecutar(
             """
-            INSERT INTO revisiones(mascotaId, fecha, motivo, diagnostico, notas, veterinario)
-            VALUES ($mascota, '${hoyMenos(hace)}', '$motivo', '$diagnostico', '$notas', 'Dra. Ruiz')
+            INSERT INTO revisiones(mascotaId, fecha, motivo, diagnostico, notas, veterinario, uuid, actualizadoEn)
+            VALUES ($mascota, '${hoyMenos(hace)}', '$motivo', '$diagnostico', '$notas', 'Dra. Ruiz', $uuidNuevo, $ahoraMillis)
             """
         )
 
     fun nota(mascota: Long, texto: String) =
-        ejecutar("INSERT INTO notas(mascotaId, texto) VALUES ($mascota, '$texto')")
+        ejecutar("INSERT INTO notas(mascotaId, texto, uuid, actualizadoEn) VALUES ($mascota, '$texto', $uuidNuevo, $ahoraMillis)")
 
     fun informe(mascota: Long, hace: Int, tipo: String, descripcion: String, archivo: String) =
         ejecutar(
             """
-            INSERT INTO informes(mascotaId, tipo, descripcion, fecha, nombreArchivo, rutaArchivo)
+            INSERT INTO informes(mascotaId, tipo, descripcion, fecha, nombreArchivo, rutaArchivo, uuid, actualizadoEn)
             VALUES ($mascota, '$tipo', '$descripcion', '${hoyMenos(hace)}', '$archivo',
-                    '/data/data/com.example.virtualpetkmp/files/informes/$archivo')
+                    '/data/data/com.example.virtualpetkmp/files/informes/$archivo', $uuidNuevo, $ahoraMillis)
             """
         )
 
@@ -237,14 +248,14 @@ fun main(args: Array<String>) {
     // --- Veterinarios --------------------------------------------------------
     ejecutar(
         """
-        INSERT INTO veterinarios(nombreClinica, nombreVeterinario, telefono, direccion, esUrgencias)
-        VALUES ('Hospital Veterinario 24h', 'Dra. Ruiz', '911234567', 'Calle Mayor 12, Madrid', 1)
+        INSERT INTO veterinarios(nombreClinica, nombreVeterinario, telefono, direccion, esUrgencias, uuid, actualizadoEn)
+        VALUES ('Hospital Veterinario 24h', 'Dra. Ruiz', '911234567', 'Calle Mayor 12, Madrid', 1, $uuidNuevo, $ahoraMillis)
         """
     )
     ejecutar(
         """
-        INSERT INTO veterinarios(nombreClinica, nombreVeterinario, telefono, direccion, esUrgencias)
-        VALUES ('Clínica del Barrio', 'Dr. López', '918765432', 'Avenida del Parque 4, Madrid', 0)
+        INSERT INTO veterinarios(nombreClinica, nombreVeterinario, telefono, direccion, esUrgencias, uuid, actualizadoEn)
+        VALUES ('Clínica del Barrio', 'Dr. López', '918765432', 'Avenida del Parque 4, Madrid', 0, $uuidNuevo, $ahoraMillis)
         """
     )
 
