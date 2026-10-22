@@ -3,18 +3,19 @@ package com.example.virtualpetkmp
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.example.virtualpetkmp.util.reprogramarRecordatoriosDeTratamientos
+import com.example.virtualpetkmp.util.reprogramarRecordatorios
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
- * Recupera los recordatorios de tratamiento cuando el móvil se reinicia o la app se actualiza.
+ * Recupera los recordatorios cuando el móvil se reinicia o la app se actualiza.
  *
  * Android **borra todas las alarmas programadas al apagar el dispositivo**, así que sin esto un
  * tratamiento con recordatorio dejaría de avisar en cuanto el teléfono se reiniciara, y el usuario
  * no tendría forma de saberlo. Al recibir `BOOT_COMPLETED` se leen de la base de datos los
- * tratamientos que piden aviso y se vuelven a programar.
+ * tratamientos que piden aviso **y las próximas dosis de vacunas y preventivos**, y se vuelven a
+ * programar todos (ver `reprogramarRecordatorios`).
  *
  * También escucha `MY_PACKAGE_REPLACED` (cuando se instala una versión nueva), que es el otro
  * momento en el que Android limpia las alarmas.
@@ -31,7 +32,7 @@ class ReinicioReceiver : BroadcastReceiver() {
         val pendiente = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                reprogramarRecordatoriosDeTratamientos(context.applicationContext)
+                reprogramarRecordatorios(context.applicationContext)
             } catch (e: Exception) {
                 println("No se pudieron reprogramar los recordatorios al arrancar: ${e.message}")
             } finally {

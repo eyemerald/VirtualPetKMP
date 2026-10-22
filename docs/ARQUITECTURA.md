@@ -217,9 +217,11 @@ Hay **dos clases de aviso**, y no se comportan igual:
 
 Las notificaciones se **reprograman al abrir la ficha de una mascota** (cancelar y volver a
 programar: así un tratamiento borrado o terminado pierde su aviso sin código aparte), **al
-arrancar la app** y, para los tratamientos, **al reiniciar el móvil o actualizar la app**:
-Android borra las alarmas al apagar, y sin el receptor de `BOOT_COMPLETED`
-(`ReinicioReceiver`) un recordatorio de medicina dejaría de sonar para siempre.
+arrancar la app** y, **al reiniciar el móvil o actualizar la app**: Android borra las alarmas al
+apagar, y sin el receptor de `BOOT_COMPLETED` (`ReinicioReceiver`) los recordatorios dejarían de
+sonar para siempre. Ese receptor reprograma **los tres tipos** de aviso
+(`util/RecordatoriosAndroid.kt`); hasta la 1.3 solo reprogramaba tratamientos, y el hueco se
+encontró con una prueba real: cinco alarmas antes de reiniciar, una sola después.
 
 #### El aviso de un tratamiento se puede aceptar o posponer
 

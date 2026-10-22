@@ -53,8 +53,8 @@ android {
         // Se sube en cada entrega a los testers: Android deja instalar la nueva versión ENCIMA de
         // la que ya tienen (y conservar sus datos) solo si trae un versionCode mayor. Con el mismo
         // número también deja, pero el móvil no puede distinguir cuál tiene instalada.
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.3"
     }
     packaging {
         resources {

@@ -14,3 +14,14 @@ actual fun etiquetaRegionalDelSistema(): String? {
     val pais = locale.country?.takeIf { it.isNotBlank() }
     return if (pais == null) idioma else "$idioma-$pais"
 }
+
+/** En escritorio no hay diferencia entre dentro y fuera de la composición: es la locale de la JVM. */
+actual fun etiquetaRegionalFueraDeComposicion(): String? =
+    etiquetaRegionalDelSistemaSinComposicion()
+
+private fun etiquetaRegionalDelSistemaSinComposicion(): String? {
+    val locale = Locale.getDefault()
+    val idioma = locale.language?.takeIf { it.isNotBlank() } ?: return null
+    val pais = locale.country?.takeIf { it.isNotBlank() }
+    return if (pais == null) idioma else "$idioma-$pais"
+}

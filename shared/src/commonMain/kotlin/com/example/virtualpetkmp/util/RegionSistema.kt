@@ -21,3 +21,16 @@ expect fun etiquetaRegionalDelSistema(): String?
 @Composable
 fun localizacionDelSistema(): Localizacion =
     Localizacion.desdeRegion(etiquetaRegionalDelSistema())
+
+/**
+ * La misma etiqueta regional, pero **sin composición**.
+ *
+ * Hace falta porque las notificaciones también se programan desde un `BroadcastReceiver`, cuando
+ * no hay ninguna interfaz: al reiniciar el móvil (`BOOT_COMPLETED`) hay que volver a programar los
+ * avisos, y la fecha que llevan se escribe ya formateada, en el idioma del dispositivo.
+ */
+expect fun etiquetaRegionalFueraDeComposicion(): String?
+
+/** Configuración regional del dispositivo, sin necesidad de estar dentro de la composición. */
+fun localizacionFueraDeComposicion(): Localizacion =
+    Localizacion.desdeRegion(etiquetaRegionalFueraDeComposicion())
