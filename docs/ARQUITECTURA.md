@@ -221,6 +221,33 @@ arrancar la app** y, para los tratamientos, **al reiniciar el móvil o actualiza
 Android borra las alarmas al apagar, y sin el receptor de `BOOT_COMPLETED`
 (`ReinicioReceiver`) un recordatorio de medicina dejaría de sonar para siempre.
 
+#### El aviso de un tratamiento se puede aceptar o posponer
+
+Un aviso de dosis es información; un aviso de medicina es una **tarea pendiente**. Por eso el de
+tratamiento trae tres cosas que el de una vacuna no tiene:
+
+- **Tocar la notificación** abre la app en la ficha de su mascota y en la hoja de **Salud y
+  seguimiento → Tratamientos** (`SolicitudNavegacion` hasta `App`, con `MainActivity` en
+  `singleTop` para no apilar pantallas: si la app ya estaba abierta, el aviso entra por
+  `onNewIntent` y se navega sin reiniciar).
+- **Aceptar**: cierra el aviso. No guarda nada, porque la dosis no se registra en ningún sitio; el
+  del día siguiente ya está programado desde que sonó este.
+- **Posponer 30 min**: cierra el aviso y lo vuelve a programar. No hay límite de veces, y
+  posponer **no puede perder** el aviso de mañana: la posposición usa el mismo id de alarma y, al
+  sonar, el receptor vuelve a encadenar el día siguiente. Si el tratamiento ya se acabó (la
+  posposición caería después de su fecha de fin), no se programa nada.
+
+Los dos botones los atiende `AccionRecordatorioReceiver`, aparte del que pinta el aviso, para que
+un fallo al posponer no pueda impedir el encadenado de mañana. Todo lo que hace falta para
+pintarlo y reprogramarlo viaja dentro del intent de la alarma (`AvisoTratamiento`), porque cuando
+salta la app puede estar cerrada: incluidos los dos textos de los botones, que se traducen al
+programar (ahí sí hay corrutina y recursos) y no al mostrar.
+
+No es un despertador: se descartó a propósito pedir `USE_FULL_SCREEN_INTENT` (en Android 14+ está
+reservado a apps de alarma y llamadas) y sonar en bucle con un servicio en primer plano. El aviso
+es un **banner con sonido y vibración** del canal `recordatorios_tratamientos`
+(`IMPORTANCE_HIGH`), y su categoría es `reminder`, no `alarm`.
+
 No hay servicio en segundo plano: es un equilibrio consciente entre simplicidad y precisión.
 
 ---

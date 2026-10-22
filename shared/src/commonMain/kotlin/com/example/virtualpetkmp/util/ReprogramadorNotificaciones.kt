@@ -13,6 +13,8 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.getString
 import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.aviso_aceptar
+import virtualpetkmp.shared.generated.resources.aviso_posponer
 import virtualpetkmp.shared.generated.resources.aviso_preventivo_mensaje
 import virtualpetkmp.shared.generated.resources.aviso_preventivo_titulo
 import virtualpetkmp.shared.generated.resources.aviso_tratamiento_mensaje
@@ -143,12 +145,23 @@ object ReprogramadorNotificaciones {
 
         try {
             programador.programarTratamiento(
-                id = RecordatoriosTratamiento.idNotificacion(id),
-                titulo = getString(Res.string.aviso_tratamiento_titulo),
-                mensaje = getString(Res.string.aviso_tratamiento_mensaje, nombreMascota, medicamento),
-                fechaDisparoMillis = millis,
-                hora = RecordatoriosTratamiento.formatearHora(hora, minuto),
-                fechaFin = tratamiento.fechaFin?.toString()
+                AvisoTratamiento(
+                    notificacionId = RecordatoriosTratamiento.idNotificacion(id),
+                    tratamientoId = id,
+                    mascotaId = tratamiento.mascotaId,
+                    titulo = getString(Res.string.aviso_tratamiento_titulo),
+                    mensaje = getString(Res.string.aviso_tratamiento_mensaje, nombreMascota, medicamento),
+                    fechaDisparoMillis = millis,
+                    hora = RecordatoriosTratamiento.formatearHora(hora, minuto),
+                    fechaFin = tratamiento.fechaFin,
+                    // Los dos botones se traducen AQUÍ, mientras hay corrutina y recursos: el
+                    // receptor que los pinta corre con la app cerrada y no puede leerlos.
+                    textoAceptar = getString(Res.string.aviso_aceptar),
+                    textoPosponer = getString(
+                        Res.string.aviso_posponer,
+                        RecordatoriosTratamiento.POSPOSICION_MINUTOS
+                    )
+                )
             )
         } catch (e: Exception) {
             println("Error programando el recordatorio del tratamiento: ${e.message}")

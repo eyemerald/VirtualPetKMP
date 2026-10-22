@@ -343,6 +343,8 @@
     <string name="aviso_preventivo_mensaje">Votre animal doit recevoir le traitement préventif %1$s le %2$s</string>
     <string name="aviso_tratamiento_titulo">L'heure du médicament</string>
     <string name="aviso_tratamiento_mensaje">Pour %1$s : %2$s</string>
+    <string name="aviso_aceptar">Accepter</string>
+    <string name="aviso_posponer">Reporter de %1$d min</string>
 
     <string name="error_cargar_mascotas">Erreur lors du chargement des animaux : %1$s</string>
     <string name="error_cargar_veterinarios">Erreur lors du chargement des vétérinaires : %1$s</string>

@@ -343,6 +343,8 @@
     <string name="aviso_preventivo_mensaje">Dein Tier braucht die Prophylaxe %1$s am %2$s</string>
     <string name="aviso_tratamiento_titulo">Zeit für die Medizin</string>
     <string name="aviso_tratamiento_mensaje">Für %1$s: %2$s</string>
+    <string name="aviso_aceptar">Akzeptieren</string>
+    <string name="aviso_posponer">Um %1$d Min. verschieben</string>
 
     <string name="error_cargar_mascotas">Fehler beim Laden der Tiere: %1$s</string>
     <string name="error_cargar_veterinarios">Fehler beim Laden der Tierärzte: %1$s</string>

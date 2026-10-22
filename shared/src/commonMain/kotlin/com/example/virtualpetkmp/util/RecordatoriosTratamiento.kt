@@ -32,8 +32,26 @@ object RecordatoriosTratamiento {
      */
     private const val DESPLAZAMIENTO_TRATAMIENTO = 2_000_000_000L
 
+    /**
+     * Cuánto tiempo se retrasa el aviso cuando el usuario pulsa "Posponer".
+     *
+     * No hay límite de veces: si no se acepta, el aviso vuelve cada 30 minutos hasta que se le da
+     * a Aceptar o hasta que se acaba el tratamiento.
+     */
+    const val POSPOSICION_MINUTOS = 30
+
     /** Id de notificación de un tratamiento. */
     fun idNotificacion(tratamientoId: Long): Long = tratamientoId + DESPLAZAMIENTO_TRATAMIENTO
+
+    /**
+     * Si un aviso que saltaría el día [objetivo] sigue estando dentro del tratamiento.
+     *
+     * Es lo que impide que posponer un aviso a las 23:50 deje una notificación viva para el día
+     * siguiente a un tratamiento que terminaba hoy. Sin esto, el último aviso de un tratamiento de
+     * una semana podría reaparecer cuando ya no toca nada.
+     */
+    fun dentroDelTratamiento(objetivo: LocalDate, fin: LocalDate?): Boolean =
+        fin == null || objetivo <= fin
 
     /**
      * Lee una hora "HH:mm" y devuelve (hora, minuto), o `null` si no es una hora válida.

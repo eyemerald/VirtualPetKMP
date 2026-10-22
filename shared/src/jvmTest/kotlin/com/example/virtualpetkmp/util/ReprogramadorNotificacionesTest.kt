@@ -37,21 +37,18 @@ class ReprogramadorNotificacionesTest {
         /** Recordatorios de tratamiento: a qué hora y con qué fecha de fin se programaron. */
         val recordatorios = mutableMapOf<Long, Pair<String, String?>>()
 
+        /** El aviso completo, que es lo que se lleva la alarma a Android. */
+        val avisos = mutableMapOf<Long, AvisoTratamiento>()
+
         override fun programar(id: Long, titulo: String, mensaje: String, fechaDisparoMillis: Long) {
             programadas[id] = fechaDisparoMillis
             textos[id] = titulo to mensaje
         }
 
-        override fun programarTratamiento(
-            id: Long,
-            titulo: String,
-            mensaje: String,
-            fechaDisparoMillis: Long,
-            hora: String,
-            fechaFin: String?
-        ) {
-            programar(id, titulo, mensaje, fechaDisparoMillis)
-            recordatorios[id] = hora to fechaFin
+        override fun programarTratamiento(aviso: AvisoTratamiento) {
+            programar(aviso.notificacionId, aviso.titulo, aviso.mensaje, aviso.fechaDisparoMillis)
+            recordatorios[aviso.notificacionId] = aviso.hora to aviso.fechaFin?.toString()
+            avisos[aviso.notificacionId] = aviso
         }
 
         override fun cancelar(id: Long) {
@@ -215,9 +212,38 @@ class ReprogramadorNotificacionesTest {
         assertTrue(mensaje.contains("4 gotas"), "falta la dosis: [$mensaje]")
     }
 
+    /**
+     * El aviso viaja entero dentro de la alarma porque el receptor que lo pinta corre con la app
+     * cerrada. Si faltara la mascota, tocar la notificación no podría abrir su ficha; si faltaran
+     * los textos, los botones saldrían sin texto (o con el de otro idioma).
+     */
     @Test
-    fun `un tratamiento sin aviso no programa nada`() = runBlocking {
+    fun `el aviso de un tratamiento lleva su mascota y los textos de los botones`() = runBlocking {
         val programador = ProgramadorFalso()
+        val ahora = LocalDateTime(2026, 5, 20, 7, 0)
+        val tratamiento = Tratamiento(
+            id = 7L,
+            mascotaId = 42L,
+            nombreMedicamento = "Oticoear",
+            fechaInicio = ahora.date,
+            hora = "08:30",
+            notificar = true
+        )
+
+        ReprogramadorNotificaciones.programarTratamiento(programador, tratamiento, "Luna", ahora)
+
+        val aviso = programador.avisos.getValue(RecordatoriosTratamiento.idNotificacion(7L))
+        assertEquals(42L, aviso.mascotaId, "sin la mascota no se puede abrir su ficha")
+        assertEquals(7L, aviso.tratamientoId, "el id real hace falta para distinguir dos avisos")
+        assertTrue(aviso.textoAceptar.isNotBlank(), "el botón de aceptar saldría sin texto")
+        assertTrue(
+            aviso.textoPosponer.contains(RecordatoriosTratamiento.POSPOSICION_MINUTOS.toString()),
+            "el botón de posponer debe decir cuánto pospone: [${aviso.textoPosponer}]"
+        )
+    }
+
+    @Test
+    fun `un tratamiento sin aviso no programa nada`() = runBlocking {        val programador = ProgramadorFalso()
         val ahora = LocalDateTime(2026, 5, 20, 7, 0)
 
         ReprogramadorNotificaciones.programarTratamiento(

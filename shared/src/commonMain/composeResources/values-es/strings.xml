@@ -340,6 +340,8 @@
     <string name="aviso_preventivo_mensaje">A tu mascota le toca el preventivo %1$s el %2$s</string>
     <string name="aviso_tratamiento_titulo">Hora de la medicina</string>
     <string name="aviso_tratamiento_mensaje">Para %1$s: %2$s</string>
+    <string name="aviso_aceptar">Aceptar</string>
+    <string name="aviso_posponer">Posponer %1$d min</string>
 
     <string name="error_cargar_mascotas">Error al cargar mascotas: %1$s</string>
     <string name="error_cargar_veterinarios">Error al cargar veterinarios: %1$s</string>

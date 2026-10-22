@@ -181,7 +181,14 @@ fun FichaMascotaScreen(
     mascotaViewModel: MascotaViewModel,
     onModificar: () -> Unit,
     mostrarDialogoExportar: Boolean,
-    onCambiarDialogoExportar: (Boolean) -> Unit
+    onCambiarDialogoExportar: (Boolean) -> Unit,
+    /**
+     * Abrir la hoja de Salud y seguimiento al entrar. Es lo que hace que tocar el aviso de un
+     * tratamiento lleve al usuario directo a la lista de tratamientos y no solo a la ficha.
+     */
+    abrirTratamientosAlEntrar: Boolean = false,
+    /** Avisa de que la hoja ya se abrió, para que la petición no se repita al volver a la ficha. */
+    onTratamientosAbiertos: () -> Unit = {}
 ) {
     val resumen by viewModel.resumen.collectAsState()
     // Último error de una operación (guardar una vacuna, borrar un pesaje...), si lo hubo.
@@ -212,6 +219,15 @@ fun FichaMascotaScreen(
     var formularioActivo by remember { mutableStateOf<FormularioHoja>(FormularioHoja.Ninguno) }
     // Registro existente que se está viendo/editando al tocar una tarjeta de la hoja
     var edicionActiva by remember { mutableStateOf<EdicionHoja>(EdicionHoja.Ninguna) }
+
+    // Venir de un aviso de tratamiento: se abre su hoja y se avisa de que ya está hecho, para que
+    // la petición no se repita si el usuario cierra la hoja y sigue en la ficha.
+    LaunchedEffect(abrirTratamientosAlEntrar) {
+        if (abrirTratamientosAlEntrar) {
+            activeSheet = ActiveSheet.HealthAndTracking
+            onTratamientosAbiertos()
+        }
+    }
 
     // El diálogo de exportar lo controla la barra superior global (MainScreen), así que su
     // estado llega desde fuera; el resto de estados de la exportación son efímeros.

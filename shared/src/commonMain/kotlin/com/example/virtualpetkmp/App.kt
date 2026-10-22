@@ -35,9 +35,13 @@ import com.example.virtualpetkmp.viewmodel.VeterinarioViewModel
  * pantallas de detalle (vacunas, preventivos, revisiones, tratamientos, informes, notas y
  * peso) se abre ahora en hojas modales dentro de la ficha, así que sus rutas y sus
  * ViewModels ya no existen.
+ *
+ * @param solicitud petición de navegación que llega de fuera (hoy, tocar el aviso de un
+ *   tratamiento). Puede cambiar en caliente: si la app ya estaba abierta y el usuario toca otra
+ *   notificación, se navega otra vez sin reiniciar nada.
  */
 @Composable
-fun App(databaseFactory: DatabaseFactory) {
+fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null) {
     // La configuración regional se decide UNA vez aquí y se publica al resto de la interfaz:
     // unidades, orden de fecha y separador decimal salen siempre de este valor, así que no
     // puede haber dos pantallas que opinen distinto. Se calcula antes que nada porque también
@@ -85,6 +89,18 @@ fun App(databaseFactory: DatabaseFactory) {
     var selectedVeterinarioId by rememberSaveable { mutableStateOf<Long?>(null) }
     var pantallaVeterinarios by rememberSaveable { mutableStateOf("lista") }
     var dialogoExportarFicha by rememberSaveable { mutableStateOf(false) }
+
+    // Si el usuario toca el aviso de un tratamiento, se abre la ficha de ESA mascota (y su hoja de
+    // Salud y seguimiento). Se consume una sola vez: el flag se apaga al abrirse la hoja, para que
+    // volver a la ficha a mano no la abra otra vez.
+    var abrirTratamientos by remember { mutableStateOf(false) }
+    LaunchedEffect(solicitud) {
+        if (solicitud != null) {
+            selectedMascotaId = solicitud.mascotaId
+            currentScreen = "ficha"
+            abrirTratamientos = solicitud.abrirTratamientos
+        }
+    }
 
     val mascotas by viewModel.mascotas.collectAsState()
     val mascotaActual = mascotas.find { it.id == selectedMascotaId }
@@ -161,6 +177,8 @@ fun App(databaseFactory: DatabaseFactory) {
                                 mascotaViewModel = viewModel,
                                 mostrarDialogoExportar = dialogoExportarFicha,
                                 onCambiarDialogoExportar = { visible -> dialogoExportarFicha = visible },
+                                abrirTratamientosAlEntrar = abrirTratamientos,
+                                onTratamientosAbiertos = { abrirTratamientos = false },
                                 onModificar = { currentScreen = "form" }
                             )
                         }

@@ -342,6 +342,8 @@
     <string name="aviso_preventivo_mensaje">O teu animal tem o preventivo %1$s em %2$s</string>
     <string name="aviso_tratamiento_titulo">Hora do medicamento</string>
     <string name="aviso_tratamiento_mensaje">Para %1$s: %2$s</string>
+    <string name="aviso_aceptar">Aceitar</string>
+    <string name="aviso_posponer">Adiar %1$d min</string>
 
     <string name="error_cargar_mascotas">Erro ao carregar animais: %1$s</string>
     <string name="error_cargar_veterinarios">Erro ao carregar veterinários: %1$s</string>

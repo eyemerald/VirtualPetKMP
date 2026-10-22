@@ -344,6 +344,8 @@
     <string name="aviso_preventivo_mensaje">Your pet is due for the %1$s preventive treatment on %2$s</string>
     <string name="aviso_tratamiento_titulo">Time for the medicine</string>
     <string name="aviso_tratamiento_mensaje">For %1$s: %2$s</string>
+    <string name="aviso_aceptar">Accept</string>
+    <string name="aviso_posponer">Snooze %1$d min</string>
 
     <string name="error_cargar_mascotas">Error loading pets: %1$s</string>
     <string name="error_cargar_veterinarios">Error loading vets: %1$s</string>

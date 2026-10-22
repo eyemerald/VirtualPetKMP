@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import com.example.virtualpetkmp.NotificacionReceiver
+import com.example.virtualpetkmp.conAvisoDeTratamiento
 
 /**
  * Alarmas de Android para los recordatorios locales.
@@ -31,22 +32,13 @@ fun crearProgramadorNotificaciones(context: Context): ProgramadorNotificaciones 
             programarAlarma(context, id, intento(context, id, titulo, mensaje), fechaDisparoMillis)
         }
 
-        override fun programarTratamiento(
-            id: Long,
-            titulo: String,
-            mensaje: String,
-            fechaDisparoMillis: Long,
-            hora: String,
-            fechaFin: String?
-        ) {
-            // El aviso de un tratamiento lleva dentro la hora y la fecha de fin: cuando salte,
-            // la app puede estar cerrada, y con eso el receptor sabe si tiene que programar el
-            // de mañana. Sin estos extras, un tratamiento solo avisaría una vez.
-            val intent = intento(context, id, titulo, mensaje).apply {
-                putExtra(NotificacionReceiver.EXTRA_HORA, hora)
-                if (fechaFin != null) putExtra(NotificacionReceiver.EXTRA_FECHA_FIN, fechaFin)
-            }
-            programarAlarma(context, id, intent, fechaDisparoMillis)
+        override fun programarTratamiento(aviso: AvisoTratamiento) {
+            // El aviso viaja completo dentro de la alarma: cuando salte, la app puede estar
+            // cerrada, y con esos extras el receptor sabe a qué mascota pertenece, puede abrir su
+            // ficha, pintar los botones Aceptar/Posponer y programar el aviso de mañana.
+            val intent = Intent(context, NotificacionReceiver::class.java)
+                .conAvisoDeTratamiento(aviso)
+            programarAlarma(context, aviso.notificacionId, intent, aviso.fechaDisparoMillis)
         }
 
         override fun cancelar(id: Long) {

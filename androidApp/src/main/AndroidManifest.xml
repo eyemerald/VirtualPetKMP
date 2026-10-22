@@ -25,8 +25,14 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <!--
+          `singleTop`: tocar el aviso de un tratamiento con la app ya abierta NO debe crear una
+          segunda pantalla encima de la actual; el aviso llega a `onNewIntent` y la app navega
+          desde donde esté.
+        -->
         <activity
                 android:exported="true"
+                android:launchMode="singleTop"
                 android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -47,6 +53,15 @@
 
         <receiver
             android:name=".NotificacionReceiver"
+            android:exported="false"/>
+
+        <!--
+          Los dos botones del aviso de tratamiento (Aceptar / Posponer). Las acciones las manda la
+          propia notificación, desde la misma app: `exported="false"` para que ninguna otra pueda
+          dar por buena una dosis ajena.
+        -->
+        <receiver
+            android:name=".AccionRecordatorioReceiver"
             android:exported="false"/>
 
         <!--

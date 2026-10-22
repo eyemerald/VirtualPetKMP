@@ -38,20 +38,11 @@ interface ProgramadorNotificaciones {
      * Programa un recordatorio **de tratamiento**, que es un aviso que se repite cada día.
      *
      * Va aparte de [programar] porque Android necesita más datos para repetirlo solo: cuando la
-     * alarma salta, la app puede estar cerrada, así que el aviso lleva dentro la hora y la fecha
-     * de fin para saber si tiene que programarse otra vez para mañana.
-     *
-     * @param hora "HH:mm" del aviso, ya normalizada.
-     * @param fechaFin último día del tratamiento (ISO), o `null` si es crónico.
+     * alarma salta, la app puede estar cerrada, así que el aviso lleva dentro todo lo necesario
+     * para reprogramarse para mañana, para abrir la ficha de su mascota y para pintar sus dos
+     * botones. Ver [AvisoTratamiento].
      */
-    fun programarTratamiento(
-        id: Long,
-        titulo: String,
-        mensaje: String,
-        fechaDisparoMillis: Long,
-        hora: String,
-        fechaFin: String?
-    )
+    fun programarTratamiento(aviso: AvisoTratamiento)
 
     /**
      * Cancela la notificación previamente programada con ese id.

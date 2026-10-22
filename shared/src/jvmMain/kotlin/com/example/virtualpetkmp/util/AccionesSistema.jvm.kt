@@ -50,18 +50,12 @@ actual fun rememberProgramadorNotificaciones(): ProgramadorNotificaciones {
                 println("[Notificación programada] id=$id | $titulo | $mensaje | disparo a las $fechaDisparoMillis")
             }
 
-            override fun programarTratamiento(
-                id: Long,
-                titulo: String,
-                mensaje: String,
-                fechaDisparoMillis: Long,
-                hora: String,
-                fechaFin: String?
-            ) {
+            override fun programarTratamiento(aviso: AvisoTratamiento) {
                 // En escritorio no hay alarmas del sistema; queda el rastro en consola.
                 println(
-                    "[Recordatorio de tratamiento] id=$id | $titulo | $mensaje | a las $hora " +
-                        "hasta ${fechaFin ?: "sin fecha de fin"}"
+                    "[Recordatorio de tratamiento] id=${aviso.notificacionId} | ${aviso.titulo} | " +
+                        "${aviso.mensaje} | a las ${aviso.hora} " +
+                        "hasta ${aviso.fechaFin ?: "sin fecha de fin"}"
                 )
             }
 

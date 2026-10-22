@@ -5,6 +5,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -187,6 +188,55 @@ class RecordatoriosTratamientoTest {
         assertEquals(
             momento(21, 8, 30),
             RecordatoriosTratamiento.proximoAviso(conAviso, momento(20, 9))
+        )
+    }
+
+    // --- Posponer ------------------------------------------------------------
+
+    /**
+     * Posponer cuenta desde **el momento de pulsar el botón**, no desde la hora a la que sonó.
+     *
+     * Si contara desde la hora del aviso, quien pospone diez minutos tarde vería el siguiente
+     * aviso veinte minutos después en lugar de treinta, y el texto del botón estaría mintiendo.
+     */
+    @Test
+    fun `posponer cuenta los 30 minutos desde que se pulsa`() {
+        val aviso = AvisoTratamiento(
+            notificacionId = RecordatoriosTratamiento.idNotificacion(1L),
+            tratamientoId = 1L,
+            mascotaId = 1L,
+            titulo = "Hora de la medicina",
+            mensaje = "Para Luna: Oticoear",
+            fechaDisparoMillis = 1_000_000L,
+            hora = "08:30"
+        )
+
+        // Se pulsa once minutos después de sonar.
+        val nuevo = aviso.pospuesto(desdeMillis = 1_000_000L + 11 * 60_000L)
+
+        assertEquals(
+            1_000_000L + (11 + 30) * 60_000L,
+            nuevo.fechaDisparoMillis,
+            "el siguiente aviso debe caer 30 minutos después de pulsar, no de sonar"
+        )
+        assertEquals("08:30", nuevo.hora, "la hora del tratamiento no cambia al posponer")
+    }
+
+    @Test
+    fun `posponer respeta el ultimo dia del tratamiento`() {
+        val fin = LocalDate.parse("2026-05-20")
+
+        // El último día sí: el tratamiento dura hasta esa fecha inclusive.
+        assertTrue(RecordatoriosTratamiento.dentroDelTratamiento(fin, fin))
+        // Al día siguiente ya no toca nada.
+        assertFalse(RecordatoriosTratamiento.dentroDelTratamiento(LocalDate.parse("2026-05-21"), fin))
+    }
+
+    @Test
+    fun `un tratamiento cronico admite posponer cualquier dia`() {
+        assertTrue(
+            RecordatoriosTratamiento.dentroDelTratamiento(LocalDate.parse("2030-01-01"), null),
+            "sin fecha de fin no hay límite"
         )
     }
 
