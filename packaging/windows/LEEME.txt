@@ -1,0 +1,38 @@
+VIRTUAL PET 1.8 PARA WINDOWS
+============================
+
+COMO INSTALARLO
+1. Descomprime este ZIP ENTERO en una carpeta (por ejemplo en el escritorio). Si ejecutas el
+   instalador desde dentro del ZIP sin descomprimir, no encontrara la aplicacion.
+2. Doble clic en INSTALAR.bat.
+3. Listo: aparece un acceso directo en el escritorio y en el menu de inicio, y la app se abre.
+
+No hace falta ser administrador: se instala en tu carpeta de usuario
+(%LOCALAPPDATA%\Programs\Virtual Pet) y no toca nada mas del sistema.
+
+
+SI WINDOWS AVISA AL INSTALAR
+- "Windows protegio tu PC" (SmartScreen): "Mas informacion" -> "Ejecutar de todas formas".
+  Sale porque el instalador no esta firmado con un certificado de pago; el archivo no se ha
+  modificado desde que se genero (SHA-256 en el mensaje de entrega).
+- Si el antivirus se queja: es un script de PowerShell que copia ficheros y crea accesos directos.
+  Puedes abrirlo con el Bloc de notas para ver exactamente lo que hace.
+
+
+DONDE ESTAN TUS DATOS
+- En %USERPROFILE%\.virtualpet  (base de datos, fotos, informes y copias de seguridad).
+- Si ya venias usando la app desde el entorno de desarrollo, esa MISMA carpeta es la que usara la
+  version instalada: no hay que pasar nada, tus mascotas aparecen tal cual.
+- Desinstalar la aplicacion NO borra esos datos.
+
+
+COMO DESINSTALARLO
+- Ajustes -> Aplicaciones -> Aplicaciones instaladas -> Virtual Pet -> Desinstalar, o
+- Menu de inicio -> Virtual Pet -> "Desinstalar Virtual Pet", o
+- %LOCALAPPDATA%\Programs\Virtual Pet\Desinstalar Virtual Pet.cmd
+Tus datos se quedan; si quieres borrarlos tambien, elimina la carpeta .virtualpet.
+
+
+QUE INCLUYE
+- La aplicacion con su propio Java incluido: no hay que instalar nada mas.
+- Tus datos son locales: la app no se conecta a internet.

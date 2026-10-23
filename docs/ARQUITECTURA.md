@@ -73,6 +73,29 @@ VirtualPetKMP/
 
 ---
 
+## 3-bis. Instalador de Windows
+
+El escritorio se empaqueta con Compose Desktop y `jpackage` (`:desktopApp:createDistributable`), que
+genera una carpeta con `Virtual Pet.exe`, el runtime de Java dentro y el icono de `icons/app.ico`.
+
+**Lo que se aprendió probándolo de verdad** (el instalable compilaba y se instalaba, pero la app no
+abría):
+
+1. **Falta `java.sql`.** `jpackage` solo mete `java.base`; el driver JDBC de SQLite necesita
+   `java/sql/DriverManager`. Hay que declararlo:
+   `nativeDistributions { modules("java.sql", "jdk.unsupported") }`. Desde Gradle (`run`) nunca falla
+   porque ahí se usa la JDK completa, así que este fallo solo aparece en el instalable.
+2. **El icono de la ventana no se hereda del `.exe`.** Hay que pasarlo en `Window(icon = ...)`; si
+   no, Windows enseña el café de Java en la barra de tareas. El `.ico` del ejecutable y del acceso
+   directo lo pone el empaquetado.
+3. **No hay WiX en este equipo**, así que `packageMsi` no puede ejecutarse (WiX es un requisito de
+   jpackage para MSI/EXE). Se entrega un **instalador propio por usuario**: el ZIP lleva la
+   aplicación y `INSTALAR.bat`, que copia a `%LOCALAPPDATA%\Programs`, crea los accesos directos,
+   registra la entrada de "Aplicaciones instaladas" y deja un desinstalador. No pide administrador.
+
+Los datos **no** viven en la carpeta de instalación: están en `%USERPROFILE%\.virtualpet`, así que
+desinstalar la app no los borra (y una instalación nueva los reutiliza tal cual).
+
 ## 4. Base de datos y migraciones
 
 Todo el esquema se declara en ficheros `.sq` y el acceso se genera en compilación. El módulo
