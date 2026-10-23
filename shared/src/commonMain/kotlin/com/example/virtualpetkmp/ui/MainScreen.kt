@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -39,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import com.example.virtualpetkmp.util.rememberComprobadorPermisoExacto
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import virtualpetkmp.shared.generated.resources.Res
@@ -46,6 +48,7 @@ import virtualpetkmp.shared.generated.resources.a11y_volver
 import virtualpetkmp.shared.generated.resources.a11y_menu_sistema
 import virtualpetkmp.shared.generated.resources.copia_menu
 import virtualpetkmp.shared.generated.resources.copia_menu_restaurar
+import virtualpetkmp.shared.generated.resources.aviso_permiso_exacto_titulo
 import virtualpetkmp.shared.generated.resources.fusion_menu
 import virtualpetkmp.shared.generated.resources.logo
 import virtualpetkmp.shared.generated.resources.pestana_mascotas
@@ -77,7 +80,9 @@ fun MainScreen(
     onVolver: (() -> Unit)? = null,
     onGuardarCopia: (() -> Unit)? = null,
     onRestaurarCopia: (() -> Unit)? = null,
-    onImportarFusion: (() -> Unit)? = null
+    onImportarFusion: (() -> Unit)? = null,
+    /** Se llama al abrir el menú: sirve para reprogramar los avisos al volver de Ajustes. */
+    onAbrirMenuSistema: (() -> Unit)? = null
 ) {
     var tabActual by rememberSaveable { mutableStateOf(0) }
     val accionesVisibles = mostrarAcciones && tabActual == 0
@@ -118,7 +123,8 @@ fun MainScreen(
                     MenuSistema(
                         onGuardarCopia = onGuardarCopia,
                         onRestaurarCopia = onRestaurarCopia,
-                        onImportarFusion = onImportarFusion
+                        onImportarFusion = onImportarFusion,
+                        onAbrirMenuSistema = onAbrirMenuSistema
                     )
                 }
 
@@ -207,14 +213,33 @@ private fun BotonFlotanteVolver(
 private fun MenuSistema(
     onGuardarCopia: (() -> Unit)?,
     onRestaurarCopia: (() -> Unit)?,
-    onImportarFusion: (() -> Unit)?
+    onImportarFusion: (() -> Unit)?,
+    onAbrirMenuSistema: (() -> Unit)?
 ) {
-    if (onGuardarCopia == null && onRestaurarCopia == null && onImportarFusion == null) return
+    // El permiso de alarmas exactas se pierde al reinstalar la app y no hay forma de recuperarlo
+    // sin ir a Ajustes: por eso, cuando falta, el menú lo avisa con una acción que lleva allí.
+    val permisoExacto = rememberComprobadorPermisoExacto()
+    val faltanAlarmasExactas = !permisoExacto.puedeProgramarExacto()
+
+    if (onGuardarCopia == null && onRestaurarCopia == null && onImportarFusion == null &&
+        !faltanAlarmasExactas
+    ) {
+        return
+    }
 
     var abierto by remember { mutableStateOf(false) }
 
     Box {
-        IconButton(onClick = { abierto = true }) {
+        IconButton(
+            onClick = {
+                abierto = true
+                // Al abrir el menú se reprograman los avisos. Hace falta porque `AlarmManager` no
+                // avisa a la app de que el usuario acaba de conceder el permiso de alarmas exactas
+                // en Ajustes: sin esto, al volver las alarmas seguirían siendo inexactas hasta
+                // reiniciar la app, y parecería que activarlo no ha servido de nada.
+                onAbrirMenuSistema?.invoke()
+            }
+        ) {
             Icon(
                 imageVector = Icons.Default.Settings,
                 contentDescription = stringResource(Res.string.a11y_menu_sistema)
@@ -240,6 +265,23 @@ private fun MenuSistema(
                     }
                 )
             }
+            if (faltanAlarmasExactas) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.aviso_permiso_exacto_titulo)) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    },
+                    onClick = {
+                        abierto = false
+                        permisoExacto.pedirPermiso()
+                    }
+                )
+            }
+
             if (onImportarFusion != null) {
                 DropdownMenuItem(
                     text = { Text(stringResource(Res.string.fusion_menu)) },

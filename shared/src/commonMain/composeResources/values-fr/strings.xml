@@ -450,4 +450,8 @@
     <string name="fusion_sin_cambios">Rien à importer : tout est déjà à jour.</string>
     <string name="fusion_archivos">%1$d fichiers copiés</string>
     <string name="fusion_omitidas">%1$d animaux ignorés à cause du conflit</string>
+
+    <!-- Permiso de alarmas exactas -->
+    <string name="aviso_permiso_exacto_titulo">Les rappels peuvent arriver en retard</string>
+    <string name="aviso_permiso_exacto_accion">Activer les alarmes exactes</string>
 </resources>

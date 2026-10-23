@@ -449,4 +449,8 @@
     <string name="fusion_sin_cambios">No hay nada que traer: ya está todo al día.</string>
     <string name="fusion_archivos">%1$d archivos copiados</string>
     <string name="fusion_omitidas">%1$d mascotas omitidas por el conflicto</string>
+
+    <!-- Permiso de alarmas exactas -->
+    <string name="aviso_permiso_exacto_titulo">Los avisos pueden llegar tarde</string>
+    <string name="aviso_permiso_exacto_accion">Activar alarmas exactas</string>
 </resources>

@@ -294,6 +294,23 @@ reservado a apps de alarma y llamadas) y sonar en bucle con un servicio en prime
 es un **banner con sonido y vibración** del canal `recordatorios_tratamientos`
 (`IMPORTANCE_HIGH`), y su categoría es `reminder`, no `alarm`.
 
+#### El permiso de alarmas exactas: el fallo más silencioso
+
+`AlarmManager.setExactAndAllowWhileIdle` necesita `SCHEDULE_EXACT_ALARM`. Si no está concedido, el
+código cae a `set()`, que **no falla**: programa la alarma con una ventana (hasta una hora) y con la
+app cerrada y el móvil en reposo puede aplazarla mucho más. El aviso acaba llegando tarde o, desde
+el punto de vista del usuario, **no llegando**.
+
+Ese permiso **se pierde al reinstalar la app** (los *appops* se borran con la instalación) y
+`AlarmManager` no avisa a la app de que ha cambiado. De ahí tres cosas que no se pueden quitar:
+
+1. Al encender *Recordarme* en un tratamiento se pide (`ComprobadorPermisoExacto.pedirPermiso`),
+   junto al de notificaciones.
+2. Si falta, el menú de sistema lo avisa con "Los avisos pueden llegar tarde".
+3. **El menú reprograma los avisos al abrirse**: es lo que hace que, al volver de concederlo en
+   Ajustes, las alarmas pasen a ser exactas sin reiniciar la app. Se hizo así porque
+   `WindowInfo.isWindowFocused` no resultó fiable para detectar la vuelta de otra app.
+
 No hay servicio en segundo plano: es un equilibrio consciente entre simplicidad y precisión.
 
 ---

@@ -33,6 +33,7 @@ import com.example.virtualpetkmp.util.rememberProgramadorNotificaciones
 import com.example.virtualpetkmp.viewmodel.FichaMascotaViewModel
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
 import com.example.virtualpetkmp.viewmodel.VeterinarioViewModel
+import kotlinx.coroutines.launch
 
 /**
  * Raíz de la app.
@@ -67,6 +68,7 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
     val viewModel = remember { MascotaViewModel(repository, pesoRepository) }
     val veterinarioViewModel = remember { VeterinarioViewModel(veterinarioRepository) }
     val programador = rememberProgramadorNotificaciones()
+    val alcance = rememberCoroutineScope()
 
     // Al arrancar se reprograman los avisos de todas las mascotas. Abrir la ficha de una
     // mascota también los reprograma, así que esto es la red de seguridad para el caso de
@@ -154,6 +156,18 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
             onGuardarCopia = { dialogoCopia = DialogoCopia.GUARDAR },
             onRestaurarCopia = { dialogoCopia = DialogoCopia.RESTAURAR },
             onImportarFusion = { dialogoCopia = DialogoCopia.IMPORTAR },
+            // Al abrir el menú se reprograman los avisos: es lo que hace que, al volver de
+            // conceder el permiso de alarmas exactas en Ajustes, pasen a ser exactas sin
+            // reiniciar la app.
+            onAbrirMenuSistema = {
+                alcance.launch {
+                    try {
+                        reprogramarAvisosDeTodo(programador, database, localizacion)
+                    } catch (e: Exception) {
+                        println("Error reprogramando avisos: ${e.message}")
+                    }
+                }
+            },
             contenidoMascotas = {
                 when (currentScreen) {
                     "list" -> {

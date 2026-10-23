@@ -450,4 +450,8 @@
     <string name="fusion_sin_cambios">Nichts zu übernehmen: alles ist bereits aktuell.</string>
     <string name="fusion_archivos">%1$d Dateien kopiert</string>
     <string name="fusion_omitidas">%1$d Tiere wegen des Konflikts übersprungen</string>
+
+    <!-- Permiso de alarmas exactas -->
+    <string name="aviso_permiso_exacto_titulo">Erinnerungen können zu spät kommen</string>
+    <string name="aviso_permiso_exacto_accion">Exakte Alarme aktivieren</string>
 </resources>

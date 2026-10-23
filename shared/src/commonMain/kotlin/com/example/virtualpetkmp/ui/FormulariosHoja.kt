@@ -34,6 +34,7 @@ import com.example.virtualpetkmp.util.UnidadPeso
 import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.util.parseFechaLocalizada
 import com.example.virtualpetkmp.util.parseKilos
+import com.example.virtualpetkmp.util.rememberComprobadorPermisoExacto
 import com.example.virtualpetkmp.util.rememberPermisoNotificaciones
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
@@ -415,6 +416,10 @@ fun FormularioTratamiento(
     // Se pide el permiso de notificaciones al encender el interruptor: es cuando el usuario
     // pide avisos, no al abrir la app sin venir a cuento.
     val pedirPermisoNotificaciones = rememberPermisoNotificaciones()
+    // Alarmas exactas: sin este permiso los avisos pueden llegar hasta una hora tarde, y con el
+    // móvil en reposo (y la app cerrada) mucho más. Se pide al encender el recordatorio, que es
+    // cuando tiene sentido pedirlo, y no al abrir la app sin venir a cuento.
+    val permisoExacto = rememberComprobadorPermisoExacto()
     var sinPermiso by remember { mutableStateOf(false) }
     var nombre by rememberSaveable { mutableStateOf(tratamiento?.nombreMedicamento ?: "") }
     var dosis by rememberSaveable { mutableStateOf(tratamiento?.dosis ?: "") }
@@ -519,6 +524,9 @@ fun FormularioTratamiento(
                                 // cambia si quiere.
                                 if (hora.isBlank()) hora = HORA_RECORDATORIO_POR_DEFECTO
                                 sinPermiso = !pedirPermisoNotificaciones()
+                                // Si no se pueden programar alarmas exactas, se abre la pantalla del
+                                // sistema para concederlo: sin eso el recordatorio llega tarde.
+                                if (!permisoExacto.puedeProgramarExacto()) permisoExacto.pedirPermiso()
                             } else {
                                 sinPermiso = false
                             }

@@ -453,4 +453,8 @@
     <string name="fusion_sin_cambios">Nothing to bring over: everything is already up to date.</string>
     <string name="fusion_archivos">%1$d files copied</string>
     <string name="fusion_omitidas">%1$d pets skipped because of the conflict</string>
+
+    <!-- Permiso de alarmas exactas -->
+    <string name="aviso_permiso_exacto_titulo">Reminders may arrive late</string>
+    <string name="aviso_permiso_exacto_accion">Enable exact alarms</string>
 </resources>
