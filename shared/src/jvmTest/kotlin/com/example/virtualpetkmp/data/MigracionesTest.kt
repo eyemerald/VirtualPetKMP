@@ -73,20 +73,50 @@ class MigracionesTest {
 
     private fun nuevoDriver(): SqlDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
 
-    /** Datos de un usuario real: una mascota con su ficha rellena. */
+    /**
+     * Datos de un usuario real: una mascota con su ficha rellena.
+     *
+     * **Se adapta a la versión de la que se parte.** Desde la 14 la tabla tiene `uuid` y
+     * `actualizadoEn`, y una fila insertada sin ellos se quedaría con los valores por defecto de la
+     * migración (`''` y `0`): eso es un artefacto del test, porque la app nunca escribe así. Antes
+     * de la 14 esas columnas no existen y no se pueden nombrar.
+     */
     private fun insertarMascota(driver: SqlDriver) {
-        driver.ejecutar(
-            """
-            INSERT INTO mascotas (nombre, especie, raza, fechaNacimiento, sexo, color, microchip)
-            VALUES ('Luna', 'Perro', 'Labrador Retriever', '2024-02-04', 'Hembra', 'Negro', '941000012345678');
-            """.trimIndent()
-        )
+        val tieneUuid = driver.columnasDe("mascotas").any { it.startsWith("uuid ") }
+
+        val columnas = if (tieneUuid) {
+            "(nombre, especie, raza, fechaNacimiento, sexo, color, microchip, uuid, actualizadoEn)"
+        } else {
+            "(nombre, especie, raza, fechaNacimiento, sexo, color, microchip)"
+        }
+        val valores = if (tieneUuid) {
+            "('Luna', 'Perro', 'Labrador Retriever', '2024-02-04', 'Hembra', 'Negro', '941000012345678', " +
+                "'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 1000)"
+        } else {
+            "('Luna', 'Perro', 'Labrador Retriever', '2024-02-04', 'Hembra', 'Negro', '941000012345678')"
+        }
+
+        driver.ejecutar("INSERT INTO mascotas $columnas VALUES $valores;")
     }
 
     /** Las notas solo existen a partir de la versión 2, así que no se pueden meter antes. */
     private fun insertarNotas(driver: SqlDriver) {
-        driver.ejecutar("INSERT INTO notas (mascotaId, texto) VALUES (1, 'Primera nota');")
-        driver.ejecutar("INSERT INTO notas (mascotaId, texto) VALUES (1, 'Segunda nota');")
+        // Igual que con la mascota: desde la 14 la tabla lleva uuid y actualizadoEn.
+        val tieneUuid = driver.columnasDe("notas").any { it.startsWith("uuid ") }
+
+        if (tieneUuid) {
+            driver.ejecutar(
+                "INSERT INTO notas (mascotaId, texto, uuid, actualizadoEn) VALUES " +
+                    "(1, 'Primera nota', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb1', 1000);"
+            )
+            driver.ejecutar(
+                "INSERT INTO notas (mascotaId, texto, uuid, actualizadoEn) VALUES " +
+                    "(1, 'Segunda nota', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2', 1000);"
+            )
+        } else {
+            driver.ejecutar("INSERT INTO notas (mascotaId, texto) VALUES (1, 'Primera nota');")
+            driver.ejecutar("INSERT INTO notas (mascotaId, texto) VALUES (1, 'Segunda nota');")
+        }
     }
 
     private fun hayTabla(driver: SqlDriver, tabla: String): Boolean =
@@ -181,6 +211,16 @@ class MigracionesTest {
                 recienInstalada.columnasDe(tabla),
                 migrada.columnasDe(tabla),
                 "las columnas de '$tabla' no coinciden entre instalar y migrar"
+            )
+
+            // Los índices también: la migración 14 crea uno por tabla y, si alguien lo añade al
+            // `.sq` y se olvida del `.sqm`, las dos rutas acaban con bases distintas (una con
+            // índice y otra sin él). No rompe nada, pero hace que la fusión vaya más lenta en un
+            // caso y no en el otro, y es justo el despiste que esta prueba existe para cazar.
+            assertEquals(
+                recienInstalada.indicesDe(tabla),
+                migrada.indicesDe(tabla),
+                "los índices de '$tabla' no coinciden entre instalar y migrar"
             )
         }
     }
@@ -322,6 +362,23 @@ private fun SqlDriver.tablas(): List<String> =
                 cursor.getString(0)?.let { nombres.add(it) }
             }
             QueryResult.Value(nombres)
+        },
+        parameters = 0
+    ).value
+
+/** Índices de una tabla: `nombre (columna, ...)`, ordenados, para poder compararlos. */
+private fun SqlDriver.indicesDe(tabla: String): List<String> =
+    executeQuery(
+        identifier = null,
+        sql = "PRAGMA index_list($tabla);",
+        mapper = { cursor ->
+            val indices = mutableListOf<String>()
+            while (cursor.next().value) {
+                // seq, name, unique, origin, partial
+                val nombre = cursor.getString(1) ?: continue
+                indices.add(nombre)
+            }
+            QueryResult.Value(indices.sorted())
         },
         parameters = 0
     ).value

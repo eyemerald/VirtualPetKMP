@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
+import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.db.VirtualPetDatabase
 import com.example.virtualpetkmp.util.CarpetasApp
 import com.example.virtualpetkmp.util.ahoraMillis
@@ -48,9 +49,13 @@ import virtualpetkmp.shared.generated.resources.copia_guardando
 import virtualpetkmp.shared.generated.resources.copia_guardar
 import virtualpetkmp.shared.generated.resources.copia_menu
 import virtualpetkmp.shared.generated.resources.copia_menu_restaurar
+import virtualpetkmp.shared.generated.resources.deshacer
+import virtualpetkmp.shared.generated.resources.deshacer_aviso
+import virtualpetkmp.shared.generated.resources.deshacer_ok
 import virtualpetkmp.shared.generated.resources.copia_ok
 import virtualpetkmp.shared.generated.resources.copia_ok_detalle
 import virtualpetkmp.shared.generated.resources.error_desconocido
+import virtualpetkmp.shared.generated.resources.exportar_mascota_explicacion
 import virtualpetkmp.shared.generated.resources.restaurar_aviso
 import virtualpetkmp.shared.generated.resources.restaurar_confirmar
 import virtualpetkmp.shared.generated.resources.restaurar_elegir
@@ -73,7 +78,7 @@ import virtualpetkmp.shared.generated.resources.restaurar_vista_titulo
  * Es un enum y no un booleano porque los dos se abren desde el mismo menú y solo puede haber uno:
  * con dos `Boolean` habría estados imposibles (los dos abiertos).
  */
-enum class DialogoCopia { GUARDAR, RESTAURAR, IMPORTAR }
+enum class DialogoCopia { GUARDAR, RESTAURAR, IMPORTAR, EXPORTAR_MASCOTA }
 
 /**
  * Motivo de un fallo de copia, ya clasificado para poder traducirlo al pintarlo.
@@ -123,6 +128,8 @@ private fun nombreSugeridoDelDia(): String {
 fun DialogoGuardarCopia(
     db: VirtualPetDatabase,
     carpetas: CarpetasApp,
+    /** Si viene, el paquete lleva solo esa mascota (y no la agenda de veterinarios). */
+    soloMascota: Mascota? = null,
     onCerrar: () -> Unit
 ) {
     val alcance = rememberCoroutineScope()
@@ -138,7 +145,19 @@ fun DialogoGuardarCopia(
         ExportadorCopia(db, carpetas, versionApp = versionDeLaApp(), plataforma = plataformaDeLaApp())
     }
     val compartir = rememberCompartidorPaquete()
-    val nombreDelPaquete = remember { nombreSugeridoDelDia() }
+    val nombreDelPaquete = remember(soloMascota) {
+        if (soloMascota == null) {
+            nombreSugeridoDelDia()
+        } else {
+            val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
+            fun dos(valor: Int) = valor.toString().padStart(2, '0')
+            val fecha = "${hoy.year}-${dos(hoy.monthNumber)}-${dos(hoy.dayOfMonth)}"
+            // El nombre lleva el de la mascota para reconocer el archivo sin abrirlo; se limpia
+            // porque los sistemas de archivos no aceptan cualquier carácter.
+            "VirtualPet-${soloMascota.nombre}-$fecha.vpet"
+                .replace(Regex("[^A-Za-z0-9._-]"), "_")
+        }
+    }
 
     // Al cerrar, el paquete temporal se borra: ya está guardado donde el usuario eligió.
     val cerrar: () -> Unit = {
@@ -157,7 +176,7 @@ fun DialogoGuardarCopia(
                 falloCompartir = false
 
                 val temporal = "${carpetas.copias}/temporal-${ahoraMillis()}.vpet"
-                val resultado = exportador.exportar(temporal)
+                val resultado = exportador.exportar(temporal, soloMascotaUuid = soloMascota?.uuid)
                 val paquete = resultado.getOrNull()
 
                 if (paquete == null) {
@@ -182,7 +201,13 @@ fun DialogoGuardarCopia(
         title = { Text(stringResource(Res.string.copia_menu)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(stringResource(Res.string.copia_explicacion))
+                Text(
+                    if (soloMascota == null) {
+                        stringResource(Res.string.copia_explicacion)
+                    } else {
+                        stringResource(Res.string.exportar_mascota_explicacion)
+                    }
+                )
                 ResultadoDeGuardar(trabajando, guardada, fallo)
                 if (falloCompartir) {
                     Text(
@@ -281,6 +306,7 @@ fun DialogoRestaurarCopia(
     var restaurando by remember { mutableStateOf(false) }
     var resultado by remember { mutableStateOf<ResultadoRestauracion?>(null) }
     var fallo by remember { mutableStateOf<Pair<FalloCopia, String>?>(null) }
+    var deshecho by remember { mutableStateOf(false) }
 
     val exportador = remember(db, carpetas) {
         ExportadorCopia(db, carpetas, versionApp = versionDeLaApp(), plataforma = plataformaDeLaApp())
@@ -334,6 +360,17 @@ fun DialogoRestaurarCopia(
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
+                        if (deshecho) {
+                            Text(
+                                stringResource(Res.string.deshacer_ok),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        } else if (resultado!!.copiaPrevia != null) {
+                            Text(
+                                stringResource(Res.string.deshacer_aviso),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     }
 
                     vista != null -> {
@@ -376,6 +413,32 @@ fun DialogoRestaurarCopia(
         },
         confirmButton = {
             when {
+                resultado != null && resultado!!.copiaPrevia != null && !deshecho -> TextButton(
+                    onClick = {
+                        val copia = resultado!!.copiaPrevia
+                        if (copia != null) {
+                            alcance.launch {
+                                restaurando = true
+                                val vuelta = importador.restaurar(copia)
+                                restaurando = false
+                                if (vuelta.isSuccess) {
+                                    deshecho = true
+                                    alRestaurar()
+                                } else {
+                                    fallo = (
+                                        (vuelta.exceptionOrNull() as? ErrorCopiaException)
+                                            ?.let { falloDeError(it.error) }
+                                            ?: FalloCopia.DESCONOCIDO
+                                        ) to vuelta.exceptionOrNull()?.message.orEmpty()
+                                }
+                            }
+                        }
+                    },
+                    enabled = !restaurando
+                ) {
+                    Text(stringResource(Res.string.deshacer))
+                }
+
                 resultado != null -> TextButton(onClick = onCerrar) {
                     Text(stringResource(Res.string.comun_cerrar))
                 }

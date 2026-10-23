@@ -12,6 +12,10 @@ CREATE TABLE revisiones (
     FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
 );
 
+-- Búsqueda por identificador universal, que es la que hace la fusión al importar.
+CREATE INDEX idx_revisiones_uuid ON revisiones(uuid);
+
+
 selectByMascotaId:
 SELECT * FROM revisiones WHERE mascotaId = ? ORDER BY fecha DESC;
 

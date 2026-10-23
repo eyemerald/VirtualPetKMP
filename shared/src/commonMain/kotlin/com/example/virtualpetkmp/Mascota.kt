@@ -25,5 +25,6 @@ data class Mascota(
     val color: String,
     val microchip: String?,
     val foto: String? = null,
-    val pesoIdeal: Double? = null
+    val pesoIdeal: Double? = null,
+    val uuid: String? = null
 )

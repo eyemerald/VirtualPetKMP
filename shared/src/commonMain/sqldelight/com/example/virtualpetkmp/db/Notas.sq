@@ -8,6 +8,10 @@ CREATE TABLE notas (
     FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
 );
 
+-- Búsqueda por identificador universal, que es la que hace la fusión al importar.
+CREATE INDEX idx_notas_uuid ON notas(uuid);
+
+
 selectByMascotaId:
 SELECT * FROM notas WHERE mascotaId = ? ORDER BY id DESC;
 

@@ -456,4 +456,11 @@
 
     <string name="copia_compartir">Compartir</string>
     <string name="copia_compartir_error">No se pudo abrir el menú de compartir.</string>
+
+    <!-- Exportar una mascota y deshacer una importación -->
+    <string name="exportar_mascota_menu">Exportar los datos de esta mascota</string>
+    <string name="exportar_mascota_explicacion">Se guarda solo esta mascota, con todo su historial, sus fotos y sus PDF. La agenda de veterinarios no se incluye: es común a todas.</string>
+    <string name="deshacer">Deshacer</string>
+    <string name="deshacer_aviso">Puedes deshacer: se volverá a como estaba antes de importar. Lo que hayas cambiado desde entonces se perderá.</string>
+    <string name="deshacer_ok">Deshecho: los datos han vuelto a como estaban antes de importar.</string>
 </resources>

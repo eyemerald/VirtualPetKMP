@@ -12,6 +12,10 @@ CREATE TABLE veterinarios (
     actualizadoEn INTEGER NOT NULL
 );
 
+-- Búsqueda por identificador universal, que es la que hace la fusión al importar.
+CREATE INDEX idx_veterinarios_uuid ON veterinarios(uuid);
+
+
 selectAll:
 SELECT * FROM veterinarios ORDER BY esUrgencias DESC, nombreClinica ASC;
 

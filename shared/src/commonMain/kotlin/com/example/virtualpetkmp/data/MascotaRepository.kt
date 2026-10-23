@@ -176,6 +176,7 @@ private fun com.example.virtualpetkmp.db.Mascotas.toMascota(): Mascota {
         color = color,
         microchip = microchip,
         foto = foto,
-        pesoIdeal = peso_ideal
+        pesoIdeal = peso_ideal,
+        uuid = uuid
     )
 }

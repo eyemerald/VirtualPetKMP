@@ -457,4 +457,11 @@
 
     <string name="copia_compartir">Partager</string>
     <string name="copia_compartir_error">Impossible d'ouvrir le menu de partage.</string>
+
+    <!-- Exportar una mascota y deshacer una importación -->
+    <string name="exportar_mascota_menu">Exporter les données de cet animal</string>
+    <string name="exportar_mascota_explicacion">Seul cet animal est enregistré, avec tout son historique, ses photos et ses PDF. La liste des vétérinaires n'est pas incluse : elle est commune.</string>
+    <string name="deshacer">Annuler</string>
+    <string name="deshacer_aviso">Tu peux annuler : retour à l'état d'avant l'import. Ce que tu as modifié depuis sera perdu.</string>
+    <string name="deshacer_ok">Annulé : les données sont revenues à l'état d'avant l'import.</string>
 </resources>

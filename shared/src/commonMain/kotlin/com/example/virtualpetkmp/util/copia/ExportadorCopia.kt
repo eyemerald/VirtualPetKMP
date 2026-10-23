@@ -46,13 +46,30 @@ class ExportadorCopia(
     private val plataforma: String
 ) {
 
-    suspend fun exportar(destino: String): Result<PaqueteExportado> = withContext(Dispatchers.IO) {
+    /**
+     * Escribe el paquete.
+     *
+     * @param soloMascotaUuid si viene, el paquete lleva **solo esa mascota** con su historial. La
+     *   agenda de veterinarios no viaja en ese caso: es común a todas las mascotas y se traspasa
+     *   con el paquete completo (decisión tomada en docs/TRASPASO_DE_DATOS.md).
+     */
+    suspend fun exportar(
+        destino: String,
+        soloMascotaUuid: String? = null
+    ): Result<PaqueteExportado> = withContext(Dispatchers.IO) {
         try {
             val archivosZip = mutableMapOf<String, String>()
             var faltaban = 0
 
             // --- Mascotas (con su foto) ------------------------------------------------
-            val mascotas = db.mascotasQueries.selectAll().executeAsList().map { fila ->
+            val todasLasMascotas = db.mascotasQueries.selectAll().executeAsList()
+            val mascotasFuente = if (soloMascotaUuid == null) {
+                todasLasMascotas
+            } else {
+                todasLasMascotas.filter { it.uuid == soloMascotaUuid }
+            }
+
+            val mascotas = mascotasFuente.map { fila ->
                 val fotoEnPaquete = fila.foto?.let { ruta ->
                     if (existeArchivo(ruta)) {
                         val nombre = "${PaqueteDatos.CARPETA_ARCHIVOS}fotos/${fila.uuid}${extensionDe(ruta, "jpg")}"
@@ -78,7 +95,7 @@ class ExportadorCopia(
                     pesoIdeal = fila.peso_ideal
                 )
             }
-            val uuidPorId = db.mascotasQueries.selectAll().executeAsList().associate { it.id to it.uuid }
+            val uuidPorId = todasLasMascotas.associate { it.id to it.uuid }
 
             val vacunas = db.vacunasQueries.selectAll().executeAsList().mapNotNull { fila ->
                 uuidPorId[fila.mascotaId]?.let { mascotaUuid ->
@@ -192,16 +209,20 @@ class ExportadorCopia(
                 }
             }
 
-            val veterinarios = db.veterinariosQueries.selectAll().executeAsList().map { fila ->
-                FilaVeterinario(
-                    uuid = fila.uuid,
-                    actualizadoEn = fila.actualizadoEn,
-                    nombreClinica = fila.nombreClinica,
-                    nombreVeterinario = fila.nombreVeterinario,
-                    telefono = fila.telefono,
-                    direccion = fila.direccion,
-                    esUrgencias = fila.esUrgencias.toInt()
-                )
+            val veterinarios = if (soloMascotaUuid != null) {
+                emptyList()
+            } else {
+                db.veterinariosQueries.selectAll().executeAsList().map { fila ->
+                    FilaVeterinario(
+                        uuid = fila.uuid,
+                        actualizadoEn = fila.actualizadoEn,
+                        nombreClinica = fila.nombreClinica,
+                        nombreVeterinario = fila.nombreVeterinario,
+                        telefono = fila.telefono,
+                        direccion = fila.direccion,
+                        esUrgencias = fila.esUrgencias.toInt()
+                    )
+                }
             }
 
             val ahora = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())

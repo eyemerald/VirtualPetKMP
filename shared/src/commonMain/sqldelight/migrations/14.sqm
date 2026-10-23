@@ -1,0 +1,15 @@
+-- Migración de la versión 14 a la 15: índice por identificador universal.
+--
+-- No toca ninguna columna ni ningún dato: solo añade un índice por tabla para que la fusión
+-- no tenga que recorrer la tabla entera cada vez que comprueba si una fila ya existe. Es
+-- aditivo y se puede repetir sin riesgo (`IF NOT EXISTS`).
+
+CREATE INDEX IF NOT EXISTS idx_mascotas_uuid ON mascotas(uuid);
+CREATE INDEX IF NOT EXISTS idx_vacunas_uuid ON vacunas(uuid);
+CREATE INDEX IF NOT EXISTS idx_preventivos_uuid ON preventivos(uuid);
+CREATE INDEX IF NOT EXISTS idx_revisiones_uuid ON revisiones(uuid);
+CREATE INDEX IF NOT EXISTS idx_tratamientos_uuid ON tratamientos(uuid);
+CREATE INDEX IF NOT EXISTS idx_pesos_uuid ON pesos(uuid);
+CREATE INDEX IF NOT EXISTS idx_informes_uuid ON informes(uuid);
+CREATE INDEX IF NOT EXISTS idx_notas_uuid ON notas(uuid);
+CREATE INDEX IF NOT EXISTS idx_veterinarios_uuid ON veterinarios(uuid);

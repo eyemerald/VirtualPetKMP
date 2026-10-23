@@ -106,6 +106,8 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
     // Carpetas privadas de la app (fotos, informes y copias) y qué diálogo de copia está abierto.
     val carpetas = rememberCarpetasApp()
     var dialogoCopia by remember { mutableStateOf<DialogoCopia?>(null) }
+    // Mascota elegida para exportar solo sus datos (menú de su ficha).
+    var mascotaParaExportar by remember { mutableStateOf<Mascota?>(null) }
 
     // Un único ViewModel de ficha por mascota, compartido por todas las hojas: así el
     // resumen, las listas y los avisos son los mismos en toda la pantalla.
@@ -196,6 +198,10 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
                                 onCambiarDialogoExportar = { visible -> dialogoExportarFicha = visible },
                                 abrirTratamientosAlEntrar = abrirTratamientos,
                                 onTratamientosAbiertos = { abrirTratamientos = false },
+                                onExportarDatos = {
+                                    mascotaParaExportar = mascota
+                                    dialogoCopia = DialogoCopia.EXPORTAR_MASCOTA
+                                },
                                 onModificar = { currentScreen = "form" }
                             )
                         }
@@ -267,6 +273,18 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
                         selectedMascotaId = null
                         currentScreen = "list"
                         viewModel.loadMascotas()
+                    }
+                )
+            }
+
+            DialogoCopia.EXPORTAR_MASCOTA -> {
+                DialogoGuardarCopia(
+                    db = database,
+                    carpetas = carpetas,
+                    soloMascota = mascotaParaExportar,
+                    onCerrar = {
+                        dialogoCopia = null
+                        mascotaParaExportar = null
                     }
                 )
             }

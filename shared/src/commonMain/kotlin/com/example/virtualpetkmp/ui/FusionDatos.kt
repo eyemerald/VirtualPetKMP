@@ -25,6 +25,7 @@ import com.example.virtualpetkmp.util.CarpetasApp
 import com.example.virtualpetkmp.util.copia.DecisionConflicto
 import com.example.virtualpetkmp.util.copia.ErrorCopiaException
 import com.example.virtualpetkmp.util.copia.ExportadorCopia
+import com.example.virtualpetkmp.util.copia.ImportadorCopia
 import com.example.virtualpetkmp.util.copia.ImportadorFusion
 import com.example.virtualpetkmp.util.copia.PlanFusion
 import com.example.virtualpetkmp.util.copia.ResultadoFusion
@@ -44,6 +45,9 @@ import virtualpetkmp.shared.generated.resources.fusion_conflictos_titulo
 import virtualpetkmp.shared.generated.resources.fusion_decision_omitir
 import virtualpetkmp.shared.generated.resources.fusion_decision_renombrar
 import virtualpetkmp.shared.generated.resources.fusion_decision_sobrescribir
+import virtualpetkmp.shared.generated.resources.deshacer
+import virtualpetkmp.shared.generated.resources.deshacer_aviso
+import virtualpetkmp.shared.generated.resources.deshacer_ok
 import virtualpetkmp.shared.generated.resources.fusion_explicacion
 import virtualpetkmp.shared.generated.resources.fusion_menu
 import virtualpetkmp.shared.generated.resources.fusion_ok
@@ -77,11 +81,14 @@ fun DialogoImportarFusion(
     var resultado by remember { mutableStateOf<ResultadoFusion?>(null) }
     var fallo by remember { mutableStateOf<Pair<FalloCopia, String>?>(null) }
     var decisiones by remember { mutableStateOf<Map<String, DecisionConflicto>>(emptyMap()) }
+    var deshecho by remember { mutableStateOf(false) }
 
     val exportador = remember(db, carpetas) {
         ExportadorCopia(db, carpetas, versionApp = versionDeLaApp(), plataforma = plataformaDeLaApp())
     }
     val fusionador = remember(db, carpetas, exportador) { ImportadorFusion(db, carpetas, exportador) }
+    // Para deshacer: la copia previa se restaura con el importador de siempre.
+    val restaurador = remember(db, carpetas, exportador) { ImportadorCopia(db, carpetas, exportador) }
 
     val elegirPaquete = rememberSelectorCopia(
         onElegida = { _, ruta ->
@@ -142,6 +149,17 @@ fun DialogoImportarFusion(
                         if (r.conflictosOmitidos > 0) {
                             Text(
                                 stringResource(Res.string.fusion_omitidas, r.conflictosOmitidos),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        if (deshecho) {
+                            Text(
+                                stringResource(Res.string.deshacer_ok),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        } else if (r.copiaPrevia != null) {
+                            Text(
+                                stringResource(Res.string.deshacer_aviso),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -210,6 +228,35 @@ fun DialogoImportarFusion(
         },
         confirmButton = {
             when {
+                resultado != null && resultado!!.copiaPrevia != null && !deshecho -> TextButton(
+                    onClick = {
+                        val copia = resultado!!.copiaPrevia
+                        if (copia != null) {
+                            alcance.launch {
+                                aplicando = true
+                                // Deshacer es volver a la copia que se hizo justo antes de
+                                // fusionar: la fusión nunca borra, así que restaurar ese estado
+                                // devuelve exactamente lo que había.
+                                val vuelta = restaurador.restaurar(copia)
+                                aplicando = false
+                                if (vuelta.isSuccess) {
+                                    deshecho = true
+                                    alFusionar()
+                                } else {
+                                    fallo = (
+                                        (vuelta.exceptionOrNull() as? ErrorCopiaException)
+                                            ?.let { falloDeError(it.error) }
+                                            ?: FalloCopia.DESCONOCIDO
+                                        ) to vuelta.exceptionOrNull()?.message.orEmpty()
+                                }
+                            }
+                        }
+                    },
+                    enabled = !aplicando
+                ) {
+                    Text(stringResource(Res.string.deshacer))
+                }
+
                 resultado != null -> TextButton(onClick = onCerrar) {
                     Text(stringResource(Res.string.comun_cerrar))
                 }

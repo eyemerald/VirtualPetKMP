@@ -13,6 +13,10 @@ CREATE TABLE vacunas (
     FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
 );
 
+-- Búsqueda por identificador universal, que es la que hace la fusión al importar.
+CREATE INDEX idx_vacunas_uuid ON vacunas(uuid);
+
+
 selectByMascotaId:
 SELECT * FROM vacunas WHERE mascotaId = ? ORDER BY fechaAplicacion DESC;
 

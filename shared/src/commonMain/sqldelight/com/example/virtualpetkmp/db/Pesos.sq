@@ -10,6 +10,10 @@ CREATE TABLE pesos (
     FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
 );
 
+-- Búsqueda por identificador universal, que es la que hace la fusión al importar.
+CREATE INDEX idx_pesos_uuid ON pesos(uuid);
+
+
 selectByMascotaId:
 SELECT * FROM pesos WHERE mascotaId = ? ORDER BY fecha ASC;
 

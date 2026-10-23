@@ -460,4 +460,11 @@
 
     <string name="copia_compartir">Share</string>
     <string name="copia_compartir_error">Could not open the share dialog.</string>
+
+    <!-- Exportar una mascota y deshacer una importación -->
+    <string name="exportar_mascota_menu">Export this pet's data</string>
+    <string name="exportar_mascota_explicacion">Only this pet is saved, with its whole history, photos and PDFs. The vet list is left out: it is shared by all pets.</string>
+    <string name="deshacer">Undo</string>
+    <string name="deshacer_aviso">You can undo: it will go back to how it was before importing. Anything you changed since then will be lost.</string>
+    <string name="deshacer_ok">Undone: the data is back to how it was before importing.</string>
 </resources>

@@ -85,6 +85,7 @@ import virtualpetkmp.shared.generated.resources.exportar_titulo
 import virtualpetkmp.shared.generated.resources.exportar_version_completa
 import virtualpetkmp.shared.generated.resources.exportar_version_resumida
 import virtualpetkmp.shared.generated.resources.ficha_activos
+import virtualpetkmp.shared.generated.resources.exportar_mascota_menu
 import virtualpetkmp.shared.generated.resources.ficha_exportar_pdf
 import virtualpetkmp.shared.generated.resources.ficha_modificar_datos
 import virtualpetkmp.shared.generated.resources.ficha_peso_actual
@@ -188,7 +189,9 @@ fun FichaMascotaScreen(
      */
     abrirTratamientosAlEntrar: Boolean = false,
     /** Avisa de que la hoja ya se abrió, para que la petición no se repita al volver a la ficha. */
-    onTratamientosAbiertos: () -> Unit = {}
+    onTratamientosAbiertos: () -> Unit = {},
+    /** Exportar los datos de esta mascota para traspasarlos a otro dispositivo. */
+    onExportarDatos: () -> Unit = {}
 ) {
     val resumen by viewModel.resumen.collectAsState()
     // Último error de una operación (guardar una vacuna, borrar un pesaje...), si lo hubo.
@@ -536,7 +539,8 @@ fun FichaMascotaScreen(
                         menuAcciones = {
                             MenuAccionesFicha(
                                 onModificar = onModificar,
-                                onExportarPdf = { onCambiarDialogoExportar(true) }
+                                onExportarPdf = { onCambiarDialogoExportar(true) },
+                                onExportarDatos = onExportarDatos
                             )
                         }
                     )
@@ -592,7 +596,8 @@ fun FichaMascotaScreen(
             menuAcciones = {
                 MenuAccionesFicha(
                     onModificar = onModificar,
-                    onExportarPdf = { onCambiarDialogoExportar(true) }
+                    onExportarPdf = { onCambiarDialogoExportar(true) },
+                    onExportarDatos = onExportarDatos
                 )
             }
         )
@@ -1024,6 +1029,7 @@ private fun AvisoErrorFicha(mensaje: String, onCerrar: () -> Unit) {
 private fun MenuAccionesFicha(
     onModificar: () -> Unit,
     onExportarPdf: () -> Unit,
+    onExportarDatos: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var abierto by remember { mutableStateOf(false) }
@@ -1058,6 +1064,18 @@ private fun MenuAccionesFicha(
                 onClick = {
                     abierto = false
                     onExportarPdf()
+                }
+            )
+            DropdownMenuItem(
+                // Exportar los DATOS (para traspasarlos), no el PDF de la ficha: van separados
+                // porque uno es para el veterinario y el otro para llevar la mascota a otro móvil.
+                text = { Text(stringResource(Res.string.exportar_mascota_menu)) },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Default.Share, contentDescription = null)
+                },
+                onClick = {
+                    abierto = false
+                    onExportarDatos()
                 }
             )
         }

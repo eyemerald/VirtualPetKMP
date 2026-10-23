@@ -456,4 +456,11 @@
 
     <string name="copia_compartir">Partilhar</string>
     <string name="copia_compartir_error">Não foi possível abrir o menu de partilha.</string>
+
+    <!-- Exportar una mascota y deshacer una importación -->
+    <string name="exportar_mascota_menu">Exportar os dados deste animal</string>
+    <string name="exportar_mascota_explicacion">É guardado apenas este animal, com todo o seu histórico, fotos e PDF. A lista de veterinários não é incluída: é comum a todos.</string>
+    <string name="deshacer">Desfazer</string>
+    <string name="deshacer_aviso">Podes desfazer: volta a como estava antes de importar. O que alteraste desde então perde-se.</string>
+    <string name="deshacer_ok">Desfeito: os dados voltaram a como estavam antes de importar.</string>
 </resources>

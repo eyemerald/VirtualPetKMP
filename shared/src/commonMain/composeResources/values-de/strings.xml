@@ -457,4 +457,11 @@
 
     <string name="copia_compartir">Teilen</string>
     <string name="copia_compartir_error">Teilen-Dialog konnte nicht geöffnet werden.</string>
+
+    <!-- Exportar una mascota y deshacer una importación -->
+    <string name="exportar_mascota_menu">Daten dieses Tiers exportieren</string>
+    <string name="exportar_mascota_explicacion">Nur dieses Tier wird gesichert, mit seinem ganzen Verlauf, Fotos und PDFs. Die Tierarztliste ist nicht dabei: sie gilt für alle.</string>
+    <string name="deshacer">Rückgängig</string>
+    <string name="deshacer_aviso">Du kannst es rückgängig machen: es geht zurück auf den Stand vor dem Import. Was du seither geändert hast, geht verloren.</string>
+    <string name="deshacer_ok">Rückgängig gemacht: die Daten sind wieder auf dem Stand vor dem Import.</string>
 </resources>
