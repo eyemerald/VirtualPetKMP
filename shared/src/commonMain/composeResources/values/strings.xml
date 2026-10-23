@@ -457,4 +457,7 @@
     <!-- Permiso de alarmas exactas -->
     <string name="aviso_permiso_exacto_titulo">Reminders may arrive late</string>
     <string name="aviso_permiso_exacto_accion">Enable exact alarms</string>
+
+    <string name="copia_compartir">Share</string>
+    <string name="copia_compartir_error">Could not open the share dialog.</string>
 </resources>

@@ -453,4 +453,7 @@
     <!-- Permiso de alarmas exactas -->
     <string name="aviso_permiso_exacto_titulo">Os avisos podem chegar atrasados</string>
     <string name="aviso_permiso_exacto_accion">Ativar alarmes exatas</string>
+
+    <string name="copia_compartir">Partilhar</string>
+    <string name="copia_compartir_error">Não foi possível abrir o menu de partilha.</string>
 </resources>

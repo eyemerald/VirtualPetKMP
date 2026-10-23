@@ -454,4 +454,7 @@
     <!-- Permiso de alarmas exactas -->
     <string name="aviso_permiso_exacto_titulo">Erinnerungen können zu spät kommen</string>
     <string name="aviso_permiso_exacto_accion">Exakte Alarme aktivieren</string>
+
+    <string name="copia_compartir">Teilen</string>
+    <string name="copia_compartir_error">Teilen-Dialog konnte nicht geöffnet werden.</string>
 </resources>

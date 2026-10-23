@@ -450,4 +450,7 @@
     <!-- Permiso de alarmas exactas -->
     <string name="aviso_permiso_exacto_titulo">I promemoria possono arrivare in ritardo</string>
     <string name="aviso_permiso_exacto_accion">Attiva sveglie esatte</string>
+
+    <string name="copia_compartir">Condividi</string>
+    <string name="copia_compartir_error">Impossibile aprire il menu di condivisione.</string>
 </resources>

@@ -26,6 +26,8 @@ import com.example.virtualpetkmp.util.copia.ResultadoRestauracion
 import com.example.virtualpetkmp.util.copia.VistaPreviaPaquete
 import com.example.virtualpetkmp.util.copiarArchivoA
 import com.example.virtualpetkmp.util.plataformaDeLaApp
+import com.example.virtualpetkmp.util.ResultadoCompartir
+import com.example.virtualpetkmp.util.rememberCompartidorPaquete
 import com.example.virtualpetkmp.util.rememberSelectorCopia
 import com.example.virtualpetkmp.util.rememberSelectorDestinoCopia
 import com.example.virtualpetkmp.util.versionDeLaApp
@@ -38,6 +40,8 @@ import virtualpetkmp.shared.generated.resources.Res
 import virtualpetkmp.shared.generated.resources.comun_cancelar
 import virtualpetkmp.shared.generated.resources.comun_cerrar
 import virtualpetkmp.shared.generated.resources.copia_error
+import virtualpetkmp.shared.generated.resources.copia_compartir
+import virtualpetkmp.shared.generated.resources.copia_compartir_error
 import virtualpetkmp.shared.generated.resources.copia_explicacion
 import virtualpetkmp.shared.generated.resources.copia_faltaban
 import virtualpetkmp.shared.generated.resources.copia_guardando
@@ -126,18 +130,31 @@ fun DialogoGuardarCopia(
     var trabajando by remember { mutableStateOf(false) }
     var guardada by remember { mutableStateOf<PaqueteExportado?>(null) }
     var fallo by remember { mutableStateOf<Pair<FalloCopia, String>?>(null) }
+    // Copia del paquete que se queda mientras el diálogo está abierto, para poder compartirlo.
+    var rutaCompartible by remember { mutableStateOf<String?>(null) }
+    var falloCompartir by remember { mutableStateOf(false) }
 
     val exportador = remember(db, carpetas) {
         ExportadorCopia(db, carpetas, versionApp = versionDeLaApp(), plataforma = plataformaDeLaApp())
     }
+    val compartir = rememberCompartidorPaquete()
+    val nombreDelPaquete = remember { nombreSugeridoDelDia() }
+
+    // Al cerrar, el paquete temporal se borra: ya está guardado donde el usuario eligió.
+    val cerrar: () -> Unit = {
+        rutaCompartible?.let { borrarArchivo(it) }
+        rutaCompartible = null
+        onCerrar()
+    }
 
     val elegirDestino = rememberSelectorDestinoCopia(
-        nombreSugerido = remember { nombreSugeridoDelDia() },
+        nombreSugerido = nombreDelPaquete,
         onElegido = { _, rutaDestino ->
             alcance.launch {
                 trabajando = true
                 fallo = null
                 guardada = null
+                falloCompartir = false
 
                 val temporal = "${carpetas.copias}/temporal-${ahoraMillis()}.vpet"
                 val resultado = exportador.exportar(temporal)
@@ -145,26 +162,35 @@ fun DialogoGuardarCopia(
 
                 if (paquete == null) {
                     fallo = FalloCopia.ESCRITURA to resultado.exceptionOrNull()?.message.orEmpty()
+                    borrarArchivo(temporal)
                 } else if (!copiarArchivoA(rutaDestino, temporal)) {
                     fallo = FalloCopia.ESCRITURA to ""
+                    borrarArchivo(temporal)
                 } else {
                     guardada = paquete
+                    // No se borra: se queda para el botón "Compartir" hasta cerrar el diálogo.
+                    rutaCompartible = temporal
                 }
 
-                // El paquete intermedio sobra en los dos casos: si salió bien, ya está copiado.
-                borrarArchivo(temporal)
                 trabajando = false
             }
         }
     )
 
     AlertDialog(
-        onDismissRequest = { if (!trabajando) onCerrar() },
+        onDismissRequest = { if (!trabajando) cerrar() },
         title = { Text(stringResource(Res.string.copia_menu)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(Res.string.copia_explicacion))
                 ResultadoDeGuardar(trabajando, guardada, fallo)
+                if (falloCompartir) {
+                    Text(
+                        stringResource(Res.string.copia_compartir_error),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         },
         confirmButton = {
@@ -179,14 +205,27 @@ fun DialogoGuardarCopia(
                     )
                 }
             } else {
-                TextButton(onClick = onCerrar) { Text(stringResource(Res.string.comun_cerrar)) }
+                // Compartir es lo que hace falta para llevar el archivo a otro móvil o al PC sin
+                // cables; se ofrece aquí, justo después de guardarlo.
+                TextButton(
+                    onClick = {
+                        val ruta = rutaCompartible
+                        if (ruta != null) {
+                            falloCompartir = compartir(nombreDelPaquete, ruta) == ResultadoCompartir.ERROR
+                        }
+                    }
+                ) {
+                    Text(stringResource(Res.string.copia_compartir))
+                }
             }
         },
         dismissButton = {
             if (guardada == null) {
-                TextButton(onClick = onCerrar, enabled = !trabajando) {
+                TextButton(onClick = cerrar, enabled = !trabajando) {
                     Text(stringResource(Res.string.comun_cancelar))
                 }
+            } else {
+                TextButton(onClick = cerrar) { Text(stringResource(Res.string.comun_cerrar)) }
             }
         }
     )
