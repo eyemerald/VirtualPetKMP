@@ -432,4 +432,21 @@
     <string name="comun_cerrar">Fechar</string>
     <string name="comun_cancelar">Cancelar</string>
     <string name="a11y_menu_sistema">Menu da aplicação</string>
+
+    <!-- Fusión entre dispositivos -->
+    <string name="fusion_menu">Importar e fundir</string>
+    <string name="fusion_explicacion">Escolhe um ficheiro de cópia. O que falta é adicionado e o mais recente é atualizado; nada do que já tens é apagado.</string>
+    <string name="fusion_plan_titulo">O que vai mudar</string>
+    <string name="fusion_plan_detalle">%1$d novos · %2$d atualizados · %3$d sem alterações</string>
+    <string name="fusion_conflictos_titulo">Mesmo nome, animal diferente</string>
+    <string name="fusion_conflicto_texto">%1$s já existe neste dispositivo</string>
+    <string name="fusion_decision_renombrar">Renomear</string>
+    <string name="fusion_decision_sobrescribir">Substituir</string>
+    <string name="fusion_decision_omitir">Ignorar</string>
+    <string name="fusion_aplicar">Fundir</string>
+    <string name="fusion_aplicando">A fundir…</string>
+    <string name="fusion_ok">Fundido: %1$d novos e %2$d atualizados</string>
+    <string name="fusion_sin_cambios">Não há nada a trazer: está tudo atualizado.</string>
+    <string name="fusion_archivos">%1$d ficheiros copiados</string>
+    <string name="fusion_omitidas">%1$d animais ignorados pelo conflito</string>
 </resources>

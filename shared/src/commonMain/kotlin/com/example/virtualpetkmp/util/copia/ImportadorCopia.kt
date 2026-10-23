@@ -43,27 +43,7 @@ class ImportadorCopia(
     /** Lee el paquete y cuenta lo que trae, sin tocar la base de datos ni extraer nada. */
     suspend fun vistaPrevia(paquete: String): Result<VistaPreviaPaquete> = withContext(Dispatchers.IO) {
         try {
-            val datos = leerDatos(paquete)
-            val adjuntos = entradasDeZip(paquete).filter { it.startsWith(PaqueteDatos.CARPETA_ARCHIVOS) }
-
-            Result.success(
-                VistaPreviaPaquete(
-                    mascotas = datos.mascotas.size,
-                    vacunas = datos.vacunas.size,
-                    preventivos = datos.preventivos.size,
-                    revisiones = datos.revisiones.size,
-                    tratamientos = datos.tratamientos.size,
-                    pesos = datos.pesos.size,
-                    informes = datos.informes.size,
-                    notas = datos.notas.size,
-                    veterinarios = datos.veterinarios.size,
-                    archivos = adjuntos.size,
-                    bytesArchivos = adjuntos.sumOf { tamanoDeEntradaZip(paquete, it).coerceAtLeast(0) },
-                    nombresMascotas = datos.mascotas.map { it.nombre },
-                    versionApp = datos.versionApp,
-                    creadoEn = datos.creadoEn
-                )
-            )
+            Result.success(LectorPaquete.vistaPrevia(paquete))
         } catch (e: ErrorCopiaException) {
             Result.failure(e)
         } catch (e: Exception) {
@@ -76,7 +56,7 @@ class ImportadorCopia(
         val rutasEscritas = mutableListOf<String>()
 
         try {
-            val datos = leerDatos(paquete)
+            val datos = LectorPaquete.leer(paquete)
 
             // 1. Copia de seguridad de lo que hay ahora. Si no se puede escribir, se aborta: es
             //    preferible no restaurar a hacerlo sin red.
@@ -335,61 +315,5 @@ class ImportadorCopia(
             .sorted()
         if (copias.size <= copiasAConservar) return
         copias.dropLast(copiasAConservar).forEach { borrarArchivo(it) }
-    }
-
-    /**
-     * Comprueba que el fichero es un paquete nuestro y lo devuelve leído.
-     *
-     * Los errores se devuelven clasificados ([ErrorCopia]) y no como texto: el mensaje final lo
-     * pone la interfaz en el idioma del usuario. La huella del manifiesto es lo que detecta un
-     * paquete a medio copiar (un ZIP que se queda corto es justo el fallo que se lleva los datos).
-     */
-    private fun leerDatos(paquete: String): PaqueteDatos {
-        if (!existeArchivo(paquete)) throw ErrorCopiaException(ErrorCopia.PAQUETE_ILEGIBLE)
-
-        val entradas = entradasDeZip(paquete)
-        val textoDatos = if (entradas.isEmpty()) {
-            null
-        } else {
-            leerTextoDeZip(paquete, PaqueteDatos.ENTRADA_DATOS)
-        }
-        if (textoDatos == null) {
-            throw ErrorCopiaException(
-                if (entradas.isEmpty()) ErrorCopia.PAQUETE_ILEGIBLE else ErrorCopia.DATOS_INCOMPLETOS
-            )
-        }
-
-        val textoManifiesto = leerTextoDeZip(paquete, PaqueteDatos.ENTRADA_MANIFIESTO)
-        if (textoManifiesto != null) {
-            val manifiesto = runCatching {
-                PaqueteDatos.json.decodeFromString(ManifiestoPaquete.serializer(), textoManifiesto)
-            }.getOrElse { throw ErrorCopiaException(ErrorCopia.DATOS_INCOMPLETOS) }
-
-            if (manifiesto.formato != PaqueteDatos.FORMATO) {
-                throw ErrorCopiaException(ErrorCopia.NO_ES_DE_VIRTUALPET)
-            }
-            if (manifiesto.versionFormato > PaqueteDatos.VERSION_FORMATO) {
-                throw ErrorCopiaException(ErrorCopia.FORMATO_DEMASIADO_NUEVO)
-            }
-            if (manifiesto.hashDatos.isNotBlank() &&
-                sha256(textoDatos.toByteArray(Charsets.UTF_8)) != manifiesto.hashDatos
-            ) {
-                throw ErrorCopiaException(ErrorCopia.DATOS_INCOMPLETOS)
-            }
-        }
-
-        val datos = runCatching {
-            PaqueteDatos.json.decodeFromString(PaqueteDatos.serializer(), textoDatos)
-        }.getOrElse { throw ErrorCopiaException(ErrorCopia.DATOS_INCOMPLETOS) }
-
-        if (datos.formato != PaqueteDatos.FORMATO) throw ErrorCopiaException(ErrorCopia.NO_ES_DE_VIRTUALPET)
-        if (datos.versionFormato > PaqueteDatos.VERSION_FORMATO) {
-            throw ErrorCopiaException(ErrorCopia.FORMATO_DEMASIADO_NUEVO)
-        }
-        if (datos.mascotas.isEmpty() && datos.veterinarios.isEmpty()) {
-            throw ErrorCopiaException(ErrorCopia.DATOS_INCOMPLETOS)
-        }
-
-        return datos
     }
 }

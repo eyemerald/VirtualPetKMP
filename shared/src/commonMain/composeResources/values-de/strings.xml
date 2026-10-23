@@ -433,4 +433,21 @@
     <string name="comun_cerrar">Schließen</string>
     <string name="comun_cancelar">Abbrechen</string>
     <string name="a11y_menu_sistema">App-Menü</string>
+
+    <!-- Fusión entre dispositivos -->
+    <string name="fusion_menu">Importieren und zusammenführen</string>
+    <string name="fusion_explicacion">Wähle eine Sicherungsdatei. Fehlendes wird ergänzt und Neueres aktualisiert; nichts Vorhandenes wird gelöscht.</string>
+    <string name="fusion_plan_titulo">Was sich ändert</string>
+    <string name="fusion_plan_detalle">%1$d neu · %2$d aktualisiert · %3$d unverändert</string>
+    <string name="fusion_conflictos_titulo">Gleicher Name, anderes Tier</string>
+    <string name="fusion_conflicto_texto">%1$s gibt es bereits auf diesem Gerät</string>
+    <string name="fusion_decision_renombrar">Umbenennen</string>
+    <string name="fusion_decision_sobrescribir">Überschreiben</string>
+    <string name="fusion_decision_omitir">Überspringen</string>
+    <string name="fusion_aplicar">Zusammenführen</string>
+    <string name="fusion_aplicando">Wird zusammengeführt…</string>
+    <string name="fusion_ok">Zusammengeführt: %1$d neu und %2$d aktualisiert</string>
+    <string name="fusion_sin_cambios">Nichts zu übernehmen: alles ist bereits aktuell.</string>
+    <string name="fusion_archivos">%1$d Dateien kopiert</string>
+    <string name="fusion_omitidas">%1$d Tiere wegen des Konflikts übersprungen</string>
 </resources>

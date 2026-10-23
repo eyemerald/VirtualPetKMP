@@ -429,4 +429,21 @@
     <string name="comun_cerrar">Chiudi</string>
     <string name="comun_cancelar">Annulla</string>
     <string name="a11y_menu_sistema">Menu dell'app</string>
+
+    <!-- Fusión entre dispositivos -->
+    <string name="fusion_menu">Importa e unisci</string>
+    <string name="fusion_explicacion">Scegli un file di copia. Si aggiunge ciò che manca e si aggiorna il più recente; nulla di ciò che hai viene eliminato.</string>
+    <string name="fusion_plan_titulo">Cosa cambierà</string>
+    <string name="fusion_plan_detalle">%1$d nuovi · %2$d aggiornati · %3$d invariati</string>
+    <string name="fusion_conflictos_titulo">Stesso nome, animale diverso</string>
+    <string name="fusion_conflicto_texto">%1$s esiste già su questo dispositivo</string>
+    <string name="fusion_decision_renombrar">Rinomina</string>
+    <string name="fusion_decision_sobrescribir">Sovrascrivi</string>
+    <string name="fusion_decision_omitir">Salta</string>
+    <string name="fusion_aplicar">Unisci</string>
+    <string name="fusion_aplicando">Unione…</string>
+    <string name="fusion_ok">Unito: %1$d nuovi e %2$d aggiornati</string>
+    <string name="fusion_sin_cambios">Niente da importare: è già tutto aggiornato.</string>
+    <string name="fusion_archivos">%1$d file copiati</string>
+    <string name="fusion_omitidas">%1$d animali saltati per il conflitto</string>
 </resources>

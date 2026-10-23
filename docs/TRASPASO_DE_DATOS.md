@@ -233,30 +233,54 @@ nada. Cubre "no perder los datos" y "dejar un móvil nuevo como estaba el viejo"
   mismas 34 filas, los mismos `uuid`, los PDFs y la foto en su sitio y el recordatorio del
   tratamiento intacto.
 
-### Fase 2b — Fusión entre dispositivos (pendiente)
+### Fase 2b — Fusión entre dispositivos — **hecha en la 1.7**
 
-- `ImportadorDatos` con **fusión**: lo que ya existe (mismo `uuid`) se actualiza y gana el más
-  reciente por `actualizadoEn`; lo nuevo se añade; nunca se borra.
-- Tests con dos bases de datos en memoria:
-  1. Exportar de A, importar en B vacía → queda igual.
-  2. Reimportar el mismo paquete → **no duplica nada**.
-  3. Cambiar un peso en A, exportar, importar en B → se actualiza esa fila, no se duplica.
-  4. Cambiar la misma fila en A y en B con fechas distintas → gana la más reciente.
-  5. Importar un paquete **más viejo** que lo local → no revierte nada.
-  6. Importar una mascota de A en B, donde B tiene otra mascota con el mismo nombre → **pregunta**
-     si sobrescribir o renombrar (decisión tomada con el usuario).
-  7. Paquete corrupto o `formato` desconocido → error claro y **la base de datos intacta**.
+Importar un paquete **ya no reemplaza**: fusiona. Cada fila se reconoce por su `uuid` y:
 
-### Fase 3 — Lo que queda de interfaz
+- si no existe aquí, se añade;
+- si existe y la del paquete es más nueva por `actualizadoEn`, se actualiza;
+- si existe y es más vieja (o igual), se deja como está: un paquete antiguo **no revierte** nada;
+- lo que solo existe aquí **nunca se borra**.
 
-- Exportar **una sola mascota** (el paquete completo ya se hace).
-- Diálogo de conflictos de la fase de fusión y **deshacer** una importación.
-- Índice sobre `uuid` en las nueve tablas, cuando exista el importador con fusión.
+Todo en una transacción, con una copia automática antes de empezar. Los adjuntos se extraen solo
+cuando la fila entra de verdad, o cuando el archivo faltaba en disco y el paquete lo trae.
 
-### Fase 4 — Probarlo de verdad
+El único caso que no se puede decidir solo es un **nombre repetido con identidad distinta**: dos
+mascotas creadas por separado en cada dispositivo se llaman igual pero no son la misma, así que el
+plan lo avisa y la interfaz pregunta: **renombrar** ("Luna (2)"), **sobrescribir** (se queda la local
+con los datos del paquete) u **omitir**. Al sobrescribir, el historial de los dos se **une**: no se
+borra el del dispositivo local.
 
-PC → móvil con datos reales y móvil → PC después de tocar algo en el móvil, comprobando que no
-aparece nada duplicado.
+Pruebas (`FusionTest`, 10): los siete escenarios acordados, más que nunca borra lo local, que un
+documento perdido se recupera y que reimportar el mismo paquete devuelve 0 nuevos y 0 actualizados.
+
+Verificado en el emulador con dos conjuntos distintos: exportar los datos de un dispositivo (Lola,
+Pepa y pipi: 31 registros), vaciar la app, sembrar otra base (Luna y Nilo) y fusionar → quedan **5
+mascotas** y las tablas suman exactamente los registros de los dos, con los 4 archivos copiados.
+
+### Fase 2c — Estado del traspaso
+
+Con la 1.7 están hechas las tres piezas del núcleo: identidad (`uuid` + `actualizadoEn`), copia de
+seguridad y restauración, y **fusión**. Lo que queda:
+
+1. **Exportar una sola mascota** (hoy el paquete lleva todo).
+2. **Deshacer** una importación desde la propia app. Hoy la red es la copia automática que se guarda
+   antes de importar —la app dice dónde queda—, pero volver a ella es a mano.
+3. **Índice sobre `uuid`** en las nueve tablas: con el tamaño de datos actual no se nota, pero la
+   fusión busca por `uuid` y merece la pena cuando la base crezca.
+4. **Propagar borrados.** No se propagan a propósito (si borras una mascota en el PC, sigue en el
+   móvil): hacerlo pide "lápidas" (`borradoEn`) y una regla más.
+
+### Fase 3 — Interfaz que falta
+
+- Exportar **una sola mascota** desde su menú ⋮.
+- Botón de **deshacer** tras importar.
+
+### Fase 4 — Probarlo de verdad entre dispositivos
+
+Móvil → PC con datos reales y PC → móvil después de tocar algo en el ordenador, comprobando que no
+aparece nada duplicado. Hasta ahora está probado en el emulador con dos conjuntos distintos de datos
+y con la app de escritorio compilando, pero no con una ida y vuelta real entre el móvil y el PC.
 
 ---
 

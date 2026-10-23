@@ -27,6 +27,12 @@ WHERE id = ?;
 delete:
 DELETE FROM informes WHERE id = ?;
 
+-- Reapunta un informe a otro archivo. Solo lo usa la fusión: si el documento no estaba en este
+-- dispositivo pero el paquete lo trae, se extrae y hay que volver a apuntar la fila a la copia
+-- local. Va aparte de `update` para que una edición normal no toque la ruta.
+updateArchivo:
+UPDATE informes SET rutaArchivo = ? WHERE id = ?;
+
 
 -- Todas las filas, para la copia de seguridad (la exportación no va mascota a mascota).
 selectAll:

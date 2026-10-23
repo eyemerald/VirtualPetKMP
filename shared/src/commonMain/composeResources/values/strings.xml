@@ -436,4 +436,21 @@
     <string name="comun_cerrar">Close</string>
     <string name="comun_cancelar">Cancel</string>
     <string name="a11y_menu_sistema">App menu</string>
+
+    <!-- Fusión entre dispositivos -->
+    <string name="fusion_menu">Import and merge</string>
+    <string name="fusion_explicacion">Choose a backup file. What is missing is added and what is newer is updated; nothing you already have is deleted.</string>
+    <string name="fusion_plan_titulo">What will change</string>
+    <string name="fusion_plan_detalle">%1$d new · %2$d updated · %3$d unchanged</string>
+    <string name="fusion_conflictos_titulo">Same name, different pet</string>
+    <string name="fusion_conflicto_texto">%1$s already exists on this device</string>
+    <string name="fusion_decision_renombrar">Rename</string>
+    <string name="fusion_decision_sobrescribir">Overwrite</string>
+    <string name="fusion_decision_omitir">Skip</string>
+    <string name="fusion_aplicar">Merge</string>
+    <string name="fusion_aplicando">Merging…</string>
+    <string name="fusion_ok">Merged: %1$d new and %2$d updated</string>
+    <string name="fusion_sin_cambios">Nothing to bring over: everything is already up to date.</string>
+    <string name="fusion_archivos">%1$d files copied</string>
+    <string name="fusion_omitidas">%1$d pets skipped because of the conflict</string>
 </resources>

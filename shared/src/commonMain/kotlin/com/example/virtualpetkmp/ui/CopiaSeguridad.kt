@@ -69,7 +69,7 @@ import virtualpetkmp.shared.generated.resources.restaurar_vista_titulo
  * Es un enum y no un booleano porque los dos se abren desde el mismo menú y solo puede haber uno:
  * con dos `Boolean` habría estados imposibles (los dos abiertos).
  */
-enum class DialogoCopia { GUARDAR, RESTAURAR }
+enum class DialogoCopia { GUARDAR, RESTAURAR, IMPORTAR }
 
 /**
  * Motivo de un fallo de copia, ya clasificado para poder traducirlo al pintarlo.
@@ -77,9 +77,9 @@ enum class DialogoCopia { GUARDAR, RESTAURAR }
  * No se guarda el texto del error sino el motivo: es lo mismo que hace el resto de la app con
  * `ErrorApp`, porque un mensaje guardado como texto se queda en el idioma que había al fallar.
  */
-private enum class FalloCopia { ILEGIBLE, AJENO, NUEVO, DATOS, GUARDANDO, ESCRITURA, DESCONOCIDO }
+internal enum class FalloCopia { ILEGIBLE, AJENO, NUEVO, DATOS, GUARDANDO, ESCRITURA, DESCONOCIDO }
 
-private fun falloDeError(error: ErrorCopia): FalloCopia = when (error) {
+internal fun falloDeError(error: ErrorCopia): FalloCopia = when (error) {
     ErrorCopia.PAQUETE_ILEGIBLE -> FalloCopia.ILEGIBLE
     ErrorCopia.NO_ES_DE_VIRTUALPET -> FalloCopia.AJENO
     ErrorCopia.FORMATO_DEMASIADO_NUEVO -> FalloCopia.NUEVO
@@ -89,7 +89,7 @@ private fun falloDeError(error: ErrorCopia): FalloCopia = when (error) {
 }
 
 @Composable
-private fun textoDeFallo(fallo: FalloCopia, detalle: String): String {
+internal fun textoDeFallo(fallo: FalloCopia, detalle: String): String {
     val detalleFinal = detalle.ifBlank { stringResource(Res.string.error_desconocido) }
     return when (fallo) {
         FalloCopia.ILEGIBLE -> stringResource(Res.string.restaurar_error_ilegible)

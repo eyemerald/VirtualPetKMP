@@ -15,6 +15,7 @@ import com.example.virtualpetkmp.data.VacunaRepository
 import com.example.virtualpetkmp.data.VeterinarioRepository
 import com.example.virtualpetkmp.ui.DialogoCopia
 import com.example.virtualpetkmp.ui.DialogoGuardarCopia
+import com.example.virtualpetkmp.ui.DialogoImportarFusion
 import com.example.virtualpetkmp.ui.DialogoRestaurarCopia
 import com.example.virtualpetkmp.util.rememberCarpetasApp
 import com.example.virtualpetkmp.util.reprogramarAvisosDeTodo
@@ -152,6 +153,7 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
             onVolver = volverAtras,
             onGuardarCopia = { dialogoCopia = DialogoCopia.GUARDAR },
             onRestaurarCopia = { dialogoCopia = DialogoCopia.RESTAURAR },
+            onImportarFusion = { dialogoCopia = DialogoCopia.IMPORTAR },
             contenidoMascotas = {
                 when (currentScreen) {
                     "list" -> {
@@ -250,6 +252,19 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
                         // La lista que se veía ya no es la de la base de datos.
                         selectedMascotaId = null
                         currentScreen = "list"
+                        viewModel.loadMascotas()
+                    }
+                )
+            }
+
+            DialogoCopia.IMPORTAR -> {
+                DialogoImportarFusion(
+                    db = database,
+                    carpetas = carpetas,
+                    alFusionar = { reprogramarAvisosDeTodo(programador, database, localizacion) },
+                    onCerrar = {
+                        dialogoCopia = null
+                        // La lista que se veía puede haber cambiado: llegan mascotas del paquete.
                         viewModel.loadMascotas()
                     }
                 )

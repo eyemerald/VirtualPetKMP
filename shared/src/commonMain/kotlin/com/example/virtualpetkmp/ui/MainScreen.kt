@@ -46,6 +46,7 @@ import virtualpetkmp.shared.generated.resources.a11y_volver
 import virtualpetkmp.shared.generated.resources.a11y_menu_sistema
 import virtualpetkmp.shared.generated.resources.copia_menu
 import virtualpetkmp.shared.generated.resources.copia_menu_restaurar
+import virtualpetkmp.shared.generated.resources.fusion_menu
 import virtualpetkmp.shared.generated.resources.logo
 import virtualpetkmp.shared.generated.resources.pestana_mascotas
 import virtualpetkmp.shared.generated.resources.pestana_veterinarios
@@ -75,7 +76,8 @@ fun MainScreen(
     mostrarAcciones: Boolean = false,
     onVolver: (() -> Unit)? = null,
     onGuardarCopia: (() -> Unit)? = null,
-    onRestaurarCopia: (() -> Unit)? = null
+    onRestaurarCopia: (() -> Unit)? = null,
+    onImportarFusion: (() -> Unit)? = null
 ) {
     var tabActual by rememberSaveable { mutableStateOf(0) }
     val accionesVisibles = mostrarAcciones && tabActual == 0
@@ -115,7 +117,8 @@ fun MainScreen(
 
                     MenuSistema(
                         onGuardarCopia = onGuardarCopia,
-                        onRestaurarCopia = onRestaurarCopia
+                        onRestaurarCopia = onRestaurarCopia,
+                        onImportarFusion = onImportarFusion
                     )
                 }
 
@@ -203,9 +206,10 @@ private fun BotonFlotanteVolver(
 @Composable
 private fun MenuSistema(
     onGuardarCopia: (() -> Unit)?,
-    onRestaurarCopia: (() -> Unit)?
+    onRestaurarCopia: (() -> Unit)?,
+    onImportarFusion: (() -> Unit)?
 ) {
-    if (onGuardarCopia == null && onRestaurarCopia == null) return
+    if (onGuardarCopia == null && onRestaurarCopia == null && onImportarFusion == null) return
 
     var abierto by remember { mutableStateOf(false) }
 
@@ -233,6 +237,15 @@ private fun MenuSistema(
                     onClick = {
                         abierto = false
                         onRestaurarCopia()
+                    }
+                )
+            }
+            if (onImportarFusion != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.fusion_menu)) },
+                    onClick = {
+                        abierto = false
+                        onImportarFusion()
                     }
                 )
             }
