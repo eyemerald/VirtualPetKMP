@@ -24,7 +24,7 @@ compose.desktop {
             // Es el nombre que aparece en el menú de inicio, en la carpeta instalada y en
             // "Aplicaciones instaladas": el de la app, no el del proyecto.
             packageName = "Virtual Pet"
-            packageVersion = "1.8.0"
+            packageVersion = "1.10.0"
             description = "Diario de salud y peso para tu mascota"
 
             // Módulos de la JDK que hay que meter en el runtime empaquetado.

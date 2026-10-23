@@ -113,10 +113,12 @@ actual fun rememberSelectorDestinoCopia(
     return {
         try {
             val sugerido = nombreSugerido.ifBlank { "VirtualPet-copia.vpet" }
+            val carpetaInicial = carpetaDeDrive() ?: File(System.getProperty("user.home"))
             val selector = JFileChooser().apply {
                 dialogTitle = "Guardar copia de seguridad"
                 fileSelectionMode = JFileChooser.FILES_ONLY
-                selectedFile = File(System.getProperty("user.home"), sugerido)
+                currentDirectory = carpetaInicial
+                selectedFile = File(carpetaInicial, sugerido)
             }
             if (selector.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
                 val elegido = selector.selectedFile
@@ -126,7 +128,7 @@ actual fun rememberSelectorDestinoCopia(
                     val rutaFinal = if (elegido.absolutePath.lowercase().endsWith(".vpet")) {
                         elegido
                     } else {
-                        File(elegido.parentFile ?: File(System.getProperty("user.home")), "${elegido.name}.vpet")
+                        File(elegido.parentFile ?: carpetaInicial, "${elegido.name}.vpet")
                     }
                     onElegido(rutaFinal.name, rutaFinal.absolutePath)
                 }
@@ -134,5 +136,28 @@ actual fun rememberSelectorDestinoCopia(
         } catch (e: Exception) {
             println("Error abriendo selector destino de copia JVM: ${e.message}")
         }
+    }
+}
+
+/**
+ * La carpeta de Google Drive si está instalado "Drive para escritorio", o `null`.
+ *
+ * La app **no** habla con Drive por internet (no tiene permiso de red, a propósito): lo que hace es
+ * empezar el diálogo de guardar en esa carpeta cuando existe, para que guardar la copia en Drive
+ * sean dos clics. Se prueban los nombres que usa el cliente en español y en inglés, en el perfil del
+ * usuario y en la raíz de cada unidad (Drive puede montarse como unidad virtual).
+ */
+private fun carpetaDeDrive(): File? {
+    val casa = System.getProperty("user.home")
+    val candidatas = listOf(
+        File(casa, "Google Drive/My Drive"),
+        File(casa, "Google Drive/Mi unidad"),
+        File(casa, "Google Drive"),
+        File(casa, "Mi unidad")
+    )
+    candidatas.firstOrNull { it.isDirectory }?.let { return it }
+
+    return File.listRoots()?.firstOrNull { raiz ->
+        raiz.path.contains("Google Drive", ignoreCase = true) && raiz.canRead()
     }
 }
