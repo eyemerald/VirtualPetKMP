@@ -370,6 +370,15 @@ No hay servicio en segundo plano: es un equilibrio consciente entre simplicidad 
   año arrastraría el octubre del anterior. Y que "6 meses" cuente **desde hoy** y no desde el
   último pesaje también: estirar la ventana hasta el último dato escondería que hace meses que no
   se pesa.
+- **Buscador y vista de la lista de mascotas.** El filtro es una función pura
+  (`filtrarMascotas` en `MascotaListScreen.kt`, con test propio): compara **sin mayúsculas ni
+  acentos** por los dos lados, porque lo que se teclea rápido nunca lleva tilde. Se hace con una
+  tabla de sustituciones y no con `java.text.Normalizer`, que no se comporta igual en todas las
+  versiones de Android. La vista elegida (tarjetas o listado) se guarda en `vista.txt` dentro de la
+  carpeta de datos (`util/PreferenciaVista.kt`), **no** con `rememberSaveable`: ese estado sobrevive
+  a girar la pantalla pero no a cerrar la app, y quien pone el listado con cuarenta animales no
+  quiere volver a ponerlo en cada arranque. El fichero es texto plano y, si no se entiende, se cae
+  en tarjetas: una preferencia ilegible nunca puede dejar la pantalla en blanco.
 - **La granularidad la decide el filtro, no los datos.** Ver `presentacionDe`. Agrupar por meses
   (media de cada mes, con los meses sin datos como huecos) es lo correcto para un año entero, que
   con un punto por pesaje sería un amasijo; el resto de filtros enseñan **cada pesaje**, que es el

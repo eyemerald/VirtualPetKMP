@@ -49,6 +49,15 @@ nombre, la edad y el menú de acciones, y tarjetas por bloque que dan **un solo 
 dosis vencidas o próximas, los tratamientos activos y **cuántos apuntes** hay en "A tener en
 cuenta").
 
+Con muchas fichas, el **buscador** filtra por nombre sin pedir tildes ni mayúsculas (escribir `lo`
+encuentra a *Nilo* y a *Lola*) y el botón de la derecha cambia entre las tarjetas y un **listado
+compacto** en el que caben el doble de animales sin desplazarse. La vista elegida se recuerda al
+reabrir la app.
+
+| Buscador | Listado compacto |
+|----------|------------------|
+| ![Buscador](screenshots/17-buscador.jpg) | ![Listado](screenshots/18-listado.jpg) |
+
 ### Peso
 
 El gráfico se adapta al filtro: un punto por pesaje en los rangos cortos y una media por mes al
@@ -337,8 +346,8 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
       del resumen de la ficha y la internacionalización (paridad entre idiomas y resolución real
       del idioma en ejecución).
 - [x] **Buscador y dos vistas de la lista de mascotas** (tarjetas o listado compacto), pensado para
-      protectoras con muchas fichas. El filtro no distingue mayúsculas ni acentos y tiene sus
-      propias pruebas.
+      protectoras con muchas fichas. El filtro no distingue mayúsculas ni acentos y la vista
+      elegida se recuerda al reabrir la app; ambos tienen sus propias pruebas.
 - [x] **Traspaso de datos completo entre dispositivos**, sin servidores ni cables: copia de
       seguridad `.vpet` (todo, con fotos y PDF dentro), restaurar, **importar fusionando** por
       identificador universal (`uuid`) con "gana el más reciente", exportar **una sola mascota**,
