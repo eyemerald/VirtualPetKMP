@@ -467,4 +467,10 @@
     <string name="deshacer">Undo</string>
     <string name="deshacer_aviso">You can undo: it will go back to how it was before importing. Anything you changed since then will be lost.</string>
     <string name="deshacer_ok">Undone: the data is back to how it was before importing.</string>
+
+    <!-- Buscador y vista de la lista de mascotas -->
+    <string name="buscar_mascota">Search by name</string>
+    <string name="buscar_mascota_sin_resultados">No pet matches that name.</string>
+    <string name="a11y_ver_como_listado">Show as a list</string>
+    <string name="a11y_ver_como_tarjetas">Show as cards</string>
 </resources>

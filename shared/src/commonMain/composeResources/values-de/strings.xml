@@ -464,4 +464,10 @@
     <string name="deshacer">Rückgängig</string>
     <string name="deshacer_aviso">Du kannst es rückgängig machen: es geht zurück auf den Stand vor dem Import. Was du seither geändert hast, geht verloren.</string>
     <string name="deshacer_ok">Rückgängig gemacht: die Daten sind wieder auf dem Stand vor dem Import.</string>
+
+    <!-- Buscador y vista de la lista de mascotas -->
+    <string name="buscar_mascota">Nach Namen suchen</string>
+    <string name="buscar_mascota_sin_resultados">Kein Tier passt zu diesem Namen.</string>
+    <string name="a11y_ver_como_listado">Als Liste anzeigen</string>
+    <string name="a11y_ver_como_tarjetas">Als Karten anzeigen</string>
 </resources>

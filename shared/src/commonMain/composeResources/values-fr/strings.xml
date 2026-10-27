@@ -464,4 +464,10 @@
     <string name="deshacer">Annuler</string>
     <string name="deshacer_aviso">Tu peux annuler : retour à l'état d'avant l'import. Ce que tu as modifié depuis sera perdu.</string>
     <string name="deshacer_ok">Annulé : les données sont revenues à l'état d'avant l'import.</string>
+
+    <!-- Buscador y vista de la lista de mascotas -->
+    <string name="buscar_mascota">Rechercher par nom</string>
+    <string name="buscar_mascota_sin_resultados">Aucun animal ne correspond à ce nom.</string>
+    <string name="a11y_ver_como_listado">Afficher en liste</string>
+    <string name="a11y_ver_como_tarjetas">Afficher en cartes</string>
 </resources>

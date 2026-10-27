@@ -463,4 +463,10 @@
     <string name="deshacer">Deshacer</string>
     <string name="deshacer_aviso">Puedes deshacer: se volverá a como estaba antes de importar. Lo que hayas cambiado desde entonces se perderá.</string>
     <string name="deshacer_ok">Deshecho: los datos han vuelto a como estaban antes de importar.</string>
+
+    <!-- Buscador y vista de la lista de mascotas -->
+    <string name="buscar_mascota">Buscar por nombre</string>
+    <string name="buscar_mascota_sin_resultados">Ninguna mascota coincide con ese nombre.</string>
+    <string name="a11y_ver_como_listado">Ver como listado</string>
+    <string name="a11y_ver_como_tarjetas">Ver como tarjetas</string>
 </resources>

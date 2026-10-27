@@ -15,7 +15,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[2]
 APP = RAIZ / "desktopApp" / "build" / "compose" / "binaries" / "main" / "app" / "Virtual Pet"
 EMPAQUETADO = RAIZ / "packaging" / "windows"
-SALIDA = RAIZ / "dist" / "VirtualPet-1.11-windows.zip"
+SALIDA = RAIZ / "dist" / "VirtualPet-1.12-windows.zip"
 
 if not APP.is_dir():
     raise SystemExit(f"no está la app empaquetada: {APP}\nEjecuta antes :desktopApp:createDistributable")

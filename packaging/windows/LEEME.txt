@@ -1,4 +1,4 @@
-VIRTUAL PET 1.11 PARA WINDOWS
+VIRTUAL PET 1.12 PARA WINDOWS
 ============================
 
 COMO INSTALARLO
@@ -36,3 +36,5 @@ Tus datos se quedan; si quieres borrarlos tambien, elimina la carpeta .virtualpe
 QUE INCLUYE
 - La aplicacion con su propio Java incluido: no hay que instalar nada mas.
 - Tus datos son locales: la app no se conecta a internet.
+- Novedades de esta version: buscador de mascotas por nombre (da igual mayusculas o acentos) y dos
+  formas de ver la lista (tarjetas con foto o listado compacto), con el boton de la derecha.

@@ -26,8 +26,10 @@ Desarrollada con **Kotlin Multiplatform** y **Compose Multiplatform**, compartie
 - 🏥 **Veterinarios**: agenda con urgencias (botón directo de llamada), llamada normal y navegación con Google Maps.
 - 📤 **Exportar la ficha a PDF**: dos documentos distintos, **completo** (para el veterinario) y **resumido** (para quien se queda cuidando a la mascota), y al generarlo se puede **compartir** por WhatsApp, correo o donde haga falta, o **guardar una copia**.
 - 🖼️ **Un icono propio**: el corazón del logo, sin el texto, para el lanzador de Android (icono normal y adaptativo) y para el instalable de Windows (`.ico`). El nombre que se ve bajo el icono es **Virtual Pet**, no el del proyecto.
+- 🔎 **Buscador y dos vistas de la lista**: un campo para **buscar por nombre** (sin distinguir mayúsculas ni acentos: "pepe" encuentra a "Pepé") y un botón para alternar entre las **tarjetas** de siempre y un **listado compacto** en el que caben el doble de animales por pantalla. La vista elegida **se recuerda al cerrar la app** (no obliga a cambiarla en cada arranque). Pensado para protectoras con muchas fichas.
+- 🔄 **Traspaso de datos entre dispositivos**, sin servidores ni cables: **copia de seguridad** en un solo archivo `.vpet` con todas las mascotas, su historial y **las fotos y los PDF dentro**; **restaurar** una copia; **importar fusionando** (añade lo que falta, actualiza lo más reciente, no borra nunca y pregunta cuando una mascota se llama igual pero no es la misma); **exportar los datos de una sola mascota**; **compartir** el archivo por WhatsApp, Telegram, correo, Drive o Quick Share; **deshacer** después de importar; y **copia automática** (se conservan las tres últimas) antes de tocar nada. Ver [docs/TRASPASO_DE_DATOS.md](docs/TRASPASO_DE_DATOS.md).
 - 🌍 **Seis idiomas**: **español, inglés, portugués, francés, alemán e italiano**, elegidos solos según el idioma del dispositivo, con las **unidades** (kg o lb) y el **formato de fecha** de la región. Los seis catálogos de textos se mantienen sincronizados con un test de paridad de claves, y hay otro que comprueba qué idioma resuelve la app en tiempo de ejecución.
-- 🔔 **Notificaciones locales**: para no olvidar las próximas dosis.
+- 🔔 **Notificaciones locales**: para no olvidar las próximas dosis, y un **recordatorio diario por tratamiento** con dos botones, **Aceptar** y **Posponer 30 min** (la posposición sobrevive a reiniciar el móvil y no se pierde). La app pide el permiso de **alarmas exactas** y, si falta, lo avisa en el menú: sin él los avisos llegan hasta una hora tarde.
 - 🌓 **Tema claro / oscuro**: se adapta a la configuración del sistema.
 - 📱 **Multiplataforma**: misma experiencia en Android y Escritorio.
 
@@ -108,14 +110,17 @@ sistema), así que editar no obliga a pasar por el menú.
 ```
 VirtualPetKMP/
 ├── androidApp/          # Módulo Android (Activity, manifest, recursos)
-├── desktopApp/          # Módulo Desktop (main.kt, empaquetado)
-├── docs/                # Documentación técnica
+├── desktopApp/          # Módulo Desktop (main.kt, empaquetado) e icono .ico
+├── docs/                # Documentación técnica (arquitectura y traspaso de datos)
+├── packaging/windows/   # Instalador de Windows (INSTALAR.bat, scripts y empaquetado)
 ├── screenshots/         # Capturas usadas en este README
 └── shared/              # Código compartido KMP
     ├── commonMain/      # Código común (UI, lógica, BD)
+    │   ├── composeResources/  # Textos de los 6 idiomas y logos
+    │   └── sqldelight/        # Esquema (.sq) y migraciones (.sqm)
     ├── androidMain/     # Implementaciones específicas de Android
     ├── jvmMain/         # Implementaciones específicas de JVM/Desktop
-    └── sqldelight/      # Esquema y migraciones de la BD
+    └── jvmTest/         # Pruebas (repositorios, migraciones, UI con lógica…)
 ```
 
 ---
@@ -167,7 +172,39 @@ copia a `dist/` con un nombre que se entienda (por ejemplo `dist/VirtualPet-1.0.
 - Quien la reciba tiene que permitir instalar apps de origen desconocido.
 - Si en ese móvil ya hay una versión instalada firmada con **otra** clave (por ejemplo el `debug`
   de Android Studio, que va firmado con la clave de depuración), Android no la deja actualizar:
-  hay que desinstalar la anterior primero, y eso borra sus datos.
+  hay que desinstalar la anterior primero, y eso borra sus datos. **Comprobarlo antes de
+  entregar** con `apksigner verify --print-certs`, que debe decir `CN=Virtual Pet`.
+- **Cada entrega sube `versionCode`** en `androidApp/build.gradle.kts`. Sin eso Android no
+  distingue la nueva de la vieja y el móvil no la ofrece como actualización.
+
+---
+
+## 🪟 Instalador para Windows
+
+La app de escritorio se empaqueta con `jpackage` (Compose Desktop), con su propio runtime de Java
+dentro: no hay que instalar nada más en el equipo de destino.
+
+```bash
+./gradlew :desktopApp:createDistributable   # deja el .exe en desktopApp/build/compose/binaries
+python packaging/windows/empaquetar.py      # arma dist/VirtualPet-<versión>-windows.zip
+```
+
+El ZIP lleva la aplicación y un instalador **por usuario** (no pide administrador): `INSTALAR.bat`
+copia a `%LOCALAPPDATA%\Programs\Virtual Pet`, crea los accesos directos, registra la entrada de
+"Aplicaciones instaladas" y deja un desinstalador. Los datos viven en `%USERPROFILE%\.virtualpet`,
+así que **desinstalar no los borra** y una instalación nueva los reutiliza.
+
+Dos cosas que se aprendieron probándolo de verdad (están explicadas en
+[docs/ARQUITECTURA.md](docs/ARQUITECTURA.md)):
+
+- `jpackage` solo mete `java.base` en el runtime: **hay que declarar `java.sql`** o la app
+  empaquetada revienta al abrir (`NoClassDefFoundError: java/sql/DriverManager`). Desde Gradle
+  nunca falla, porque ahí se usa la JDK completa.
+- El icono de la ventana **no se hereda** del `.exe`: se pasa en `Window(icon = ...)`.
+
+No se genera un `.msi` porque jpackage lo necesita a través de **WiX Toolset**, que no está
+instalado en este equipo. Si se instala WiX y se quiere un MSI, basta con añadir
+`TargetFormat.Msi` y ejecutar `:desktopApp:packageMsi`.
 
 ---
 
@@ -299,6 +336,20 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
 - [x] **Tests** de repositorios, migraciones de esquema, errores de las operaciones, los cálculos
       del resumen de la ficha y la internacionalización (paridad entre idiomas y resolución real
       del idioma en ejecución).
+- [x] **Buscador y dos vistas de la lista de mascotas** (tarjetas o listado compacto), pensado para
+      protectoras con muchas fichas. El filtro no distingue mayúsculas ni acentos y tiene sus
+      propias pruebas.
+- [x] **Traspaso de datos completo entre dispositivos**, sin servidores ni cables: copia de
+      seguridad `.vpet` (todo, con fotos y PDF dentro), restaurar, **importar fusionando** por
+      identificador universal (`uuid`) con "gana el más reciente", exportar **una sola mascota**,
+      **deshacer** tras importar, **compartir** el archivo por el compartir del sistema y **copia
+      automática** (tres últimas) antes de tocar nada. Esquema 15, con `uuid` y `actualizadoEn` en
+      las nueve tablas, índices por `uuid` y migraciones aditivas.
+- [x] **Instalador para Windows** con la app empaquetada y su runtime dentro (instalación por
+      usuario, sin administrador, con desinstalador), y el icono en la ventana.
+- [x] **Avisos de tratamiento con Aceptar y Posponer 30 min**, que sobreviven al reinicio y a
+      abrir la app; petición y aviso del permiso de **alarmas exactas**, que es lo que hace que no
+      lleguen una hora tarde.
 
 ### 🔜 Pendiente antes de la v1.0
 
@@ -310,12 +361,15 @@ adb shell "run-as com.example.virtualpetkmp sh -c 'cat /data/local/tmp/datos-eje
       Requiere decidir antes: tabla nueva de páginas de cartilla (`mascotaId`, `ruta`,
       `fecha`, `nota`), su migración, y cómo mostrar un PDF dentro de la app (hoy los PDF se
       abren con una app externa).
-- [ ] **Paso de datos entre PC y móvil** (documento y móvil), en los dos sentidos, pudiendo
-      pasar **todo** o **una sola mascota**, y **sin duplicar ni borrar nada**: importar tiene
-      que ser actualizar. El diseño está decidido y escrito en
-      [`docs/TRASPASO_DE_DATOS.md`](docs/TRASPASO_DE_DATOS.md) (identidad que viaja —`uuid` y
-      `actualizadoEn`—, paquete ZIP con JSON y fotos, reglas de fusión y plan por fases). La
-      sincronización automática por red queda descartada: el proyecto es offline a propósito.
+- [ ] **Propagar los borrados** entre dispositivos: hoy una mascota borrada en el móvil sigue
+      existiendo en el ordenador hasta que se borre allí. Hacerlo bien pide "lápidas"
+      (`borradoEn`) y una regla más de fusión; está explicado en
+      [`docs/TRASPASO_DE_DATOS.md`](docs/TRASPASO_DE_DATOS.md).
+- [ ] **Instalador `.msi`** de Windows: hoy se entrega un instalador propio por usuario porque
+      jpackage necesita **WiX Toolset** para el MSI y no está instalado.
+- [ ] **Abrir un `.vpet` directamente** al recibirlo (por ejemplo desde WhatsApp): hoy hay que
+      guardarlo y elegirlo en "Importar y fusionar". Se resuelve con un `intent-filter` para esa
+      extensión.
 - [ ] Publicación en Google Play Store.
 
 ### 🔍 Revisar (no bloquea la v1.0)

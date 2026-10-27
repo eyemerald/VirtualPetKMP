@@ -10,6 +10,9 @@
 $ErrorActionPreference = "Stop"
 
 $nombre = "Virtual Pet"
+# Versión que se muestra en "Aplicaciones instaladas". jpackage no deja la versión en ningún sitio
+# que se pueda leer en tiempo de instalación, así que se escribe aquí en cada entrega.
+$version = "1.12"
 $origen = Join-Path $PSScriptRoot $nombre
 $destino = Join-Path $env:LOCALAPPDATA "Programs\$nombre"
 $ejecutable = Join-Path $destino "$nombre.exe"
@@ -64,7 +67,7 @@ $clave = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\VirtualPetKM
 New-Item -Path $clave -Force | Out-Null
 $tamanoKb = [int]((Get-ChildItem $destino -Recurse -File | Measure-Object Length -Sum).Sum / 1KB)
 Set-ItemProperty -Path $clave -Name "DisplayName" -Value $nombre
-Set-ItemProperty -Path $clave -Name "DisplayVersion" -Value "1.8"
+Set-ItemProperty -Path $clave -Name "DisplayVersion" -Value $version
 Set-ItemProperty -Path $clave -Name "Publisher" -Value "Virtual Pet"
 Set-ItemProperty -Path $clave -Name "InstallLocation" -Value $destino
 Set-ItemProperty -Path $clave -Name "DisplayIcon" -Value "$ejecutable,0"
