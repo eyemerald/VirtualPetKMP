@@ -1,7 +1,11 @@
 package com.example.virtualpetkmp.data
 
 import android.content.Context
+import androidx.sqlite.db.SupportSQLiteDatabase
+import app.cash.sqldelight.db.AfterVersion
+import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.db.SqlSchema
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.example.virtualpetkmp.db.VirtualPetDatabase
 
@@ -15,14 +19,33 @@ actual class DatabaseFactory(private val context: Context) {
             schema = esquema,
             context = context,
             name = "virtualpet.db",
-            callback = AndroidSqliteDriver.Callback(esquema)
+            callback = CallbackConClavesForaneas(esquema)
         )
 
-        // SQLite tiene las claves foráneas desactivadas por defecto.
-        // Sin esto, ON DELETE CASCADE de las tablas relacionadas (notas, etc.)
-        // no se ejecutaría realmente al borrar una mascota.
-        driver.execute(null, "PRAGMA foreign_keys = ON;", 0)
-
         return VirtualPetDatabase(driver)
+    }
+}
+
+/**
+ * Callback del esquema que activa las claves foráneas **en todas las conexiones**.
+ *
+ * SQLite las tiene apagadas por defecto, y el `PRAGMA foreign_keys` que había antes solo valía
+ * para la conexión donde se ejecutaba: `SQLiteDatabase` mantiene un **pool de conexiones**, así
+ * que el `ON DELETE CASCADE` dependía de que Android decidiera hacer el borrado en "la conexión
+ * buena". Funcionaba, pero por un detalle del framework, no porque lo garantizáramos nosotros.
+ *
+ * `onConfigure` es el sitio que Android llama **al abrir la base**, y
+ * `setForeignKeyConstraintsEnabled(true)` es una propiedad de la configuración del pool: se aplica
+ * a todas las conexiones, presentes y futuras. Se mantiene el `onCreate`/`onUpgrade` del esquema
+ * porque los hereda de [AndroidSqliteDriver.Callback].
+ */
+internal class CallbackConClavesForaneas(
+    schema: SqlSchema<QueryResult.Value<Unit>>,
+    vararg callbacks: AfterVersion
+) : AndroidSqliteDriver.Callback(schema, *callbacks) {
+
+    override fun onConfigure(db: SupportSQLiteDatabase) {
+        super.onConfigure(db)
+        db.setForeignKeyConstraintsEnabled(true)
     }
 }
