@@ -6,6 +6,7 @@ import app.cash.sqldelight.db.SqlSchema
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.example.virtualpetkmp.db.VirtualPetDatabase
 import java.io.File
+import java.util.Properties
 
 actual class DatabaseFactory {
     actual fun createDatabase(): VirtualPetDatabase {
@@ -16,9 +17,40 @@ actual class DatabaseFactory {
         }
         val dbFile = File(appDir, "virtualpet.db")
 
-        val driver: SqlDriver = JdbcSqliteDriver(url = "jdbc:sqlite:${dbFile.absolutePath}")
-        return abrirBaseDeDatos(driver)
+        return abrirBaseDeDatos(crearDriverJdbc(dbFile), archivo = dbFile)
     }
+}
+
+/**
+ * Driver JDBC sobre un fichero, con [propiedadesSqlite] (claves foráneas activas en cada conexión).
+ *
+ * Está aparte de [DatabaseFactory] para que los tests abran la base **exactamente igual** que la
+ * app; si se configurara solo ahí dentro, los tests podrían pasar con una configuración distinta de
+ * la de producción.
+ */
+internal fun crearDriverJdbc(archivo: File): SqlDriver =
+    JdbcSqliteDriver(
+        url = "jdbc:sqlite:${archivo.absolutePath}",
+        properties = propiedadesSqlite()
+    )
+
+/**
+ * Propiedades de la conexión JDBC de SQLite.
+ *
+ * **Por qué `foreign_keys=true` y no solo el `PRAGMA`.** El `PRAGMA foreign_keys` es una propiedad
+ * **de cada conexión**, no de la base de datos. `JdbcSqliteDriver` con un fichero abre conexiones
+ * nuevas constantemente (`ThreadedConnectionManager.closeConnection` hace `connection.close()` y
+ * olvida la conexión cuando la sentencia no va dentro de una transacción), y cada una llegaba con
+ * las claves foráneas **apagadas**: el `PRAGMA` que se ejecuta una vez al abrir no la alcanzaba.
+ * El resultado era que borrar una mascota desde `Dispatchers.IO` dejaba sus vacunas, pesos y notas
+ * huérfanas (reproducido con 19 filas en la base real).
+ *
+ * Pasando la propiedad al `DriverManager`, **todas** las conexiones nacen con las claves foráneas
+ * activas. Comprobado: tres conexiones seguidas con estas propiedades devuelven
+ * `PRAGMA foreign_keys = 1`; la misma conexión sin ellas devuelve `0`.
+ */
+internal fun propiedadesSqlite(): Properties = Properties().apply {
+    setProperty("foreign_keys", "true")
 }
 
 /**
@@ -40,10 +72,14 @@ actual class DatabaseFactory {
  * siempre en `0` y cada arranque intentaba crear las tablas otra vez, así que la app de
  * escritorio reventaba al abrirse por segunda vez con un "table ... already exists". Aquí se
  * marca al final, tanto al crear como al migrar, para que el siguiente arranque no repita nada.
+ *
+ * @param archivo fichero de la base, para poder hacer la copia previa a la limpieza de huérfanas.
+ *   `null` en los tests en memoria, donde no hay fichero que copiar.
  */
 internal fun abrirBaseDeDatos(
     driver: SqlDriver,
-    esquema: SqlSchema<QueryResult.Value<Unit>> = SqlSchemaDelegado(VirtualPetDatabase.Schema)
+    esquema: SqlSchema<QueryResult.Value<Unit>> = SqlSchemaDelegado(VirtualPetDatabase.Schema),
+    archivo: File? = null
 ): VirtualPetDatabase {
     val versionActual = driver.versionDeUsuario()
 
@@ -58,11 +94,13 @@ internal fun abrirBaseDeDatos(
         driver.execute(null, "PRAGMA user_version = ${esquema.version};", 0)
     }
 
-    // SQLite tiene las claves foráneas desactivadas por defecto: sin esto, el ON DELETE CASCADE
-    // de las tablas relacionadas no se ejecutaría de verdad al borrar una mascota.
+    // El PRAGMA se queda por los tests en memoria: con `IN_MEMORY` sqldelight reutiliza una sola
+    // conexión, así que aquí sí basta. En fichero, lo que manda es `propiedadesSqlite()`.
     driver.execute(null, "PRAGMA foreign_keys = ON;", 0)
 
-    return VirtualPetDatabase(driver)
+    val baseDeDatos = VirtualPetDatabase(driver)
+    limpiarHuerfanosAlAbrir(baseDeDatos, driver, archivo)
+    return baseDeDatos
 }
 
 /** Versión del esquema que hay guardada en el fichero (`0` si nunca se ha marcado). */
