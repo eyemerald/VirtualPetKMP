@@ -1,9 +1,5 @@
 package com.example.virtualpetkmp.data
 
-import app.cash.sqldelight.db.AfterVersion
-import app.cash.sqldelight.db.QueryResult
-import app.cash.sqldelight.db.SqlDriver
-import app.cash.sqldelight.db.SqlSchema
 import com.example.virtualpetkmp.db.VirtualPetDatabase
 
 expect class DatabaseFactory {
@@ -11,29 +7,22 @@ expect class DatabaseFactory {
 }
 
 /**
- * Envuelve el esquema para que, al abrir una base de datos que ya existía en una versión
- * anterior, se ejecuten las migraciones (los ficheros `.sqm` de la carpeta `migrations`)
- * en lugar de recrear la base.
+ * La base de datos del usuario es de una **versión más nueva** que esta app.
  *
- * Sin esto, las migraciones nunca se aplican: el driver se limita a abrir el fichero tal
- * cual y la app se encuentra un esquema viejo (columnas que faltan) o, si el driver intenta
- * actualizar la versión por su cuenta, un fallo al arrancar. Envolver el esquema es lo que
- * hace que el `ALTER TABLE` llegue de verdad a la base de datos del usuario, conservando
- * todos sus datos.
+ * Pasa cuando se instala una versión anterior encima de una que ya migró el fichero (por ejemplo,
+ * volver a un `.exe` o un APK viejos). Abrirla con un esquema que no conoce las columnas nuevas
+ * sería el peor final posible: la app no puede escribir bien y, si intentara "arreglarlo", podría
+ * perder datos. Así que **no se toca la base**: se lanza este error y el fichero se queda como está.
+ *
+ * El mensaje va en español y sin tecnicismos porque es lo que verá el usuario en el registro de
+ * fallos; hoy no hay una pantalla que lo enseñe (eso pediría tocar la interfaz, fuera de este
+ * arreglo), pero el fichero queda intacto y no se pierde nada.
  */
-internal class SqlSchemaDelegado(
-    private val esquema: SqlSchema<QueryResult.Value<Unit>>
-) : SqlSchema<QueryResult.Value<Unit>> {
-
-    override val version: Long
-        get() = esquema.version
-
-    override fun create(driver: SqlDriver): QueryResult.Value<Unit> = esquema.create(driver)
-
-    override fun migrate(
-        driver: SqlDriver,
-        oldVersion: Long,
-        newVersion: Long,
-        vararg callbacks: AfterVersion
-    ): QueryResult.Value<Unit> = esquema.migrate(driver, oldVersion, newVersion, *callbacks)
-}
+class BaseDeDatosMasNuevaException(
+    val versionFichero: Long,
+    val versionApp: Long
+) : Exception(
+    "La base de datos es de una versión más nueva de la aplicación " +
+        "(datos en la versión $versionFichero; esta app entiende hasta la $versionApp). " +
+        "No se ha tocado nada: actualiza la aplicación para poder usar estos datos."
+)

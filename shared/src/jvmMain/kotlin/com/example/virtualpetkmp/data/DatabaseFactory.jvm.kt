@@ -56,51 +56,116 @@ internal fun propiedadesSqlite(): Properties = Properties().apply {
 /**
  * Abre la base de datos de escritorio creándola o migrándola según lo que ya haya en el fichero.
  *
- * Es una función aparte, y no código suelto dentro de [DatabaseFactory], para poder probarla:
- * se le pasa un driver en memoria y se comprueba el ciclo completo sin tocar el disco.
+ * Es una función aparte, y no código suelto dentro de [DatabaseFactory], para poder probarla: se le
+ * pasa un driver (en memoria o sobre un fichero) y se comprueba el ciclo completo.
  *
  * **Cómo se sabe en qué versión está el fichero.** SQLite reserva un entero para eso,
  * `PRAGMA user_version`, y es lo que se lee al abrir:
  *
- * - `0` → el fichero es nuevo (o lo creó una versión de la app que no lo marcaba): se ejecuta
- *   el esquema completo.
- * - menor que la versión actual → se aplican las migraciones `.sqm` que falten.
+ * - `0` → el fichero es nuevo (o lo creó una versión de la app que no lo marcaba): se ejecuta el
+ *   esquema completo.
+ * - menor que la versión actual → se copia el fichero y se aplican las migraciones `.sqm` que
+ *   falten, todo dentro de una transacción.
  * - igual → no hay nada que hacer.
+ * - **mayor** que la versión actual → no se toca nada y se lanza [BaseDeDatosMasNuevaException].
  *
- * **El detalle que importaba:** ni crear ni migrar escriben `user_version` por su cuenta; eso lo
- * hace el driver de Android, pero **no** el de JDBC. Sin marcarlo a mano, el fichero se quedaba
- * siempre en `0` y cada arranque intentaba crear las tablas otra vez, así que la app de
- * escritorio reventaba al abrirse por segunda vez con un "table ... already exists". Aquí se
- * marca al final, tanto al crear como al migrar, para que el siguiente arranque no repita nada.
+ * **El marcador (`user_version`) solo sube.** Antes se reescribía siempre que fuera distinto, lo
+ * que incluía bajarlo: un ejecutable viejo abriendo una base nueva "la degradaba" en silencio y la
+ * siguiente versión intentaba migrar sobre columnas que ya existían.
  *
- * @param archivo fichero de la base, para poder hacer la copia previa a la limpieza de huérfanas.
+ * **Limitación conocida:** un fichero con `user_version = 0` pero con tablas ya creadas (bases de
+ * las primeras versiones de escritorio, que no marcaban la versión) entra por la rama "fichero
+ * nuevo" y `create` falla con "table ... already exists". No se arregla aquí porque exigiría
+ * adivinar el esquema que tenía ese fichero.
+ *
+ * @param archivo fichero de la base, para poder hacer las copias previas (migración y limpieza).
  *   `null` en los tests en memoria, donde no hay fichero que copiar.
+ * @throws BaseDeDatosMasNuevaException si la base es más nueva que [esquema].
  */
 internal fun abrirBaseDeDatos(
     driver: SqlDriver,
-    esquema: SqlSchema<QueryResult.Value<Unit>> = SqlSchemaDelegado(VirtualPetDatabase.Schema),
+    esquema: SqlSchema<QueryResult.Value<Unit>> = VirtualPetDatabase.Schema,
     archivo: File? = null
 ): VirtualPetDatabase {
     val versionActual = driver.versionDeUsuario()
 
-    when {
-        versionActual == 0L -> esquema.create(driver).value
-        versionActual < esquema.version -> esquema.migrate(driver, versionActual, esquema.version).value
+    // Nunca hacia atrás: si el fichero es más nuevo, se deja intacto y se avisa.
+    if (versionActual > esquema.version) {
+        throw BaseDeDatosMasNuevaException(versionFichero = versionActual, versionApp = esquema.version)
     }
 
-    // Se marca SIEMPRE, incluso cuando no había nada que hacer: así una base de datos creada por
-    // una versión antigua de la app (que no lo marcaba) queda arreglada en el primer arranque.
-    if (versionActual != esquema.version) {
-        driver.execute(null, "PRAGMA user_version = ${esquema.version};", 0)
+    val baseDeDatos = VirtualPetDatabase(driver)
+
+    when {
+        versionActual == 0L -> baseDeDatos.transaction {
+            esquema.create(driver).value
+            marcarVersion(driver, esquema.version)
+        }
+
+        versionActual < esquema.version -> migrarConRedDeSeguridad(
+            baseDeDatos = baseDeDatos,
+            driver = driver,
+            esquema = esquema,
+            versionVieja = versionActual,
+            archivo = archivo
+        )
     }
 
     // El PRAGMA se queda por los tests en memoria: con `IN_MEMORY` sqldelight reutiliza una sola
     // conexión, así que aquí sí basta. En fichero, lo que manda es `propiedadesSqlite()`.
     driver.execute(null, "PRAGMA foreign_keys = ON;", 0)
 
-    val baseDeDatos = VirtualPetDatabase(driver)
     limpiarHuerfanosAlAbrir(baseDeDatos, driver, archivo)
+
     return baseDeDatos
+}
+
+/**
+ * Migra de [versionVieja] a la actual, con copia previa y en **una transacción**.
+ *
+ * La transacción se pide al código generado (`VirtualPetDatabase.transaction`) porque el
+ * `endTransaction` del driver es protegido en sqldelight 2.x. Dentro de una transacción el driver
+ * fija la conexión del hilo, así que las decenas de sentencias de la migración y el `user_version`
+ * van juntos: o entra todo, o no entra nada (SQLite admite DDL transaccional).
+ *
+ * Antes de empezar se **copia el fichero** a `virtualpet-antes-de-migrar-vN.db` (N = versión de
+ * origen), sobrescribiendo la copia anterior de esa misma versión. La copia no se usa para
+ * recuperar automáticamente (la transacción ya lo garantiza); se deja por si el usuario necesita
+ * volver atrás a mano.
+ */
+private fun migrarConRedDeSeguridad(
+    baseDeDatos: VirtualPetDatabase,
+    driver: SqlDriver,
+    esquema: SqlSchema<QueryResult.Value<Unit>>,
+    versionVieja: Long,
+    archivo: File?
+) {
+    val copia = archivo?.let { copiarAntesDeMigrar(it, versionVieja) }
+    try {
+        baseDeDatos.transaction {
+            esquema.migrate(driver, versionVieja, esquema.version).value
+            marcarVersion(driver, esquema.version)
+        }
+    } catch (e: Exception) {
+        // La transacción se deshace sola: el fichero queda como estaba antes de migrar.
+        println(
+            "[VirtualPet] la migración desde la versión $versionVieja falló (${e.message}). " +
+                "No se ha cambiado nada." + (copia?.let { " Copia previa en $it" } ?: "")
+        )
+        throw e
+    }
+}
+
+/** Copia el fichero antes de migrar. Devuelve la ruta de la copia. */
+private fun copiarAntesDeMigrar(archivo: File, versionVieja: Long): String {
+    val destino = File(archivo.parentFile, "virtualpet-antes-de-migrar-v$versionVieja.db")
+    archivo.copyTo(destino, overwrite = true)
+    return destino.absolutePath
+}
+
+/** Escribe la versión del esquema en el fichero. Solo se llama para subirla. */
+private fun marcarVersion(driver: SqlDriver, version: Long) {
+    driver.execute(null, "PRAGMA user_version = $version;", 0)
 }
 
 /** Versión del esquema que hay guardada en el fichero (`0` si nunca se ha marcado). */

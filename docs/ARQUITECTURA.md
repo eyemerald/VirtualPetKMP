@@ -148,14 +148,26 @@ fichero**: por eso el paquete se escribe en la caché y se copia con `copiarArch
 streaming). Y el MIME al guardar es `application/octet-stream`, no `application/zip`, porque el
 sistema añadiría `.zip` al nombre y el archivo dejaría de reconocerse por su extensión.
 
-### Los drivers aplican las migraciones (importante)
+### Quién aplica las migraciones (y qué se quitó de en medio)
 
-Esto **estuvo roto** y es un fallo fácil de repetir: los drivers se construían con el esquema
-pero sin ejecutar nunca `migrate()`, así que la primera migración real habría fallado en el
-móvil o borrado datos en escritorio. Ahora se resuelve con `SqlSchemaDelegado`, que envuelve
-el esquema y lo entrega al driver; Android además necesita
-`AndroidSqliteDriver.Callback(esquema)` para que el `onUpgrade` de SQLite llegue a
-`migrate()`. **Si tocas `DatabaseFactory`, no quites ese envoltorio.**
+Aquí hubo un malentendido escrito en el código: durante un tiempo se envolvió el esquema en una
+clase `SqlSchemaDelegado` con un comentario que decía que **sin ese envoltorio** las migraciones no
+se aplicarían. Era falso: la clase reenviaba `version`, `create` y `migrate` tal cual, sin añadir
+nada. Se comprobó borrándola y pasando `VirtualPetDatabase.Schema` directamente: las 246 pruebas
+seguían en verde. **Ahora no existe** (revisión 1.13).
+
+Lo que de verdad hace que las migraciones lleguen al fichero del usuario:
+
+- **Escritorio:** `abrirBaseDeDatos()` lee `PRAGMA user_version` y llama explícitamente a
+  `esquema.migrate(...)` cuando el fichero es más antiguo, todo dentro de una transacción, y marca
+  la versión al final. Si el fichero es **más nuevo** que la app, no se toca y se lanza
+  `BaseDeDatosMasNuevaException`.
+- **Android:** se pasa el esquema al driver **y** un `Callback` (`AndroidSqliteDriver.Callback`),
+  que es lo que hace que el `onUpgrade` de SQLite llegue a `migrate()`.
+- **Claves foráneas:** `PRAGMA foreign_keys` es *de cada conexión*. En escritorio se pasa la
+  propiedad `foreign_keys=true` al `DriverManager` (todas las conexiones nacen con ellas); en
+  Android, `setForeignKeyConstraintsEnabled(true)` desde `onConfigure`, que es configuración del
+  pool. **Si tocas `DatabaseFactory`, no quites ninguna de las dos cosas.**
 
 ### Cómo saber si una migración funciona
 

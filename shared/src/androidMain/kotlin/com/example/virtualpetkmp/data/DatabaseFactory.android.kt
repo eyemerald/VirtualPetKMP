@@ -11,15 +11,11 @@ import com.example.virtualpetkmp.db.VirtualPetDatabase
 
 actual class DatabaseFactory(private val context: Context) {
     actual fun createDatabase(): VirtualPetDatabase {
-        // El esquema se envuelve para que Android ejecute las migraciones (.sqm) cuando la
-        // base de datos del móvil ya existía con una versión anterior.
-        val esquema = SqlSchemaDelegado(VirtualPetDatabase.Schema)
-
         val driver: SqlDriver = AndroidSqliteDriver(
-            schema = esquema,
+            schema = VirtualPetDatabase.Schema,
             context = context,
             name = "virtualpet.db",
-            callback = CallbackConClavesForaneas(esquema)
+            callback = CallbackConClavesForaneas(VirtualPetDatabase.Schema)
         )
 
         return VirtualPetDatabase(driver)
@@ -27,17 +23,21 @@ actual class DatabaseFactory(private val context: Context) {
 }
 
 /**
- * Callback del esquema que activa las claves foráneas **en todas las conexiones**.
+ * Callback del esquema: activa las claves foráneas y rechaza una base más nueva.
  *
- * SQLite las tiene apagadas por defecto, y el `PRAGMA foreign_keys` que había antes solo valía
- * para la conexión donde se ejecutaba: `SQLiteDatabase` mantiene un **pool de conexiones**, así
- * que el `ON DELETE CASCADE` dependía de que Android decidiera hacer el borrado en "la conexión
- * buena". Funcionaba, pero por un detalle del framework, no porque lo garantizáramos nosotros.
+ * **Claves foráneas.** SQLite las tiene apagadas por defecto, y el `PRAGMA foreign_keys` que había
+ * antes solo valía para la conexión donde se ejecutaba: `SQLiteDatabase` mantiene un **pool de
+ * conexiones**, así que el `ON DELETE CASCADE` dependía de que Android hiciera el borrado en "la
+ * conexión buena". `onConfigure` se llama al abrir la base y
+ * `setForeignKeyConstraintsEnabled(true)` es configuración del pool: vale para todas las conexiones,
+ * presentes y futuras.
  *
- * `onConfigure` es el sitio que Android llama **al abrir la base**, y
- * `setForeignKeyConstraintsEnabled(true)` es una propiedad de la configuración del pool: se aplica
- * a todas las conexiones, presentes y futuras. Se mantiene el `onCreate`/`onUpgrade` del esquema
- * porque los hereda de [AndroidSqliteDriver.Callback].
+ * **Base más nueva que la app.** `onDowngrade` es lo que llama Android cuando el fichero tiene una
+ * versión mayor que el esquema del código. Por defecto lanzaría un mensaje en inglés; aquí se lanza
+ * [BaseDeDatosMasNuevaException] con el mensaje en español y **sin tocar la base**.
+ *
+ * `onCreate`/`onUpgrade` (los del esquema, que aplican las migraciones `.sqm`) se heredan de
+ * [AndroidSqliteDriver.Callback].
  */
 internal class CallbackConClavesForaneas(
     schema: SqlSchema<QueryResult.Value<Unit>>,
@@ -47,5 +47,12 @@ internal class CallbackConClavesForaneas(
     override fun onConfigure(db: SupportSQLiteDatabase) {
         super.onConfigure(db)
         db.setForeignKeyConstraintsEnabled(true)
+    }
+
+    override fun onDowngrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        throw BaseDeDatosMasNuevaException(
+            versionFichero = oldVersion.toLong(),
+            versionApp = newVersion.toLong()
+        )
     }
 }
