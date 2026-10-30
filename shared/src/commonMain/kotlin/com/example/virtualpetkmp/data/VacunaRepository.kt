@@ -70,19 +70,23 @@ class VacunaRepository(private val database: VirtualPetDatabase) {
         actualizadoEn: Long = ahoraMillis()
     ): Result<Long> = withContext(Dispatchers.IO) {
         try {
-            database.vacunasQueries.insert(
-                mascotaId = mascotaId,
-                nombre = nombre,
-                fechaAplicacion = fechaAplicacion.toString(),
-                fechaProximaDosis = fechaProximaDosis.toString(),
-                veterinario = veterinario,
-                lote = lote,
-                uuid = uuid,
-                actualizadoEn = actualizadoEn
-            )
+            // Alta + lectura del id en una sola transacción: así la conexión del hilo queda fijada
+            // y `last_insert_rowid()` es el de la fila recién creada (fuera de transacción, sobre
+            // fichero, cada sentencia va por una conexión distinta y devolvía 0).
+            val idInsertado = database.transactionWithResult {
+                database.vacunasQueries.insert(
+                    mascotaId = mascotaId,
+                    nombre = nombre,
+                    fechaAplicacion = fechaAplicacion.toString(),
+                    fechaProximaDosis = fechaProximaDosis.toString(),
+                    veterinario = veterinario,
+                    lote = lote,
+                    uuid = uuid,
+                    actualizadoEn = actualizadoEn
+                )
 
-            val idInsertado = database.vacunasQueries.getLastInsertedId()
-                .executeAsOne()
+                database.vacunasQueries.getLastInsertedId().executeAsOne()
+            }
 
             Result.success(idInsertado)
         } catch (e: Exception) {

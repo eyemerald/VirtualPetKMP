@@ -41,18 +41,22 @@ class VeterinarioRepository(private val database: VirtualPetDatabase) {
         actualizadoEn: Long = ahoraMillis()
     ): Result<Long> = withContext(Dispatchers.IO) {
         try {
-            database.veterinariosQueries.insert(
-                nombreClinica = veterinario.nombreClinica,
-                nombreVeterinario = veterinario.nombreVeterinario,
-                telefono = veterinario.telefono,
-                direccion = veterinario.direccion,
-                esUrgencias = if (veterinario.esUrgencias) 1L else 0L,
-                uuid = uuid,
-                actualizadoEn = actualizadoEn
-            )
+            // Alta + lectura del id en una sola transacción: la conexión del hilo queda fijada y
+            // `last_insert_rowid()` es el de la fila recién creada (fuera de transacción, sobre
+            // fichero, cada sentencia va por otra conexión y devolvía 0).
+            val idInsertado = database.transactionWithResult {
+                database.veterinariosQueries.insert(
+                    nombreClinica = veterinario.nombreClinica,
+                    nombreVeterinario = veterinario.nombreVeterinario,
+                    telefono = veterinario.telefono,
+                    direccion = veterinario.direccion,
+                    esUrgencias = if (veterinario.esUrgencias) 1L else 0L,
+                    uuid = uuid,
+                    actualizadoEn = actualizadoEn
+                )
 
-            val idInsertado = database.veterinariosQueries.getLastInsertedId()
-                .executeAsOne()
+                database.veterinariosQueries.getLastInsertedId().executeAsOne()
+            }
 
             Result.success(idInsertado)
         } catch (e: Exception) {

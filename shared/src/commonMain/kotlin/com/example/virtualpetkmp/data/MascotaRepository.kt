@@ -55,23 +55,27 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
                 return@withContext Result.failure(ErrorAppException(ErrorApp.NOMBRE_DUPLICADO))
             }
 
-            database.mascotasQueries.insert(
-                nombre = mascota.nombre,
-                especie = mascota.especie,
-                raza = mascota.raza,
-                fechaNacimiento = mascota.fechaNacimiento.toString(),
-                sexo = mascota.sexo,
-                color = mascota.color,
-                microchip = mascota.microchip,
-                foto = mascota.foto,
-                peso_ideal = mascota.pesoIdeal,
-                uuid = uuid,
-                actualizadoEn = actualizadoEn
-            )
+            // El alta y la lectura del id van en la MISMA transacción. Fuera de una transacción,
+            // sqldelight sobre fichero abre una conexión por sentencia, así que
+            // `last_insert_rowid()` se ejecutaba en otra conexión y devolvía 0. Dentro de una
+            // transacción la conexión del hilo queda fijada y el id es el de la fila creada.
+            val idInsertado = database.transactionWithResult {
+                database.mascotasQueries.insert(
+                    nombre = mascota.nombre,
+                    especie = mascota.especie,
+                    raza = mascota.raza,
+                    fechaNacimiento = mascota.fechaNacimiento.toString(),
+                    sexo = mascota.sexo,
+                    color = mascota.color,
+                    microchip = mascota.microchip,
+                    foto = mascota.foto,
+                    peso_ideal = mascota.pesoIdeal,
+                    uuid = uuid,
+                    actualizadoEn = actualizadoEn
+                )
 
-            // Obtener el ID insertado usando last_insert_rowid()
-            val idInsertado = database.mascotasQueries.getLastInsertedId()
-                .executeAsOne()
+                database.mascotasQueries.getLastInsertedId().executeAsOne()
+            }
 
             Result.success(idInsertado)
         } catch (e: Exception) {

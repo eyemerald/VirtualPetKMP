@@ -79,20 +79,24 @@ class PreventivoRepository(private val database: VirtualPetDatabase) {
         actualizadoEn: Long = ahoraMillis()
     ): Result<Long> = withContext(Dispatchers.IO) {
         try {
-            database.preventivosQueries.insert(
-                mascotaId = mascotaId,
-                tipo = tipo,
-                nombre = nombre,
-                fechaAplicacion = fechaAplicacion.toString(),
-                fechaProximaDosis = fechaProximaDosis.toString(),
-                veterinario = veterinario,
-                lote = lote,
-                uuid = uuid,
-                actualizadoEn = actualizadoEn
-            )
+            // Alta + lectura del id en una sola transacción: la conexión del hilo queda fijada y
+            // `last_insert_rowid()` es el de la fila recién creada (fuera de transacción, sobre
+            // fichero, cada sentencia va por otra conexión y devolvía 0).
+            val idInsertado = database.transactionWithResult {
+                database.preventivosQueries.insert(
+                    mascotaId = mascotaId,
+                    tipo = tipo,
+                    nombre = nombre,
+                    fechaAplicacion = fechaAplicacion.toString(),
+                    fechaProximaDosis = fechaProximaDosis.toString(),
+                    veterinario = veterinario,
+                    lote = lote,
+                    uuid = uuid,
+                    actualizadoEn = actualizadoEn
+                )
 
-            val idInsertado = database.preventivosQueries.getLastInsertedId()
-                .executeAsOne()
+                database.preventivosQueries.getLastInsertedId().executeAsOne()
+            }
 
             Result.success(idInsertado)
         } catch (e: Exception) {
