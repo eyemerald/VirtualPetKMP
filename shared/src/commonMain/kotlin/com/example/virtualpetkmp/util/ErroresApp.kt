@@ -2,8 +2,8 @@ package com.example.virtualpetkmp.util
 
 import org.jetbrains.compose.resources.getString
 import virtualpetkmp.shared.generated.resources.Res
-import virtualpetkmp.shared.generated.resources.error_desconocido
 import virtualpetkmp.shared.generated.resources.error_id_requerido
+import virtualpetkmp.shared.generated.resources.error_inesperado
 import virtualpetkmp.shared.generated.resources.error_nombre_duplicado
 
 /**
@@ -46,13 +46,31 @@ suspend fun textoErrorApp(error: ErrorApp): String = when (error) {
 /**
  * Mensaje de un fallo cualquiera, en el idioma activo.
  *
- * Los motivos de dominio ([ErrorAppException]) se traducen; cualquier otra excepción se enseña
- * con su mensaje técnico, que es lo más útil para diagnosticar, y con "error desconocido" si ni
- * siquiera trae uno.
+ * Los motivos de dominio ([ErrorAppException]) se traducen con su texto propio. **Cualquier otra
+ * excepción se enseña con un texto genérico traducido** y su detalle técnico va al registro
+ * ([registrarFallo]): el mensaje de una excepción está escrito para quien programa (nombres de
+ * columnas, rutas, códigos) y en un solo idioma, así que no puede ser lo que lea el usuario.
  */
 suspend fun textoDeFallo(e: Throwable?): String = when (e) {
     is ErrorAppException -> textoErrorApp(e.error)
-    else -> e?.message ?: getString(Res.string.error_desconocido)
+    else -> {
+        registrarFallo(e)
+        getString(Res.string.error_inesperado)
+    }
+}
+
+/**
+ * Deja un fallo en el registro, para poder diagnosticarlo.
+ *
+ * **Es el mecanismo que ya usa el proyecto**: `println`, que en Android acaba en `logcat` como
+ * `System.out` y en escritorio en la consola. No hay librería de registro (ni Timber ni
+ * `android.util.Log`) y no merecía la pena añadir una para esto. Se añade `printStackTrace()`
+ * porque el detalle que de verdad sirve para arreglar un fallo es la traza, no solo el mensaje.
+ */
+internal fun registrarFallo(e: Throwable?) {
+    if (e == null) return
+    println("[VirtualPet] fallo inesperado: ${e::class.simpleName}: ${e.message}")
+    e.printStackTrace()
 }
 
 /**

@@ -358,6 +358,7 @@
     <string name="error_nombre_duplicado">A pet with that name already exists</string>
     <string name="error_id_requerido">An id is required to update</string>
     <string name="error_desconocido">Unknown error</string>
+    <string name="error_inesperado">Something went wrong</string>
 
     <!-- Errors from the pet record operations (vaccines, weights, notes, reports...) -->
     <string name="error_cargar_ficha">Could not load the record: %1$s</string>

@@ -1,5 +1,7 @@
-package com.example.virtualpetkmp.util
+﻿package com.example.virtualpetkmp.util
 
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -39,5 +41,54 @@ class ErroresAppTest {
         assertEquals(ErrorApp.ID_REQUERIDO, error.error)
         // La excepción no debe llevar el mensaje de cara al usuario: eso lo pone la interfaz.
         assertEquals("ID_REQUERIDO", error.message)
+    }
+
+    // --- El texto que ve el usuario cuando falla algo que no es de dominio ---------------------
+
+    @Test
+    fun `una excepcion que no es de dominio sale con texto generico y sin su mensaje`() = runBlocking {
+        val tecnico = "SQLITE_ERROR: no such column: rutaArchivo"
+
+        val texto = textoDeFallo(IllegalStateException(tecnico))
+
+        assertEquals("Ha ocurrido un error inesperado", texto)
+        assertTrue(
+            !texto.contains("SQLITE") && !texto.contains("columna") && !texto.contains(tecnico),
+            "el mensaje técnico no puede llegar a la pantalla: [$texto]"
+        )
+    }
+
+    @Test
+    fun `el detalle tecnico no se pierde, va al registro`() = runBlocking {
+        val tecnico = "Detalle que solo sirve para depurar"
+        val salida = ByteArrayOutputStream()
+        val error = ByteArrayOutputStream()
+        val outOriginal = System.out
+        val errOriginal = System.err
+
+        try {
+            System.setOut(PrintStream(salida, true, "UTF-8"))
+            System.setErr(PrintStream(error, true, "UTF-8"))
+            textoDeFallo(IllegalStateException(tecnico))
+        } finally {
+            System.setOut(outOriginal)
+            System.setErr(errOriginal)
+        }
+
+        val registro = salida.toString("UTF-8") + error.toString("UTF-8")
+        assertTrue(registro.contains(tecnico), "el detalle técnico tiene que quedar en el registro: [$registro]")
+    }
+
+    @Test
+    fun `el error de dominio sigue saliendo traducido y no generico`() = runBlocking {
+        val texto = textoDeFallo(ErrorAppException(ErrorApp.NOMBRE_DUPLICADO))
+
+        assertEquals("Ya existe una mascota con ese nombre", texto)
+        assertTrue(texto != "Ha ocurrido un error inesperado", "un error conocido no puede salir como inesperado")
+    }
+
+    @Test
+    fun `sin excepcion tambien sale el texto generico`() = runBlocking {
+        assertEquals("Ha ocurrido un error inesperado", textoDeFallo(null))
     }
 }

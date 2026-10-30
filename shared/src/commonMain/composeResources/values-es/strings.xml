@@ -354,6 +354,7 @@
     <string name="error_nombre_duplicado">Ya existe una mascota con ese nombre</string>
     <string name="error_id_requerido">Se necesita un id para actualizar</string>
     <string name="error_desconocido">Error desconocido</string>
+    <string name="error_inesperado">Ha ocurrido un error inesperado</string>
 
     <!-- Errores de las operaciones de la ficha (vacunas, pesos, notas, informes...) -->
     <string name="error_cargar_ficha">No se pudo cargar la ficha: %1$s</string>
