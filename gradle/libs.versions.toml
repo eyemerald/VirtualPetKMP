@@ -2,7 +2,10 @@
 agp = "9.0.1"
 android-compileSdk = "37"
 android-minSdk = "26"
-android-targetSdk = "34"
+# Play exige un `targetSdk` reciente para publicar (y en agosto de 2026 pide 36 o mas).
+# Subirlo cambia el comportamiento del sistema: ver `docs/PLAY_STORE.md`, apartado de cambios
+# de Android 15 y 16 revisados uno por uno.
+android-targetSdk = "36"
 androidx-activity = "1.8.0"
 androidx-core = "1.12.0"
 composeMultiplatform = "1.9.3"
