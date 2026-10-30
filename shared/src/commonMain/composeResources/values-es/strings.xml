@@ -366,6 +366,13 @@
     <string name="canal_tratamientos_descripcion">Avisos diarios para dar la medicación a tiempo</string>
     <string name="canal_recordatorios_nombre">Recordatorios de vacunas y preventivos</string>
     <string name="canal_recordatorios_descripcion">Avisos de las próximas dosis de vacunas y preventivos</string>
+    <string name="dialogo_elegir_archivo">Seleccionar archivo</string>
+    <string name="dialogo_guardar_pdf">Guardar PDF como</string>
+    <string name="dialogo_elegir_copia">Elegir copia de seguridad</string>
+    <string name="dialogo_guardar_copia">Guardar copia de seguridad</string>
+    <string name="dialogo_elegir_foto">Elegir foto de la mascota</string>
+    <string name="dialogo_filtro_imagenes">Imágenes</string>
+    <string name="dialogo_filtro_copia">Copia de Virtual Pet (*.vpet)</string>
 
     <!-- Errores de las operaciones de la ficha (vacunas, pesos, notas, informes...) -->
     <string name="error_cargar_ficha">No se pudo cargar la ficha: %1$s</string>

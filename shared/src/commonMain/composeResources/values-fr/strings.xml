@@ -369,6 +369,13 @@
     <string name="canal_tratamientos_descripcion">Rappels quotidiens pour donner le médicament à temps</string>
     <string name="canal_recordatorios_nombre">Rappels de vaccins et de préventifs</string>
     <string name="canal_recordatorios_descripcion">Rappels des prochaines doses de vaccins et de préventifs</string>
+    <string name="dialogo_elegir_archivo">Choisir un fichier</string>
+    <string name="dialogo_guardar_pdf">Enregistrer le PDF sous</string>
+    <string name="dialogo_elegir_copia">Choisir une sauvegarde</string>
+    <string name="dialogo_guardar_copia">Enregistrer la sauvegarde</string>
+    <string name="dialogo_elegir_foto">Choisir la photo de l'animal</string>
+    <string name="dialogo_filtro_imagenes">Images</string>
+    <string name="dialogo_filtro_copia">Sauvegarde Virtual Pet (*.vpet)</string>
     <string name="error_cargar_ficha">Impossible de charger la fiche : %1$s</string>
     <string name="error_guardar_dato">Échec de l\'enregistrement : %1$s</string>
     <string name="error_borrar_dato">Échec de la suppression : %1$s</string>

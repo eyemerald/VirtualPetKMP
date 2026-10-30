@@ -370,6 +370,13 @@
     <string name="canal_tratamientos_descripcion">Daily reminders to give the medication on time</string>
     <string name="canal_recordatorios_nombre">Vaccine and preventive reminders</string>
     <string name="canal_recordatorios_descripcion">Reminders for upcoming vaccine and preventive doses</string>
+    <string name="dialogo_elegir_archivo">Choose file</string>
+    <string name="dialogo_guardar_pdf">Save PDF as</string>
+    <string name="dialogo_elegir_copia">Choose backup file</string>
+    <string name="dialogo_guardar_copia">Save backup file</string>
+    <string name="dialogo_elegir_foto">Choose the pet photo</string>
+    <string name="dialogo_filtro_imagenes">Images</string>
+    <string name="dialogo_filtro_copia">Virtual Pet backup (*.vpet)</string>
 
     <!-- Errors from the pet record operations (vaccines, weights, notes, reports...) -->
     <string name="error_cargar_ficha">Could not load the record: %1$s</string>

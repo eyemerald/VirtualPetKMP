@@ -4,6 +4,11 @@ import androidx.compose.runtime.Composable
 import java.io.File
 import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.getString
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.dialogo_elegir_foto
+import virtualpetkmp.shared.generated.resources.dialogo_filtro_imagenes
 
 @Composable
 actual fun rememberFotoMascota(
@@ -14,11 +19,11 @@ actual fun rememberFotoMascota(
         elegirDeArchivos = {
             try {
                 val selector = JFileChooser()
-                selector.dialogTitle = "Elegir foto de la mascota"
+                selector.dialogTitle = runBlocking { getString(Res.string.dialogo_elegir_foto) }
                 selector.fileSelectionMode = JFileChooser.FILES_ONLY
                 selector.isAcceptAllFileFilterUsed = true
                 selector.fileFilter = FileNameExtensionFilter(
-                    "Imágenes (jpg, jpeg, png, gif, bmp, webp)",
+                    runBlocking { getString(Res.string.dialogo_filtro_imagenes) } + " (jpg, jpeg, png, gif, bmp, webp)",
                     "jpg", "jpeg", "png", "gif", "bmp", "webp"
                 )
 

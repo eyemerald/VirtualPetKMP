@@ -3,6 +3,14 @@ package com.example.virtualpetkmp.util
 import androidx.compose.runtime.Composable
 import java.io.File
 import javax.swing.JFileChooser
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.getString
+import virtualpetkmp.shared.generated.resources.Res
+import virtualpetkmp.shared.generated.resources.dialogo_elegir_archivo
+import virtualpetkmp.shared.generated.resources.dialogo_elegir_copia
+import virtualpetkmp.shared.generated.resources.dialogo_filtro_copia
+import virtualpetkmp.shared.generated.resources.dialogo_guardar_copia
+import virtualpetkmp.shared.generated.resources.dialogo_guardar_pdf
 
 @Composable
 actual fun rememberSelectorArchivo(
@@ -11,7 +19,7 @@ actual fun rememberSelectorArchivo(
     return {
         try {
             val selector = JFileChooser()
-            selector.dialogTitle = "Seleccionar archivo"
+            selector.dialogTitle = runBlocking { getString(Res.string.dialogo_elegir_archivo) }
             selector.fileSelectionMode = JFileChooser.FILES_ONLY
 
             val resultado = selector.showOpenDialog(null)
@@ -56,7 +64,7 @@ actual fun rememberSelectorDestino(
     return {
         try {
             val selector = JFileChooser()
-            selector.dialogTitle = "Guardar PDF como"
+            selector.dialogTitle = runBlocking { getString(Res.string.dialogo_guardar_pdf) }
             selector.fileSelectionMode = JFileChooser.FILES_ONLY
             selector.selectedFile = File(System.getProperty("user.home"), nombreSugerido.ifBlank { "ficha-mascota.pdf" })
 
@@ -86,11 +94,11 @@ actual fun rememberSelectorCopia(
     return {
         try {
             val selector = JFileChooser().apply {
-                dialogTitle = "Elegir copia de seguridad"
+                dialogTitle = runBlocking { getString(Res.string.dialogo_elegir_copia) }
                 fileSelectionMode = JFileChooser.FILES_ONLY
                 // Filtro por extensión, pero sin impedir elegir otro fichero: así se puede abrir un
                 // paquete renombrado y se le da un error claro en vez de no dejarlo ni intentar.
-                fileFilter = javax.swing.filechooser.FileNameExtensionFilter("Copia de Virtual Pet (*.vpet)", "vpet")
+                fileFilter = javax.swing.filechooser.FileNameExtensionFilter(runBlocking { getString(Res.string.dialogo_filtro_copia) }, "vpet")
                 currentDirectory = File(System.getProperty("user.home"))
             }
             if (selector.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
@@ -115,7 +123,7 @@ actual fun rememberSelectorDestinoCopia(
             val sugerido = nombreSugerido.ifBlank { "VirtualPet-copia.vpet" }
             val carpetaInicial = carpetaDeDrive() ?: File(System.getProperty("user.home"))
             val selector = JFileChooser().apply {
-                dialogTitle = "Guardar copia de seguridad"
+                dialogTitle = runBlocking { getString(Res.string.dialogo_guardar_copia) }
                 fileSelectionMode = JFileChooser.FILES_ONLY
                 currentDirectory = carpetaInicial
                 selectedFile = File(carpetaInicial, sugerido)

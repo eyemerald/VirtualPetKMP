@@ -369,6 +369,13 @@
     <string name="canal_tratamientos_descripcion">Tägliche Erinnerung, das Medikament rechtzeitig zu geben</string>
     <string name="canal_recordatorios_nombre">Erinnerungen an Impfungen und Prophylaxe</string>
     <string name="canal_recordatorios_descripcion">Erinnerungen an die nächsten Impf- und Prophylaxedosen</string>
+    <string name="dialogo_elegir_archivo">Datei auswählen</string>
+    <string name="dialogo_guardar_pdf">PDF speichern unter</string>
+    <string name="dialogo_elegir_copia">Sicherung auswählen</string>
+    <string name="dialogo_guardar_copia">Sicherung speichern</string>
+    <string name="dialogo_elegir_foto">Foto des Tieres auswählen</string>
+    <string name="dialogo_filtro_imagenes">Bilder</string>
+    <string name="dialogo_filtro_copia">Virtual Pet-Sicherung (*.vpet)</string>
     <string name="error_cargar_ficha">Akte konnte nicht geladen werden: %1$s</string>
     <string name="error_guardar_dato">Speichern fehlgeschlagen: %1$s</string>
     <string name="error_borrar_dato">Löschen fehlgeschlagen: %1$s</string>
