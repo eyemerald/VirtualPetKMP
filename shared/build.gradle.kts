@@ -43,7 +43,8 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
-            implementation(libs.compose.uiTooling)
+            // `compose.uiTooling` (el inspector y PreviewActivity) va solo en debug, desde
+            // `androidApp`: aquí era `implementation` y acababa dentro de la APK de release.
             implementation(libs.sqldelight.android.driver)
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.core.ktx)
@@ -67,7 +68,7 @@ kotlin {
             implementation("io.github.rikoappdev:compose-pdf:0.9.0")
         }
         jvmMain.dependencies {
-            implementation("app.cash.sqldelight:sqlite-driver:2.0.0")
+            implementation(libs.sqldelight.sqlite.driver)
             implementation(libs.sqldelight.coroutines.extensions)
         }
         jvmTest.dependencies {
