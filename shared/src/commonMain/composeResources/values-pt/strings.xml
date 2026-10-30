@@ -450,6 +450,8 @@
     <string name="fusion_archivos">%1$d ficheiros copiados</string>
     <string name="fusion_omitidas">%1$d animais ignorados pelo conflito</string>
     <string name="fusion_sin_mascota">%1$d registos descartados: o seu animal não está nem no ficheiro nem neste dispositivo</string>
+    <string name="base_mas_nueva_titulo">Os dados são de uma versão mais recente</string>
+    <string name="base_mas_nueva_mensaje">A base de dados está na versão %1$d e esta aplicação entende até à %2$d. Nada foi alterado. Atualiza a aplicação para a poderes abrir.</string>
 
     <!-- Permiso de alarmas exactas -->
     <string name="aviso_permiso_exacto_titulo">Os avisos podem chegar atrasados</string>

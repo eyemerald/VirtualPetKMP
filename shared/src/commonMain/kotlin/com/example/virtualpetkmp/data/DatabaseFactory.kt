@@ -14,9 +14,12 @@ expect class DatabaseFactory {
  * sería el peor final posible: la app no puede escribir bien y, si intentara "arreglarlo", podría
  * perder datos. Así que **no se toca la base**: se lanza este error y el fichero se queda como está.
  *
- * El mensaje va en español y sin tecnicismos porque es lo que verá el usuario en el registro de
- * fallos; hoy no hay una pantalla que lo enseñe (eso pediría tocar la interfaz, fuera de este
- * arreglo), pero el fichero queda intacto y no se pierde nada.
+ * **El [message] es para el registro y la depuración, no para el usuario.** El texto que ve la
+ * persona sale de los recursos de idioma (`base_mas_nueva_titulo` y `base_mas_nueva_mensaje`), lo
+ * enseña `PantallaBaseMasNueva` a partir de las dos propiedades, y va traducido a los seis idiomas.
+ *
+ * Las dos versiones van como propiedades precisamente para eso: quien capture la excepción no
+ * necesita analizar el mensaje.
  */
 class BaseDeDatosMasNuevaException(
     val versionFichero: Long,

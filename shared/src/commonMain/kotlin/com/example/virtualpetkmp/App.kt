@@ -3,6 +3,7 @@ package com.example.virtualpetkmp
 import androidx.compose.runtime.*
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.example.virtualpetkmp.data.BaseDeDatosMasNuevaException
 import com.example.virtualpetkmp.data.DatabaseFactory
 import com.example.virtualpetkmp.data.InformeRepository
 import com.example.virtualpetkmp.data.MascotaRepository
@@ -22,6 +23,7 @@ import com.example.virtualpetkmp.util.reprogramarAvisosDeTodo
 import com.example.virtualpetkmp.ui.FichaMascotaScreen
 import com.example.virtualpetkmp.ui.MainScreen
 import com.example.virtualpetkmp.ui.MascotaFormScreen
+import com.example.virtualpetkmp.ui.PantallaBaseMasNueva
 import com.example.virtualpetkmp.ui.MascotaListScreen
 import com.example.virtualpetkmp.ui.VeterinarioFormScreen
 import com.example.virtualpetkmp.ui.VeterinariosListScreen
@@ -55,7 +57,30 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
     // la necesitan las notificaciones de arranque y el ViewModel de la ficha.
     val localizacion = localizacionDelSistema()
 
-    val database = remember { databaseFactory.createDatabase() }
+    // Abrir la base puede fallar de una forma concreta: el fichero es de una versión MÁS NUEVA que
+    // esta app (instalaste una versión anterior encima). Antes en Android la lista enseñaba el
+    // mensaje de la excepción, en español y sin traducir; ahora se avisa con un texto de los
+    // recursos y la base no se ha tocado.
+    //
+    // En escritorio este caso no llega hasta aquí: `desktopApp/main.kt` revisa la versión **antes**
+    // de abrir la ventana y enseña un diálogo del sistema, porque cortar la composición nada más
+    // empezar dejaba la ventana en blanco (comprobado).
+    val apertura = remember(databaseFactory) { runCatching { databaseFactory.createDatabase() } }
+
+    (apertura.exceptionOrNull() as? BaseDeDatosMasNuevaException)?.let { fallo ->
+        VirtualPetTheme {
+            ConLocalizacion(localizacion) {
+                PantallaBaseMasNueva(
+                    versionFichero = fallo.versionFichero,
+                    versionApp = fallo.versionApp
+                )
+            }
+        }
+        return
+    }
+
+    // Cualquier otro fallo al abrir se comporta como antes: se propaga.
+    val database = apertura.getOrThrow()
     val repository = remember { MascotaRepository(database) }
     val notaRepository = remember { NotaRepository(database) }
     val pesoRepository = remember { PesoRepository(database) }

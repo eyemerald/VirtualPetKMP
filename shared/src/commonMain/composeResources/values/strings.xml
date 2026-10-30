@@ -454,6 +454,8 @@
     <string name="fusion_archivos">%1$d files copied</string>
     <string name="fusion_omitidas">%1$d pets skipped because of the conflict</string>
     <string name="fusion_sin_mascota">%1$d records skipped: their pet is neither in the file nor on this device</string>
+    <string name="base_mas_nueva_titulo">Your data is from a newer version</string>
+    <string name="base_mas_nueva_mensaje">The database is at version %1$d and this app understands up to %2$d. Nothing has been changed. Update the app to open it.</string>
 
     <!-- Permiso de alarmas exactas -->
     <string name="aviso_permiso_exacto_titulo">Reminders may arrive late</string>

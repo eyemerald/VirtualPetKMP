@@ -18,6 +18,20 @@ actual class DatabaseFactory(private val context: Context) {
             callback = CallbackConClavesForaneas(VirtualPetDatabase.Schema)
         )
 
+        // `AndroidSqliteDriver` abre el fichero **en la primera consulta**, no al construirse. Se
+        // fuerza aquí para que un fichero de una versión más nueva lance
+        // `BaseDeDatosMasNuevaException` al arrancar: así `App` puede enseñar el aviso traducido en
+        // vez de aparecer como un error de la lista ("Error al cargar mascotas: ...").
+        driver.executeQuery(
+            identifier = null,
+            sql = "PRAGMA user_version;",
+            mapper = { cursor ->
+                cursor.next()
+                QueryResult.Value(Unit)
+            },
+            parameters = 0
+        ).value
+
         return VirtualPetDatabase(driver)
     }
 }

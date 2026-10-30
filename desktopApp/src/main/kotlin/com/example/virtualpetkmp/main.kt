@@ -8,6 +8,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.example.virtualpetkmp.data.DatabaseFactory
+import com.example.virtualpetkmp.data.avisarSiLaBaseEsMasNueva
 import javax.imageio.ImageIO
 
 /**
@@ -21,16 +22,25 @@ import javax.imageio.ImageIO
  * porque esos son `internal` de `shared` y no se pueden ver desde aquí.
  *
  * El tamaño inicial imita la ventana de un móvil, que es para lo que está pensada la interfaz.
+ *
+ * **Antes de abrir la ventana se revisa la versión de la base** (`avisarSiLaBaseEsMasNueva`): si el
+ * fichero es de una versión más nueva que la app, se enseña un aviso del sistema con el texto
+ * traducido y no se abre nada. Comprobarlo dentro de la composición dejaba la ventana en blanco
+ * (comprobado), así que se hace aquí.
  */
-fun main() = application {
-    val databaseFactory = DatabaseFactory()
-    Window(
-        onCloseRequest = ::exitApplication,
-        title = "Virtual Pet",
-        icon = cargarIcono()?.let { BitmapPainter(it) },
-        state = rememberWindowState(size = DpSize(430.dp, 900.dp))
-    ) {
-        App(databaseFactory)
+fun main() {
+    if (avisarSiLaBaseEsMasNueva()) return
+
+    application {
+        val databaseFactory = DatabaseFactory()
+        Window(
+            onCloseRequest = ::exitApplication,
+            title = "Virtual Pet",
+            icon = cargarIcono()?.let { BitmapPainter(it) },
+            state = rememberWindowState(size = DpSize(430.dp, 900.dp))
+        ) {
+            App(databaseFactory)
+        }
     }
 }
 

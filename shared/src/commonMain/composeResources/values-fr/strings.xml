@@ -451,6 +451,8 @@
     <string name="fusion_archivos">%1$d fichiers copiés</string>
     <string name="fusion_omitidas">%1$d animaux ignorés à cause du conflit</string>
     <string name="fusion_sin_mascota">%1$d enregistrements écartés : leur animal n'est ni dans le fichier ni sur cet appareil</string>
+    <string name="base_mas_nueva_titulo">Les données viennent d'une version plus récente</string>
+    <string name="base_mas_nueva_mensaje">La base de données est en version %1$d et cette application comprend jusqu'à la %2$d. Rien n'a été modifié. Mettez l'application à jour pour l'ouvrir.</string>
 
     <!-- Permiso de alarmas exactas -->
     <string name="aviso_permiso_exacto_titulo">Les rappels peuvent arriver en retard</string>

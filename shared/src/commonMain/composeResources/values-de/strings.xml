@@ -451,6 +451,8 @@
     <string name="fusion_archivos">%1$d Dateien kopiert</string>
     <string name="fusion_omitidas">%1$d Tiere wegen des Konflikts übersprungen</string>
     <string name="fusion_sin_mascota">%1$d Einträge verworfen: Ihr Tier ist weder in der Datei noch auf diesem Gerät</string>
+    <string name="base_mas_nueva_titulo">Die Daten stammen aus einer neueren Version</string>
+    <string name="base_mas_nueva_mensaje">Die Datenbank hat Version %1$d, diese App versteht bis Version %2$d. Es wurde nichts geändert. Aktualisiere die App, um sie zu öffnen.</string>
 
     <!-- Permiso de alarmas exactas -->
     <string name="aviso_permiso_exacto_titulo">Erinnerungen können zu spät kommen</string>
