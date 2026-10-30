@@ -24,7 +24,7 @@
 13. [La interfaz: decisiones que se notan al usarla](#13-la-interfaz-decisiones-que-se-notan-al-usarla)
 14. [La app de escritorio y su instalador](#14-la-app-de-escritorio-y-su-instalador)
 15. [Firma y distribución: por qué el keystore es sagrado](#15-firma-y-distribución-por-qué-el-keystore-es-sagrado)
-16. [Las 280 pruebas: qué se prueba, qué no y por qué](#16-las-280-pruebas-qué-se-prueba-qué-no-y-por-qué)
+16. [Las 290 pruebas: qué se prueba, qué no y por qué](#16-las-290-pruebas-qué-se-prueba-qué-no-y-por-qué)
 17. [El flujo de entrega, comando a comando](#17-el-flujo-de-entrega-comando-a-comando)
 18. [Preguntas difíciles y su respuesta](#18-preguntas-difíciles-y-su-respuesta)
 19. [Debilidades conocidas (dilas tú antes de que las digan)](#19-debilidades-conocidas-dilas-tú-antes-de-que-las-digan)
@@ -41,10 +41,10 @@
 > "Es un diario de salud para mascotas que funciona **sin servidores y sin cuenta**: los datos son
 > de quien los tiene en el móvil. Lo escribí **una sola vez en Kotlin Multiplatform** y sale para
 > **Android y Windows**, con la interfaz en Compose. La base de datos es SQLite con migraciones
-> versionadas y **280 pruebas automáticas**; el traspaso entre dispositivos es un archivo `.vpet`
+> versionadas y **290 pruebas automáticas**; el traspaso entre dispositivos es un archivo `.vpet`
 > (un ZIP con JSON y los adjuntos) que se puede restaurar, fusionar o deshacer, y **nunca borra
-> nada sin haber hecho antes una copia**. Son **26.320 líneas de Kotlin en 167 ficheros**, y el
-> **83,0 % del código de producción es común** a las dos plataformas (16.042 de 19.322 líneas)."
+> nada sin haber hecho antes una copia**. Son **26.629 líneas de Kotlin en 170 ficheros**, y el
+> **82,9 % del código de producción es común** a las dos plataformas (16.121 de 19.465 líneas)."
 
 > Las cifras se miden, no se recuerdan: el apéndice del final dice con qué comando sale cada una.
 
@@ -205,7 +205,7 @@ la base de datos en ambos**. Con eso, las opciones eran:
 Lo que se demuestra con datos: `shared/` tiene **22 ficheros de UI** (20 pantallas/componentes + 2 del
 tema) **y 33 de utilidades compartidas** (más 6 del paquete de copia), y los dos envoltorios son **un
 fichero Kotlin cada uno** (`MainActivity.kt` y `main.kt`) más su configuración. El producto está
-escrito prácticamente una sola vez (16.042 de las 19.322 líneas de producción son comunes: **83,0 %**).
+escrito prácticamente una sola vez (16.121 de las 19.465 líneas de producción son comunes: **82,9 %**).
 Ahí está la respuesta a "¿esto cuánto trabajo tiene?": escribir una pantalla cuesta una pantalla, no
 dos.
 
@@ -486,12 +486,17 @@ servidor y cuenta de Google; aquí no hay backend por decisión.
 ## 13. La interfaz: decisiones que se notan al usarla
 
 - **Regla de la casa: ningún texto que vea el usuario está escrito en el código.** Todos salen de
-  `composeResources/values*/strings.xml` (**359 cadenas por idioma**, 6 idiomas, con un test de
+  `composeResources/values*/strings.xml` (**378 cadenas por idioma**, 6 idiomas, con un test de
   paridad). Los mensajes de las **excepciones son para el registro y la depuración**, no para el
-  usuario: cuando hay que avisar, se captura la excepción y se pinta una cadena de los recursos (así
-  funciona el aviso de "los datos son de una versión más nueva"). Queda texto fijo pendiente de
-  revisar en sitios concretos (diálogos del sistema del escritorio, errores de foto, nombres de los
-  canales de notificación); está inventariado en la revisión 1.14 y **no se ha tocado todavía**.
+  usuario: `textoDeFallo` enseña una cadena genérica ("Ha ocurrido un error inesperado") y manda el
+  detalle al registro con `registrarFallo` (`println` + traza, que es el mecanismo que ya usaba el
+  proyecto). Los errores de foto no son textos: son un `enum ErrorFoto` que la pantalla traduce, y
+  el nombre y la descripción de los canales de notificación se reescriben en cada arranque para que
+  un cambio de idioma del sistema se vea en Ajustes. **Queda deuda conocida** (revisión 1.15, sin
+  tocar a propósito): nombres por defecto de los ficheros exportados (`ficha-*.pdf`,
+  `VirtualPet-copia-*.vpet`), el título de reserva `"Recordatorio"`, los textos de
+  `FechaUtils` (`"Día inválido"`…) y `Localizacion.formatearEdad`. Además, `detalleDeError` sigue
+  añadiendo el mensaje técnico a los avisos del tipo "No se pudo cargar la lista: \<detalle\>".
 - **La foto de la mascota se guarda ya reducida a 640 px de lado mayor** (`util/RedimensionFoto.kt`,
   JPEG calidad 82; PNG si la imagen tiene transparencia). El punto de partida es la pantalla: la foto
   se pinta como mucho a **84 dp**, así que a densidad 4,0 hacen falta 336 px, y se guardan 640 para
@@ -598,9 +603,9 @@ servidor y cuenta de Google; aquí no hay backend por decisión.
 
 ---
 
-## 16. Las 280 pruebas: qué se prueba, qué no y por qué
+## 16. Las 290 pruebas: qué se prueba, qué no y por qué
 
-**Números reales:** 280 pruebas en 39 clases. Se ejecutan con `./gradlew :shared:jvmTest` (unas 2
+**Números reales:** 290 pruebas en 41 clases. Se ejecutan con `./gradlew :shared:jvmTest` (unas 2
 minutos) sobre **SQLite en memoria creado desde el esquema**: no son mocks, es el motor de verdad.
 
 | Bloque | Clases | Qué demuestra |
@@ -685,7 +690,7 @@ git -c http.sslBackend=openssl push origin entrega-X.Y
 ## 18. Preguntas difíciles y su respuesta
 
 **"¿Esto es una app de verdad o un proyecto de clase?"**
-> 26.320 líneas de Kotlin, 167 ficheros, 280 pruebas, dos plataformas, un instalador para Windows,
+> 26.629 líneas de Kotlin, 170 ficheros, 290 pruebas, dos plataformas, un instalador para Windows,
 > migraciones de esquema desde la versión 1, y hay usuarios reales probándola con datos reales. La
 > parte de "clase" sería el tamaño: es un producto pequeño hecho con cuidado.
 
@@ -736,7 +741,7 @@ git -c http.sslBackend=openssl push origin entrega-X.Y
 > grandes son para 5 animales, no para 40.
 
 **"¿Cuánto tardarías en hacerlo para iPhone?"**
-> El 83,0 % del código de producción es común, pero hoy **no compila para iOS tal cual**: hay un
+> El 82,9 % del código de producción es común, pero hoy **no compila para iOS tal cual**: hay un
 > `java.io.File` en un fichero de `commonMain` y la librería del PDF no publica artefactos iOS.
 > Habría que sacar esos dos, escribir los `actual` de iOS (ficheros, notificaciones locales,
 > selector de documentos, generación del PDF) y firmar un `.ipa` con un Mac. Días de trabajo, no un
@@ -768,8 +773,8 @@ Están en el README como "Pendiente", pero tenlas en la cabeza con su explicaci�
 | **Sin tests de UI instrumentados.** | Los requiere un emulador estable y son frágiles; la lógica está extraída a `util/` y probada, y lo visual se ha verificado en dispositivo real. Con más tiempo, `Compose UI test` para los flujos críticos. |
 | **Un solo desarrollador y un solo Android de pruebas** (POCO con HyperOS). | Las peculiaridades de HyperOS (batería, inicio automático) están documentadas en el mensaje para testers, y hay un emulador aparte. Más marcas = más confianza; por eso existen los testers. |
 | **Un `.vpet` recibido no se abre desde WhatsApp con doble toque.** | Requiere un `intent-filter` para la extensión. Hoy: guardar y elegirlo en "Importar y fusionar" (3 toques). Está en la lista. |
-| **Queda texto visible escrito en el código** en sitios concretos: los títulos de los diálogos del sistema del escritorio, los mensajes de error al elegir foto y los nombres/descripciones de los canales de notificación. | Está inventariado (revisión 1.14) y todavía sin arreglar; la regla es que todo texto de cara al usuario salga de `strings.xml`, y estos son los que faltan. No es un problema de funcionamiento: es de idioma. |
-| **[NO VERIFICADO]** El ejecutable de escritorio con SQLite 3.51 solo se ha arrancado a mano, no instalado desde el ZIP como usuario final. | Los 280 tests y el arranque contra una **copia** de la base real cubren el riesgo funcional; queda la prueba manual del instalador (está en la lista de pruebas antes de fusionar). |
+| **Queda texto visible escrito en el código** en sitios concretos: nombres por defecto de los ficheros exportados (`ficha-Luna-2026-10-30.pdf`, `VirtualPet-copia-….vpet`), el título de reserva `"Recordatorio"` de la notificación, `FechaUtils` (`"Día inválido"`…) y `Localizacion.formatearEdad` (que sí está por idiomas, pero escrito en el código). Y `detalleDeError` sigue pegando el mensaje técnico detrás de avisos como "No se pudo cargar la lista: …". | La regla es que todo texto de cara al usuario salga de `strings.xml`. En la 1.15 se arreglaron los cuatro bloques grandes (mensajes de error de la app, errores del selector de foto, canales de notificación y diálogos del escritorio); **esto es lo que queda**, está decidido no tocarlo todavía y no es un problema de funcionamiento: es de idioma. |
+| **[NO VERIFICADO]** El ejecutable de escritorio con SQLite 3.51 solo se ha arrancado a mano, no instalado desde el ZIP como usuario final. | Los 290 tests y el arranque contra una **copia** de la base real cubren el riesgo funcional; queda la prueba manual del instalador (está en la lista de pruebas antes de fusionar). |
 
 ---
 
@@ -820,7 +825,7 @@ En este orden (el orden también demuestra criterio):
 ```powershell
 $env:GRADLE_USER_HOME="$PWD\.gradle-home"      # caché de Gradle dentro del proyecto
 
-.\gradlew.bat :shared:jvmTest --console=plain           # 280 pruebas (~2 min)
+.\gradlew.bat :shared:jvmTest --console=plain           # 290 pruebas (~2 min)
 .\gradlew.bat :androidApp:assembleDebug --console=plain  # APK de pruebas
 .\gradlew.bat :androidApp:assembleRelease --console=plain# APK firmada de release
 .\gradlew.bat :desktopApp:run --console=plain            # app de escritorio
@@ -886,9 +891,9 @@ repetirlos (y para que nadie te pille improvisando):
 | Cifra | Comando |
 | --- | --- |
 | Líneas y ficheros por sourceSet | `foreach ($ss in 'commonMain','androidMain','jvmMain','jvmTest') { $f = Get-ChildItem "shared/src/$ss" -Recurse -Include *.kt; "$ss $($f.Count) ficheros $((($f | % { (Get-Content $_).Count }) | Measure-Object -Sum).Sum) lineas" }` |
-| Producción y % común | Producción = commonMain + androidMain + jvmMain + los dos envoltorios = **19.322** líneas; común = **16.042** → 16.042 / 19.322 = **83,0 %** (revisión 1.14) |
-| Total de líneas | 19.322 producción + 6.998 de test = **26.320** |
-| Nº de pruebas y de clases | `Get-ChildItem shared/build/test-results/jvmTest/*.xml \| % { ([xml](Get-Content $_)).testsuite } \| Measure-Object tests -Sum` → **280**, y `.Count` de ficheros = **39** clases |
+| Producción y % común | Producción = commonMain + androidMain + jvmMain + los dos envoltorios = **19.465** líneas; común = **16.121** → 16.121 / 19.465 = **82,9 %** (revisión 1.15) |
+| Total de líneas | 19.465 producción + 7.164 de test = **26.629** |
+| Nº de pruebas y de clases | `Get-ChildItem shared/build/test-results/jvmTest/*.xml \| % { ([xml](Get-Content $_)).testsuite } \| Measure-Object tests -Sum` → **290**, y `.Count` de ficheros = **41** clases |
 | `expect`/`actual` | `Select-String -Path (gci shared/src/commonMain -Recurse -Include *.kt).FullName -Pattern '\bexpect\b' \| Measure-Object` → 44 en 14 ficheros |
 | Targets de la app | `Select-String shared/build.gradle.kts -Pattern 'androidLibrary|jvm\(\)\|ios'` → solo `androidLibrary` y `jvm()` |
 | `java.io.File` en común | `Select-String -Path (gci shared/src/commonMain -Recurse -Include *.kt).FullName -Pattern '^import java\.'` → `ImagenMascota.kt:4` |
@@ -903,7 +908,9 @@ repetirlos (y para que nadie te pille improvisando):
 | Fotos antes/después (640 px) | test temporal con las dos fotos reales del `.vpet` de rescate: 3.469 KB → **60 KB** y 3.588 KB → **53 KB**; `.vpet` con las dos **115 KB** (original 7,27 MB) |
 | Tamaño de una foto ya guardada | `run-as ... ls -l files/fotos` en el emulador: la nueva **5.657 B (480×640)**; antiguas 3.552.909 y 3.674.882 B (3072×4096, sin tocar) |
 | Objetos cableados en `App.kt` | leer `App.kt:58-71`: 9 repositorios + 3 ViewModels + `programador` + `database` = **14** |
-| Cadenas por idioma | `Get-ChildItem shared/src/commonMain/composeResources -Recurse -Filter strings.xml \| % { ((Select-String -Path $_.FullName -Pattern ''<string name='' \| Measure-Object).Count) }` → **359** en cada uno de los 6 |
+| Cadenas por idioma | `Get-ChildItem shared/src/commonMain/composeResources -Recurse -Filter strings.xml \| % { ((Select-String -Path $_.FullName -Pattern ''<string name='' \| Measure-Object).Count) }` → **378** en cada uno de los 6 |
+| Idioma de los canales | Emulador API 37: `adb shell cmd locale set-device-locale en-US`, reiniciar la app y leer `dumpsys notification` → `mName=Vaccine and preventive reminders` y `mName=Treatment reminders`; Ajustes del canal: "Daily reminders to give the medication on time". Volviendo a `es-ES`: "Recordatorios de tratamientos" y "Recordatorios de vacunas y preventivos" |
+| Textos fijos arreglados | `ErroresAppTest` (7), `ErrorFotoTest` (4) y `TextosDeDialogoTest` (2): 13 pruebas que comprueban que el texto sale de los recursos y no del mensaje de la excepción |
 | Coste de ir en transacción | test temporal midiendo 300 `insert` sobre fichero: **6.283 ms** sin transacción frente a **36 ms** en una sola (×174) |
 | Id del alta | `IdInsertadoTest` con base en fichero: antes del arreglo los 4 tests fallaban (`id = 0` y, con claves foráneas activas, `FOREIGN KEY constraint failed` al insertar el hijo con `mascotaId = 0`) |
 | Aviso de base más nueva | Android: emulador con `user_version = 99` → pantalla "Los datos son de una versión más nueva … versión 99 … hasta la 15". Escritorio: `.exe` empaquetado con una copia de la base a 99 → diálogo del sistema con el mismo texto; con la base al día abre normal |
