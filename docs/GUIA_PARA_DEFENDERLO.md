@@ -1,4 +1,4 @@
-# Guía del proyecto para defenderlo
+﻿# Guía del proyecto para defenderlo
 
 > Documento **personal**: no es para los testers ni para el README. Explica cómo está hecho
 > VirtualPetKMP, **por qué** cada pieza está así, qué alternativas se descartaron y qué responder
@@ -24,7 +24,7 @@
 13. [La interfaz: decisiones que se notan al usarla](#13-la-interfaz-decisiones-que-se-notan-al-usarla)
 14. [La app de escritorio y su instalador](#14-la-app-de-escritorio-y-su-instalador)
 15. [Firma y distribución: por qué el keystore es sagrado](#15-firma-y-distribución-por-qué-el-keystore-es-sagrado)
-16. [Las 267 pruebas: qué se prueba, qué no y por qué](#16-las-267-pruebas-qué-se-prueba-qué-no-y-por-qué)
+16. [Las 280 pruebas: qué se prueba, qué no y por qué](#16-las-280-pruebas-qué-se-prueba-qué-no-y-por-qué)
 17. [El flujo de entrega, comando a comando](#17-el-flujo-de-entrega-comando-a-comando)
 18. [Preguntas difíciles y su respuesta](#18-preguntas-difíciles-y-su-respuesta)
 19. [Debilidades conocidas (dilas tú antes de que las digan)](#19-debilidades-conocidas-dilas-tú-antes-de-que-las-digan)
@@ -41,10 +41,10 @@
 > "Es un diario de salud para mascotas que funciona **sin servidores y sin cuenta**: los datos son
 > de quien los tiene en el móvil. Lo escribí **una sola vez en Kotlin Multiplatform** y sale para
 > **Android y Windows**, con la interfaz en Compose. La base de datos es SQLite con migraciones
-> versionadas y **267 pruebas automáticas**; el traspaso entre dispositivos es un archivo `.vpet`
+> versionadas y **280 pruebas automáticas**; el traspaso entre dispositivos es un archivo `.vpet`
 > (un ZIP con JSON y los adjuntos) que se puede restaurar, fusionar o deshacer, y **nunca borra
-> nada sin haber hecho antes una copia**. Son **25.372 líneas de Kotlin en 161 ficheros**, y el
-> **83,3 % del código de producción es común** a las dos plataformas (15.894 de 19.072 líneas)."
+> nada sin haber hecho antes una copia**. Son **26.320 líneas de Kotlin en 167 ficheros**, y el
+> **83,0 % del código de producción es común** a las dos plataformas (16.042 de 19.322 líneas)."
 
 > Las cifras se miden, no se recuerdan: el apéndice del final dice con qué comando sale cada una.
 
@@ -205,7 +205,7 @@ la base de datos en ambos**. Con eso, las opciones eran:
 Lo que se demuestra con datos: `shared/` tiene **22 ficheros de UI** (20 pantallas/componentes + 2 del
 tema) **y 33 de utilidades compartidas** (más 6 del paquete de copia), y los dos envoltorios son **un
 fichero Kotlin cada uno** (`MainActivity.kt` y `main.kt`) más su configuración. El producto está
-escrito prácticamente una sola vez (15.894 de las 19.072 líneas de producción son comunes: **83,3 %**).
+escrito prácticamente una sola vez (16.042 de las 19.322 líneas de producción son comunes: **83,0 %**).
 Ahí está la respuesta a "¿esto cuánto trabajo tiene?": escribir una pantalla cuesta una pantalla, no
 dos.
 
@@ -218,7 +218,7 @@ Es una decisión de **alcance**, no técnica, y conviene decirla así:
 - iOS no se puede compilar ni probar aquí (hace falta un Mac y un dispositivo): **[NO VERIFICADO]**. Entregar iOS sin
   haberlo ejecutado nunca sería mentir.
 - **Lo que está comprobado:** en `shared/build.gradle.kts` solo hay dos targets, `androidLibrary`
-  y `jvm()` — **no existe `iosMain`**. Lo específico de plataforma son **43 `expect` en 14
+  y `jvm()` — **no existe `iosMain`**. Lo específico de plataforma son **44 `expect` en 15
   ficheros** (`Archivos.kt` 18, `AccionesSistema.kt` 6, `SelectorArchivo.kt` 4, y el resto repartido):
   ficheros, selector, compartir, notificaciones, versión de la app.
 - **Lo que NO está listo, y antes se decía en esta guía:** `commonMain` usa
@@ -312,8 +312,8 @@ hoy sería ceremonia.
   proyecto: si tiene un `if` que puede fallar, va aquí y lleva test.**
 - **`expect`/`actual` (lo único distinto por plataforma)**: leer/escribir bytes, listar carpeta,
   SHA-256, ZIP, `DatabaseFactory`, selector de archivo, compartir, programador de notificaciones,
-  reducción de fotos, versión de la app. Son **44 declaraciones `expect` en 14 ficheros**, con sus
-  `actual` repartidos en **21 ficheros de `androidMain` y 18 de `jvmMain`**.
+  reducción de fotos, versión de la app. Son **44 declaraciones `expect` en 15 ficheros**, con sus
+  `actual` repartidos en **21 ficheros de `androidMain` y 19 de `jvmMain`**.
   **Nada de lógica de negocio ahí.**
 - **`Localizacion` y `TraduccionesDatos`**: se decide **una sola vez** en `App.kt` y se publica con
   un `CompositionLocal`, para que no haya dos pantallas que opinen distinto sobre kilos/libras o
@@ -368,6 +368,16 @@ son ficheros SQL que se leen y se prueban**:
    se toca nada y se lanza `BaseDeDatosMasNuevaException` (mensaje en español); y antes de migrar se
    copia el fichero a `virtualpet-antes-de-migrar-vN.db` y la migración va **en una transacción**
    (`migrate` + `user_version`), así que o entra entera o no cambia nada.
+
+4. **El `id` de un alta se lee en la misma transacción que el `insert`.** `SELECT
+   last_insert_rowid()` devuelve el último id insertado **en esa conexión**, y sqldelight sobre
+   fichero abre una conexión por sentencia fuera de transacción: el alta devolvía **0**. Estaba en
+   los 4 repositorios que devuelven id (mascota, vacuna, preventivo, veterinario) y ningún test lo
+   veía porque usaban base en memoria (una sola conexión). Consecuencia real: el aviso de una vacuna
+   se programaba con id 0 (`FichaMascotaViewModel.kt:416`). Ahora `insert` + `getLastInsertedId` van
+   dentro de `db.transactionWithResult { }`, con `IdInsertadoTest` (base en fichero) e
+   `ImportacionFicheroTest` (restaurar y fusionar dejan los hijos colgados de su mascota y 0
+   huérfanas).
 
 **Migraciones aditivas siempre.** Ninguna migración borra ni renombra datos del usuario: se añaden
 columnas (con valor por defecto o relleno) y se crean índices con `IF NOT EXISTS`. La 13 rellenó
@@ -475,6 +485,22 @@ servidor y cuenta de Google; aquí no hay backend por decisión.
 
 ## 13. La interfaz: decisiones que se notan al usarla
 
+- **Regla de la casa: ningún texto que vea el usuario está escrito en el código.** Todos salen de
+  `composeResources/values*/strings.xml` (**359 cadenas por idioma**, 6 idiomas, con un test de
+  paridad). Los mensajes de las **excepciones son para el registro y la depuración**, no para el
+  usuario: cuando hay que avisar, se captura la excepción y se pinta una cadena de los recursos (así
+  funciona el aviso de "los datos son de una versión más nueva"). Queda texto fijo pendiente de
+  revisar en sitios concretos (diálogos del sistema del escritorio, errores de foto, nombres de los
+  canales de notificación); está inventariado en la revisión 1.14 y **no se ha tocado todavía**.
+- **La foto de la mascota se guarda ya reducida a 640 px de lado mayor** (`util/RedimensionFoto.kt`,
+  JPEG calidad 82; PNG si la imagen tiene transparencia). El punto de partida es la pantalla: la foto
+  se pinta como mucho a **84 dp**, así que a densidad 4,0 hacen falta 336 px, y se guardan 640 para
+  tener margen (pantallas más densas, el PDF de la ficha —46 dp impresos— y futuros tamaños). Medido
+  con dos fotos reales de 3072×4096: **3.469 KB → 60 KB** y **3.588 KB → 53 KB** (98,2 % y 98,5 %), y
+  el `.vpet` con las dos pasa de **7,27 MB a 115 KB**. En Android se decodifica con `inSampleSize`
+  (no se cargan los 12 MP enteros) y la **rotación EXIF se aplica a los píxeles antes de
+  recomprimir**. Las fotos **ya guardadas no se tocan**, y las de los informes tampoco: ahí la
+  calidad legible es el requisito.
 - **Un solo menú de acciones (⋮) en toda la app.** Antes cada lista tenía su lápiz y su papelera.
   Con el menú, la misma acción se ve igual en todas partes, y **la papelera deja de estar a un
   toque por accidente** (borrar es lo que menos se hace).
@@ -557,6 +583,12 @@ servidor y cuenta de Google; aquí no hay backend por decisión.
   20.009.984 B con 12,5 MB metidos en `files/copias` → **7.490.048 B** al aplicar las reglas (medido con el transporte **local** del emulador; **[NO VERIFICADO]** contra una cuenta de Google real). La
   frase honesta es "los datos son tuyos y se quedan en tu móvil salvo la copia que el propio
   Android haga, que puedes desactivar"; **"no pasan por nadie" no es cierto**.
+- **La copia de Google es una red extra, no la protección principal.** Tiene un **tope de 25 MB por
+  aplicación**: con 40 mascotas y sus informes (que no se reducen porque tienen que seguir legibles)
+  la cuenta se queda cerca de ese límite (cifras en la sección de debilidades). La protección
+  **fiable** es el `.vpet`: se guarda donde el usuario quiera, no tiene tope, lleva todo (fotos y PDF
+  dentro) y se puede restaurar en cualquier dispositivo. Lo que da la copia del sistema es comodidad
+  al cambiar de móvil.
 - **Lo que la app NO pide** (defensa de privacidad, y se puede demostrar en el manifiesto): nada de
   almacenamiento —`WRITE_EXTERNAL_STORAGE` y `READ_EXTERNAL_STORAGE` están **eliminados
   explícitamente** con `tools:node="remove"` porque alguna librería los arrastraba—, nada de
@@ -566,9 +598,9 @@ servidor y cuenta de Google; aquí no hay backend por decisión.
 
 ---
 
-## 16. Las 267 pruebas: qué se prueba, qué no y por qué
+## 16. Las 280 pruebas: qué se prueba, qué no y por qué
 
-**Números reales:** 267 pruebas en 35 clases. Se ejecutan con `./gradlew :shared:jvmTest` (unas 2
+**Números reales:** 280 pruebas en 39 clases. Se ejecutan con `./gradlew :shared:jvmTest` (unas 2
 minutos) sobre **SQLite en memoria creado desde el esquema**: no son mocks, es el motor de verdad.
 
 | Bloque | Clases | Qué demuestra |
@@ -583,6 +615,10 @@ minutos) sobre **SQLite en memoria creado desde el esquema**: no son mocks, es e
 | PDF | `ContenidoPdfTest` (28), `ExportadorPdfTest` (8) | Que el PDF **contiene** lo que debe y en el orden correcto. |
 | Idioma y formato | `LocalizacionTest` (10), `TraduccionesDatosTest` (8), `ParidadTraduccionesTest` (8), `IdiomaEnTiempoDeEjecucionTest` (2) | Kilos/libras, orden de fecha, decimal, paridad de los 6 idiomas. |
 | Fotos | `RedimensionFotoTest` (12) | Cálculo del tamaño (horizontal, vertical, cuadrada, ya pequeña, límite, tamaño 0) y la reducción real de un fichero, incluido PNG con transparencia. |
+| Id de un alta | `IdInsertadoTest` (4) | Con base **en fichero**: los 4 repositorios que devuelven id devuelven el de la fila creada (antes, 0). |
+| Importación en fichero | `ImportacionFicheroTest` (3) | Restaurar y fusionar con base en fichero dejan los hijos colgados de su mascota y 0 huérfanas; fusionar dos veces no duplica. |
+| Fusión con descartes | `FusionFilasSinMascotaTest` (2) | Una fila sin mascota se descarta, se cuenta en `filasSinMascota` y no deja huérfanas. |
+| Apertura y versión | `RevisarVersionBaseTest` (4) | La revisión que hace el escritorio antes de abrir la ventana: detecta base más nueva, devuelve las dos versiones y no toca el fichero. |
 | UI con lógica | `BuscadorMascotasTest` (8), `FichaMascotaResumenTest`, `FichaMascotaErroresTest`, `ErroresAppTest`, `PreferenciaVistaTest` (5) | Lo que se puede probar sin pintar: filtrado, resumen de la ficha, errores visibles. |
 
 **Filosofía del proyecto:** *"al arreglar un fallo, añade el test que lo habría cazado"*. Ejemplos
@@ -649,7 +685,7 @@ git -c http.sslBackend=openssl push origin entrega-X.Y
 ## 18. Preguntas difíciles y su respuesta
 
 **"¿Esto es una app de verdad o un proyecto de clase?"**
-> 25.372 líneas de Kotlin, 161 ficheros, 267 pruebas, dos plataformas, un instalador para Windows,
+> 26.320 líneas de Kotlin, 167 ficheros, 280 pruebas, dos plataformas, un instalador para Windows,
 > migraciones de esquema desde la versión 1, y hay usuarios reales probándola con datos reales. La
 > parte de "clase" sería el tamaño: es un producto pequeño hecho con cuidado.
 
@@ -700,7 +736,7 @@ git -c http.sslBackend=openssl push origin entrega-X.Y
 > grandes son para 5 animales, no para 40.
 
 **"¿Cuánto tardarías en hacerlo para iPhone?"**
-> El 83,3 % del código de producción es común, pero hoy **no compila para iOS tal cual**: hay un
+> El 83,0 % del código de producción es común, pero hoy **no compila para iOS tal cual**: hay un
 > `java.io.File` en un fichero de `commonMain` y la librería del PDF no publica artefactos iOS.
 > Habría que sacar esos dos, escribir los `actual` de iOS (ficheros, notificaciones locales,
 > selector de documentos, generación del PDF) y firmar un `.ipa` con un Mac. Días de trabajo, no un
@@ -728,11 +764,12 @@ Están en el README como "Pendiente", pero tenlas en la cabeza con su explicaci�
 | **Los borrados no se propagan entre dispositivos.** Borras una mascota en el móvil y sigue en el PC hasta que la borras allí. | Es una decisión, no un olvido: propagar borrados pide "lápidas" (`borradoEn`) y una regla de fusión nueva; hacerlo mal **borra datos de más**, que es el peor fallo posible. Prefiero que sobre una ficha un rato a perder historial. |
 | **Traducciones de de/pt/fr/it sin revisar por un nativo.** | Están con aviso explícito en el README; la paridad de claves la garantiza un test. Lo que más varía son los nombres de raza. Contratar una revisión es de las primeras cosas antes de publicar. |
 | **Las fotos que ya estaban guardadas NO se reducen.** La reducción es al guardar, así que las antiguas siguen con sus MB. Medido en el emulador: siguen a 3072×4096 y 3,55 / 3,67 MB. | Es a propósito: tocar ficheros que el usuario ya tiene sin que lo pida es justo lo que no se hace. Un proceso de un solo uso (con copia previa) bajaría cada una a ~20 KB; está propuesto, **no implementado**, a la espera de decidirlo. |
-| **La copia de Google puede pasar de 25 MB por los informes**, no por las fotos. | Con las fotos reducidas (40 mascotas × 2 × ~20 KB ≈ 1,6 MB) el peso lo ponen los PDF de informes, que no se reducen porque tienen que seguir legibles: 80 ficheros × ~250 KB ≈ 20 MB, más base y fotos ≈ 22 MB. Cabe, pero sin mucho margen. Si se quiere garantizar, hay que excluir también `files/informes` de la nube (decisión pendiente, no implementada). |
+| **La copia de Google tiene un tope de 25 MB y el peso lo ponen los informes**, no las fotos. | Fotos a 640 px: 40 mascotas × 2 × ~60 KB ≈ **4,8 MB**. Base: del orden de **1 MB**. Informes (no se reducen, tienen que seguir legibles): 80 ficheros × ~250 KB ≈ **20 MB** → total ≈ **26 MB**, es decir, **por encima del tope**. Está decidido no excluir los informes de la nube, así que la copia del sistema puede quedarse corta con muchas mascotas; el `.vpet` es la copia que no falla. |
 | **Sin tests de UI instrumentados.** | Los requiere un emulador estable y son frágiles; la lógica está extraída a `util/` y probada, y lo visual se ha verificado en dispositivo real. Con más tiempo, `Compose UI test` para los flujos críticos. |
 | **Un solo desarrollador y un solo Android de pruebas** (POCO con HyperOS). | Las peculiaridades de HyperOS (batería, inicio automático) están documentadas en el mensaje para testers, y hay un emulador aparte. Más marcas = más confianza; por eso existen los testers. |
 | **Un `.vpet` recibido no se abre desde WhatsApp con doble toque.** | Requiere un `intent-filter` para la extensión. Hoy: guardar y elegirlo en "Importar y fusionar" (3 toques). Está en la lista. |
-| **[NO VERIFICADO]** El ejecutable de escritorio con SQLite 3.51 solo se ha arrancado a mano, no instalado desde el ZIP como usuario final. | Los 267 tests y el arranque contra una **copia** de la base real cubren el riesgo funcional; queda la prueba manual del instalador (está en la lista de pruebas antes de fusionar). |
+| **Queda texto visible escrito en el código** en sitios concretos: los títulos de los diálogos del sistema del escritorio, los mensajes de error al elegir foto y los nombres/descripciones de los canales de notificación. | Está inventariado (revisión 1.14) y todavía sin arreglar; la regla es que todo texto de cara al usuario salga de `strings.xml`, y estos son los que faltan. No es un problema de funcionamiento: es de idioma. |
+| **[NO VERIFICADO]** El ejecutable de escritorio con SQLite 3.51 solo se ha arrancado a mano, no instalado desde el ZIP como usuario final. | Los 280 tests y el arranque contra una **copia** de la base real cubren el riesgo funcional; queda la prueba manual del instalador (está en la lista de pruebas antes de fusionar). |
 
 ---
 
@@ -769,6 +806,8 @@ En este orden (el orden también demuestra criterio):
 | Posposiciones | `shared/.../util/Posposiciones.kt` + `util/RecordatoriosTratamiento.kt` |
 | PDF | `shared/.../util/ExportadorPdf.kt` + `util/ContenidoPdf.kt` |
 | Buscador y vistas | `shared/.../ui/MascotaListScreen.kt`, `util/PreferenciaVista.kt` |
+| Aviso de base más nueva | `ui/BaseMasNueva.kt` (Android), `data/RevisarVersionBase.kt` (escritorio) |
+| Reducción de fotos | `util/RedimensionFoto.kt` (+ `.android.kt`, `.jvm.kt`) |
 | Idioma y unidades | `shared/.../util/Localizacion.kt`, `TraduccionesDatos.kt`, `composeResources/values*/strings.xml` |
 | Instalador de Windows | `packaging/windows/instalar.ps1`, `empaquetar.py`, `LEEME.txt` |
 | Firma | `keystore.properties` (local) + `androidApp/build.gradle.kts` |
@@ -781,7 +820,7 @@ En este orden (el orden también demuestra criterio):
 ```powershell
 $env:GRADLE_USER_HOME="$PWD\.gradle-home"      # caché de Gradle dentro del proyecto
 
-.\gradlew.bat :shared:jvmTest --console=plain           # 267 pruebas (~2 min)
+.\gradlew.bat :shared:jvmTest --console=plain           # 280 pruebas (~2 min)
 .\gradlew.bat :androidApp:assembleDebug --console=plain  # APK de pruebas
 .\gradlew.bat :androidApp:assembleRelease --console=plain# APK firmada de release
 .\gradlew.bat :desktopApp:run --console=plain            # app de escritorio
@@ -847,9 +886,9 @@ repetirlos (y para que nadie te pille improvisando):
 | Cifra | Comando |
 | --- | --- |
 | Líneas y ficheros por sourceSet | `foreach ($ss in 'commonMain','androidMain','jvmMain','jvmTest') { $f = Get-ChildItem "shared/src/$ss" -Recurse -Include *.kt; "$ss $($f.Count) ficheros $((($f | % { (Get-Content $_).Count }) | Measure-Object -Sum).Sum) lineas" }` |
-| Producción y % común | Producción = commonMain + androidMain + jvmMain + los dos envoltorios = **19.072** líneas; común = **15.894** → 15.894 / 19.072 = **83,3 %** |
-| Total de líneas | 19.072 producción + 6.300 de test = **25.372** |
-| Nº de pruebas y de clases | `Get-ChildItem shared/build/test-results/jvmTest/*.xml \| % { ([xml](Get-Content $_)).testsuite } \| Measure-Object tests -Sum` (y `.Count` de ficheros = clases) |
+| Producción y % común | Producción = commonMain + androidMain + jvmMain + los dos envoltorios = **19.322** líneas; común = **16.042** → 16.042 / 19.322 = **83,0 %** (revisión 1.14) |
+| Total de líneas | 19.322 producción + 6.998 de test = **26.320** |
+| Nº de pruebas y de clases | `Get-ChildItem shared/build/test-results/jvmTest/*.xml \| % { ([xml](Get-Content $_)).testsuite } \| Measure-Object tests -Sum` → **280**, y `.Count` de ficheros = **39** clases |
 | `expect`/`actual` | `Select-String -Path (gci shared/src/commonMain -Recurse -Include *.kt).FullName -Pattern '\bexpect\b' \| Measure-Object` → 44 en 14 ficheros |
 | Targets de la app | `Select-String shared/build.gradle.kts -Pattern 'androidLibrary|jvm\(\)\|ios'` → solo `androidLibrary` y `jvm()` |
 | `java.io.File` en común | `Select-String -Path (gci shared/src/commonMain -Recurse -Include *.kt).FullName -Pattern '^import java\.'` → `ImagenMascota.kt:4` |
@@ -861,9 +900,13 @@ repetirlos (y para que nadie te pille improvisando):
 | Android y claves foráneas | emulador: `logcat` del `onConfigure` (temperal, ya quitado) + borrado de una mascota con 19 filas hijas desde la interfaz → `PRAGMA foreign_key_check` = 0 |
 | `PreviewActivity` fuera del release | abrir la APK como ZIP y buscar `compose/ui/tooling/PreviewActivity` en los `classes*.dex`: aparece en `dist/VirtualPet-1.12.apk` y **no** en la recién compilada |
 | Tamaño de la copia de Google | `adb shell bmgr backupnow com.example.virtualpetkmp` con transporte local: 20.009.984 B con 12,5 MB en `files/copias` → 7.490.048 B con las reglas |
-| Fotos antes/después | test temporal con las dos fotos reales del `.vpet` de rescate: 3.469 KB → 21 KB y 3.588 KB → 18 KB; `.vpet` resultante 40 KB (original 7,27 MB) |
-| Tamaño de una foto ya guardada | `run-as ... ls -l files/fotos` en el emulador: nuevas 4.433 B (252×336); antiguas 3.552.909 y 3.674.882 B (3072×4096) |
+| Fotos antes/después (640 px) | test temporal con las dos fotos reales del `.vpet` de rescate: 3.469 KB → **60 KB** y 3.588 KB → **53 KB**; `.vpet` con las dos **115 KB** (original 7,27 MB) |
+| Tamaño de una foto ya guardada | `run-as ... ls -l files/fotos` en el emulador: la nueva **5.657 B (480×640)**; antiguas 3.552.909 y 3.674.882 B (3072×4096, sin tocar) |
 | Objetos cableados en `App.kt` | leer `App.kt:58-71`: 9 repositorios + 3 ViewModels + `programador` + `database` = **14** |
+| Cadenas por idioma | `Get-ChildItem shared/src/commonMain/composeResources -Recurse -Filter strings.xml \| % { ((Select-String -Path $_.FullName -Pattern ''<string name='' \| Measure-Object).Count) }` → **359** en cada uno de los 6 |
+| Coste de ir en transacción | test temporal midiendo 300 `insert` sobre fichero: **6.283 ms** sin transacción frente a **36 ms** en una sola (×174) |
+| Id del alta | `IdInsertadoTest` con base en fichero: antes del arreglo los 4 tests fallaban (`id = 0` y, con claves foráneas activas, `FOREIGN KEY constraint failed` al insertar el hijo con `mascotaId = 0`) |
+| Aviso de base más nueva | Android: emulador con `user_version = 99` → pantalla "Los datos son de una versión más nueva … versión 99 … hasta la 15". Escritorio: `.exe` empaquetado con una copia de la base a 99 → diálogo del sistema con el mismo texto; con la base al día abre normal |
 | Warnings de compilación | `.\gradlew.bat :shared:compileKotlinJvm --rerun-tasks --no-build-cache` y contar líneas `^w:` → **116** (casi todas por el artefacto *compat* de `kotlinx-datetime`) |
 
 ### Lo que NO he podido verificar (marcado también como `[NO VERIFICADO]`)
