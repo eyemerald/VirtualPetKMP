@@ -51,6 +51,12 @@ data class ResultadoFusion(
     val filasActualizadas: Int,
     val archivosCopiados: Int,
     val conflictosOmitidos: Int,
+    /**
+     * Filas hijas que se han descartado porque su mascota no estaba ni en el paquete ni en este
+     * dispositivo (o se omitió a mano al resolver un conflicto). Se cuentan para poder avisar; antes
+     * desaparecían en silencio.
+     */
+    val filasSinMascota: Int = 0,
     /** Copia de seguridad que se hizo antes de fusionar, para poder volver atrás a mano. */
     val copiaPrevia: String?
 )
@@ -477,19 +483,37 @@ class ImportadorFusion(
                 return@withContext Result.failure(ErrorCopiaException(ErrorCopia.ERROR_GUARDANDO))
             }
 
+            // Filas hijas que no se han podido colgar de ninguna mascota: su `mascotaUuid` no está
+            // en este dispositivo ni se va a crear (paquete manipulado, o mascota omitida a mano).
+            // Antes se descartaban en silencio; ahora se cuentan para poder decírselo al usuario.
+            val filasSinMascota =
+                vacunasNuevas.count { destinoPorUuid[it.mascotaUuid] == null } +
+                    preventivosNuevos.count { destinoPorUuid[it.mascotaUuid] == null } +
+                    revisionesNuevas.count { destinoPorUuid[it.mascotaUuid] == null } +
+                    tratamientosNuevos.count { destinoPorUuid[it.mascotaUuid] == null } +
+                    pesosNuevos.count { destinoPorUuid[it.mascotaUuid] == null } +
+                    informesNuevos.count { destinoPorUuid[it.mascotaUuid] == null } +
+                    notasNuevas.count { destinoPorUuid[it.mascotaUuid] == null }
+
+            // `filasNuevas` es lo que se ha **aplicado** de verdad, así que las descartadas no
+            // cuentan: si no, el diálogo diría "3 nuevas" y "1 descartada" a la vez.
+            val filasNuevasAplicadas = (mascotasNuevas.size + vacunasNuevas.size +
+                preventivosNuevos.size + revisionesNuevas.size + tratamientosNuevos.size +
+                pesosNuevos.size + informesNuevos.size + notasNuevas.size +
+                veterinariosNuevos.size) - filasSinMascota
+
             Result.success(
                 ResultadoFusion(
                     mascotasNuevas = mascotasNuevas.size,
                     mascotasActualizadas = mascotasActualizar.size,
-                    filasNuevas = mascotasNuevas.size + vacunasNuevas.size + preventivosNuevos.size +
-                        revisionesNuevas.size + tratamientosNuevos.size + pesosNuevos.size +
-                        informesNuevos.size + notasNuevas.size + veterinariosNuevos.size,
+                    filasNuevas = filasNuevasAplicadas,
                     filasActualizadas = mascotasActualizar.size + vacunasActualizar.size +
                         preventivosActualizar.size + revisionesActualizar.size +
                         tratamientosActualizar.size + pesosActualizar.size +
                         informesActualizar.size + notasActualizar.size + veterinariosActualizar.size,
                     archivosCopiados = rutasEscritas.size,
                     conflictosOmitidos = omitidas,
+                    filasSinMascota = filasSinMascota,
                     copiaPrevia = copiaPrevia
                 )
             )

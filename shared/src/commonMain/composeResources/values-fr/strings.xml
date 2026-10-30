@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
   Français : traduction de l'application.
 
@@ -450,6 +450,7 @@
     <string name="fusion_sin_cambios">Rien à importer : tout est déjà à jour.</string>
     <string name="fusion_archivos">%1$d fichiers copiés</string>
     <string name="fusion_omitidas">%1$d animaux ignorés à cause du conflit</string>
+    <string name="fusion_sin_mascota">%1$d enregistrements écartés : leur animal n'est ni dans le fichier ni sur cet appareil</string>
 
     <!-- Permiso de alarmas exactas -->
     <string name="aviso_permiso_exacto_titulo">Les rappels peuvent arriver en retard</string>

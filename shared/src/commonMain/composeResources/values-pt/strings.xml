@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
   Português: tradução do catálogo de textos da aplicação.
 
@@ -449,6 +449,7 @@
     <string name="fusion_sin_cambios">Não há nada a trazer: está tudo atualizado.</string>
     <string name="fusion_archivos">%1$d ficheiros copiados</string>
     <string name="fusion_omitidas">%1$d animais ignorados pelo conflito</string>
+    <string name="fusion_sin_mascota">%1$d registos descartados: o seu animal não está nem no ficheiro nem neste dispositivo</string>
 
     <!-- Permiso de alarmas exactas -->
     <string name="aviso_permiso_exacto_titulo">Os avisos podem chegar atrasados</string>

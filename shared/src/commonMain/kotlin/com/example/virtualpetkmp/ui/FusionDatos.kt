@@ -1,4 +1,4 @@
-package com.example.virtualpetkmp.ui
+﻿package com.example.virtualpetkmp.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -55,6 +55,7 @@ import virtualpetkmp.shared.generated.resources.fusion_omitidas
 import virtualpetkmp.shared.generated.resources.fusion_plan_detalle
 import virtualpetkmp.shared.generated.resources.fusion_plan_titulo
 import virtualpetkmp.shared.generated.resources.fusion_sin_cambios
+import virtualpetkmp.shared.generated.resources.fusion_sin_mascota
 import virtualpetkmp.shared.generated.resources.restaurar_elegir
 
 /**
@@ -149,6 +150,14 @@ fun DialogoImportarFusion(
                         if (r.conflictosOmitidos > 0) {
                             Text(
                                 stringResource(Res.string.fusion_omitidas, r.conflictosOmitidos),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        // Filas que no se pudieron colgar de ninguna mascota: se descartan y se
+                        // dice, en vez de que desaparezcan en silencio.
+                        if (r.filasSinMascota > 0) {
+                            Text(
+                                stringResource(Res.string.fusion_sin_mascota, r.filasSinMascota),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }

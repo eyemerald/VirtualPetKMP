@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
   Standardtexte (Deutsch).
 
@@ -450,6 +450,7 @@
     <string name="fusion_sin_cambios">Nichts zu übernehmen: alles ist bereits aktuell.</string>
     <string name="fusion_archivos">%1$d Dateien kopiert</string>
     <string name="fusion_omitidas">%1$d Tiere wegen des Konflikts übersprungen</string>
+    <string name="fusion_sin_mascota">%1$d Einträge verworfen: Ihr Tier ist weder in der Datei noch auf diesem Gerät</string>
 
     <!-- Permiso de alarmas exactas -->
     <string name="aviso_permiso_exacto_titulo">Erinnerungen können zu spät kommen</string>

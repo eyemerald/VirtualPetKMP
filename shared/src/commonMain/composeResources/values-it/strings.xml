@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
   Italiano: traduzione dell'applicazione. `values/strings.xml` è la fonte strutturale delle chiavi,
   così che l'ordine e il numero delle voci restino identici in tutte le lingue.
@@ -446,6 +446,7 @@
     <string name="fusion_sin_cambios">Niente da importare: è già tutto aggiornato.</string>
     <string name="fusion_archivos">%1$d file copiati</string>
     <string name="fusion_omitidas">%1$d animali saltati per il conflitto</string>
+    <string name="fusion_sin_mascota">%1$d record scartati: il loro animale non è né nel file né su questo dispositivo</string>
 
     <!-- Permiso de alarmas exactas -->
     <string name="aviso_permiso_exacto_titulo">I promemoria possono arrivare in ritardo</string>
