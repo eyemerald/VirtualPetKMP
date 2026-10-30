@@ -1,4 +1,4 @@
-﻿package com.example.virtualpetkmp
+package com.example.virtualpetkmp
 
 import android.app.NotificationManager
 import android.content.Context

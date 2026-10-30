@@ -1,1 +1,1 @@
-﻿ALTER TABLE mascotas ADD COLUMN foto TEXT;
+ALTER TABLE mascotas ADD COLUMN foto TEXT;

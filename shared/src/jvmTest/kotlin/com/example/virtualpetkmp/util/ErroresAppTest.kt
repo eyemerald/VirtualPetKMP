@@ -1,4 +1,4 @@
-﻿package com.example.virtualpetkmp.util
+package com.example.virtualpetkmp.util
 
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream

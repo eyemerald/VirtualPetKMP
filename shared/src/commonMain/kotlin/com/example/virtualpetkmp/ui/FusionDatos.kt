@@ -1,4 +1,4 @@
-﻿package com.example.virtualpetkmp.ui
+package com.example.virtualpetkmp.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
