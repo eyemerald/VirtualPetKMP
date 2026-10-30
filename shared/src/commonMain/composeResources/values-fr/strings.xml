@@ -365,6 +365,10 @@
     <string name="error_foto_sin_galeria">Aucune galerie d'images disponible</string>
     <string name="error_foto_abrir_camara">Impossible d'ouvrir l'appareil photo</string>
     <string name="error_foto_abrir_selector">Impossible d'ouvrir le sélecteur d'images</string>
+    <string name="canal_tratamientos_nombre">Rappels de traitements</string>
+    <string name="canal_tratamientos_descripcion">Rappels quotidiens pour donner le médicament à temps</string>
+    <string name="canal_recordatorios_nombre">Rappels de vaccins et de préventifs</string>
+    <string name="canal_recordatorios_descripcion">Rappels des prochaines doses de vaccins et de préventifs</string>
     <string name="error_cargar_ficha">Impossible de charger la fiche : %1$s</string>
     <string name="error_guardar_dato">Échec de l\'enregistrement : %1$s</string>
     <string name="error_borrar_dato">Échec de la suppression : %1$s</string>

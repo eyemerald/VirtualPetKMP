@@ -43,6 +43,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        // Los canales de notificación llevan nombre y descripción de cara al usuario, y salen de los
+        // recursos de idioma. Se crean (o se reescriben) en cada arranque: así, si el usuario cambia
+        // el idioma del sistema, Ajustes enseña los canales en el idioma nuevo sin tener que esperar
+        // a que salte un aviso.
+        crearCanalesDeNotificacion(this)
+
         leerAviso(intent)
 
         setContent {

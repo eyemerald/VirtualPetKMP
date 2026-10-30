@@ -364,6 +364,10 @@
     <string name="error_foto_sin_galeria">Não há nenhuma galeria de imagens disponível</string>
     <string name="error_foto_abrir_camara">Não foi possível abrir a câmara</string>
     <string name="error_foto_abrir_selector">Não foi possível abrir o seletor de imagens</string>
+    <string name="canal_tratamientos_nombre">Lembretes de tratamentos</string>
+    <string name="canal_tratamientos_descripcion">Avisos diários para dar a medicação a tempo</string>
+    <string name="canal_recordatorios_nombre">Lembretes de vacinas e preventivos</string>
+    <string name="canal_recordatorios_descripcion">Avisos das próximas doses de vacinas e preventivos</string>
     <string name="error_cargar_ficha">Não foi possível carregar a ficha: %1$s</string>
     <string name="error_guardar_dato">Não foi possível guardar: %1$s</string>
     <string name="error_borrar_dato">Não foi possível apagar: %1$s</string>

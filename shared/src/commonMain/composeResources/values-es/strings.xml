@@ -362,6 +362,10 @@
     <string name="error_foto_sin_galeria">No hay ninguna galería de imágenes disponible</string>
     <string name="error_foto_abrir_camara">No se pudo abrir la cámara</string>
     <string name="error_foto_abrir_selector">No se pudo abrir el selector de imágenes</string>
+    <string name="canal_tratamientos_nombre">Recordatorios de tratamientos</string>
+    <string name="canal_tratamientos_descripcion">Avisos diarios para dar la medicación a tiempo</string>
+    <string name="canal_recordatorios_nombre">Recordatorios de vacunas y preventivos</string>
+    <string name="canal_recordatorios_descripcion">Avisos de las próximas dosis de vacunas y preventivos</string>
 
     <!-- Errores de las operaciones de la ficha (vacunas, pesos, notas, informes...) -->
     <string name="error_cargar_ficha">No se pudo cargar la ficha: %1$s</string>

@@ -365,6 +365,10 @@
     <string name="error_foto_sin_galeria">Es ist keine Bildergalerie verfügbar</string>
     <string name="error_foto_abrir_camara">Die Kamera konnte nicht geöffnet werden</string>
     <string name="error_foto_abrir_selector">Die Bildauswahl konnte nicht geöffnet werden</string>
+    <string name="canal_tratamientos_nombre">Erinnerungen an Behandlungen</string>
+    <string name="canal_tratamientos_descripcion">Tägliche Erinnerung, das Medikament rechtzeitig zu geben</string>
+    <string name="canal_recordatorios_nombre">Erinnerungen an Impfungen und Prophylaxe</string>
+    <string name="canal_recordatorios_descripcion">Erinnerungen an die nächsten Impf- und Prophylaxedosen</string>
     <string name="error_cargar_ficha">Akte konnte nicht geladen werden: %1$s</string>
     <string name="error_guardar_dato">Speichern fehlgeschlagen: %1$s</string>
     <string name="error_borrar_dato">Löschen fehlgeschlagen: %1$s</string>

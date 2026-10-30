@@ -361,6 +361,10 @@
     <string name="error_foto_sin_galeria">Non è disponibile nessuna galleria di immagini</string>
     <string name="error_foto_abrir_camara">Non è stato possibile aprire la fotocamera</string>
     <string name="error_foto_abrir_selector">Non è stato possibile aprire il selettore di immagini</string>
+    <string name="canal_tratamientos_nombre">Promemoria dei trattamenti</string>
+    <string name="canal_tratamientos_descripcion">Avvisi giornalieri per dare il farmaco in tempo</string>
+    <string name="canal_recordatorios_nombre">Promemoria di vaccini e preventivi</string>
+    <string name="canal_recordatorios_descripcion">Avvisi delle prossime dosi di vaccini e preventivi</string>
     <string name="error_cargar_ficha">Impossibile caricare la scheda: %1$s</string>
     <string name="error_guardar_dato">Salvataggio non riuscito: %1$s</string>
     <string name="error_borrar_dato">Eliminazione non riuscita: %1$s</string>

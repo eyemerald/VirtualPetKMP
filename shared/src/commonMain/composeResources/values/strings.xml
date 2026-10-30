@@ -366,6 +366,10 @@
     <string name="error_foto_sin_galeria">No image gallery is available</string>
     <string name="error_foto_abrir_camara">The camera could not be opened</string>
     <string name="error_foto_abrir_selector">The image picker could not be opened</string>
+    <string name="canal_tratamientos_nombre">Treatment reminders</string>
+    <string name="canal_tratamientos_descripcion">Daily reminders to give the medication on time</string>
+    <string name="canal_recordatorios_nombre">Vaccine and preventive reminders</string>
+    <string name="canal_recordatorios_descripcion">Reminders for upcoming vaccine and preventive doses</string>
 
     <!-- Errors from the pet record operations (vaccines, weights, notes, reports...) -->
     <string name="error_cargar_ficha">Could not load the record: %1$s</string>

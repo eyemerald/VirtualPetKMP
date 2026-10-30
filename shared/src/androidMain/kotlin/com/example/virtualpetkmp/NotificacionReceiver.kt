@@ -1,13 +1,11 @@
-package com.example.virtualpetkmp
+﻿package com.example.virtualpetkmp
 
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.virtualpetkmp.util.AvisoTratamiento
 import com.example.virtualpetkmp.util.Posposiciones
@@ -42,7 +40,9 @@ class NotificacionReceiver : BroadcastReceiver() {
 
         val canal = if (aviso != null) CANAL_TRATAMIENTOS else CANAL_RECORDATORIOS
         val gestor = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        asegurarCanal(gestor, canal)
+        // Nombre y descripción de los canales salen de los recursos de idioma. Se reescriben aquí
+        // para que un cambio de idioma del sistema se vea aunque la app lleve días cerrada.
+        crearCanalesDeNotificacion(context)
 
         val builder = NotificationCompat.Builder(context, canal)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
@@ -177,31 +177,7 @@ class NotificacionReceiver : BroadcastReceiver() {
         const val ACCION_ACEPTAR = "com.example.virtualpetkmp.ACEPTAR_RECORDATORIO"
         const val ACCION_POSPONER = "com.example.virtualpetkmp.POSPONER_RECORDATORIO"
 
-        /**
-         * Crea el canal si no existe.
-         *
-         * Android 8+ no muestra nada de un canal que no esté creado, y crear uno que ya existe no
-         * hace nada (no pisa la configuración del usuario), así que se puede llamar siempre.
-         */
-        fun asegurarCanal(gestor: NotificationManager, canalId: String) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-            if (gestor.getNotificationChannel(canalId) != null) return
 
-            val canal = NotificationChannel(
-                canalId,
-                when (canalId) {
-                    CANAL_TRATAMIENTOS -> "Recordatorios de tratamientos"
-                    else -> "Recordatorios de vacunas y preventivos"
-                },
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = when (canalId) {
-                    CANAL_TRATAMIENTOS -> "Avisos diarios para dar la medicación a tiempo"
-                    else -> "Avisos de las próximas dosis de vacunas y preventivos"
-                }
-            }
-            gestor.createNotificationChannel(canal)
-        }
     }
 }
 
