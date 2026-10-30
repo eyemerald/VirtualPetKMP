@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Lo mismo que `data_extraction_rules.xml`, pero para Android 8–11 (API 26-30), que usan
+  `android:fullBackupContent` en vez de `android:dataExtractionRules`.
+
+  Se excluye únicamente `files/copias`: son las copias automáticas que hace la app antes de
+  importar, es decir, una copia **de** los datos. La base de datos, las fotos y los informes sí
+  se incluyen.
+-->
+<full-backup-content>
+    <exclude domain="file" path="copias" />
+</full-backup-content>

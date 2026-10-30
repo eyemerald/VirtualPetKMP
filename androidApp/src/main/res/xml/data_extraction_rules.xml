@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Qué se manda a la copia de seguridad de Google (Android 12 / API 31 y superior).
+
+  Solo se excluye `files/copias`, que son las copias automáticas que la app se hace a sí misma
+  antes de importar (hasta 3 paquetes `.vpet` del tamaño de todos los datos). Esos ficheros son
+  una copia **de** los datos: subirlos duplicaría el respaldo y, con fotos y PDFs, se pasa del
+  límite de 25 MB por aplicación que impone Google.
+
+  Todo lo demás —la base de datos, las fotos de las mascotas y los informes adjuntos— **sí** se
+  copia: si el usuario cambia de móvil, la app se lo lleva todo.
+
+  El traspaso entre dispositivos (`device-transfer`) no lleva exclusiones a propósito: no pasa por
+  Google ni tiene límite de tamaño, y ahí interesa llevarse hasta las copias.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="copias" />
+    </cloud-backup>
+    <device-transfer>
+    </device-transfer>
+</data-extraction-rules>

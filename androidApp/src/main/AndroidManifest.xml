@@ -18,8 +18,17 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove"/>
 
+    <!--
+      Copia de seguridad del sistema ACTIVADA a propósito: si el usuario cambia de móvil o pierde
+      el suyo, Android le devuelve los datos. Lo único que se deja fuera es `files/copias` (las
+      copias automáticas de la app, que son una copia *de* los datos y harían que el respaldo se
+      pasara del límite de 25 MB). Ver `res/xml/data_extraction_rules.xml` (Android 12+) y
+      `res/xml/backup_rules.xml` (Android 8–11).
+    -->
     <application
             android:allowBackup="true"
+            android:dataExtractionRules="@xml/data_extraction_rules"
+            android:fullBackupContent="@xml/backup_rules"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_round"
