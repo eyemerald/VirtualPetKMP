@@ -30,6 +30,8 @@ dependencies {
 }
 
 android {
+    // `namespace` es el paquete **del código** (el del `R` generado y el de las clases). No se
+    // cambia: mover los paquetes del código no aporta nada y toca miles de líneas.
     namespace = "com.example.virtualpetkmp"
 
     // Misma lectura que en `:shared`, para que los dos módulos compilen contra lo mismo: se
@@ -47,7 +49,11 @@ android {
     compileSdk = apiCompilacion.substringBefore('.').toInt()
 
     defaultConfig {
-        applicationId = "com.example.virtualpetkmp"
+        // `applicationId` es la **identidad de la app** para Android y para Play: el id del
+        // paquete instalado, el de la ficha en la tienda y la clave de la firma. Es lo único que
+        // cambia para publicar. Ojo: para Android, un `applicationId` distinto es **otra app**,
+        // así que no hereda los datos de la instalación anterior (de ahí el traspaso con `.vpet`).
+        applicationId = "io.github.eyemerald.virtualpet"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         // Se sube en cada entrega a los testers: Android deja instalar la nueva versión ENCIMA de

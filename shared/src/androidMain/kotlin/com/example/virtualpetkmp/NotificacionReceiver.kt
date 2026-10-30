@@ -173,9 +173,15 @@ class NotificacionReceiver : BroadcastReceiver() {
         const val EXTRA_AVISO_MASCOTA_ID = "aviso_mascota_id"
         const val EXTRA_AVISO_TRATAMIENTO_ID = "aviso_tratamiento_id"
 
-        /** Acciones de los dos botones del aviso. */
-        const val ACCION_ACEPTAR = "com.example.virtualpetkmp.ACEPTAR_RECORDATORIO"
-        const val ACCION_POSPONER = "com.example.virtualpetkmp.POSPONER_RECORDATORIO"
+        /**
+         * Acciones de los dos botones del aviso.
+         *
+         * Llevan un prefijo propio y no el del paquete: son intents **explicitos** (van a nuestro
+         * AccionRecordatorioReceiver), así que no necesitan ser únicas en el sistema, y así no
+         * queda el identificador antiguo de la app escrito en el código.
+         */
+        const val ACCION_ACEPTAR = "virtualpet.ACEPTAR_RECORDATORIO"
+        const val ACCION_POSPONER = "virtualpet.POSPONER_RECORDATORIO"
 
 
     }
