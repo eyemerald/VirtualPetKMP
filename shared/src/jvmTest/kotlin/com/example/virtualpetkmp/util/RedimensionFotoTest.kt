@@ -16,17 +16,22 @@ import kotlin.test.assertTrue
  * Lo que se busca: **una sola regla, en una función pura**, para que la cuenta no viva dentro del
  * código de Android y de escritorio por separado (serían dos oportunidades de equivocarse).
  *
- * El lado máximo no es arbitrario: la foto se pinta como mucho a 84 dp y la densidad más alta que
- * usa Android en la práctica es 4,0 → 84 × 4,0 = 336 px.
+ * El punto de partida es la pantalla: la foto se pinta como mucho a 84 dp y la densidad más alta
+ * que usa Android hoy es 4,0 → 84 × 4,0 = 336 px. Se guarda a **640 px** a propósito: da margen
+ * para pantallas aún más densas, para el PDF de la ficha (46 dp impresos) y para fotos que algún
+ * día se enseñen más grandes.
  */
 class RedimensionFotoTest {
 
     private val ladoMaximo = LADO_MAXIMO_FOTO_MASCOTA
 
     @Test
-    fun `el lado maximo sale de 84 dp por densidad 4`() {
-        assertEquals(336, ladoMaximo, "el lado máximo tiene que derivarse de la pantalla, no elegirse a ojo")
-        assertEquals(84 * 4, ladoMaximo)
+    fun `el lado maximo es 640 y deja margen sobre 84 dp a densidad 4`() {
+        assertEquals(640, ladoMaximo)
+        assertTrue(
+            ladoMaximo >= 84 * 4,
+            "640 no puede quedarse por debajo de 84 dp a densidad 4,0 (serían 336 px)"
+        )
     }
 
     @Test
@@ -35,7 +40,7 @@ class RedimensionFotoTest {
         val destino = calcularDimensionesFoto(4000, 3000)
 
         assertEquals(ladoMaximo, destino.ancho, "el lado mayor tiene que quedar en el máximo")
-        assertEquals(252, destino.alto, "3000 * (336/4000) = 252")
+        assertEquals(480, destino.alto, "3000 * (640/4000) = 480")
         assertEquals(
             4000.0 / 3000.0,
             destino.ancho.toDouble() / destino.alto,
@@ -48,7 +53,7 @@ class RedimensionFotoTest {
     fun `una foto vertical se reduce por el lado mayor`() {
         val destino = calcularDimensionesFoto(3000, 4000)
 
-        assertEquals(252, destino.ancho)
+        assertEquals(480, destino.ancho)
         assertEquals(ladoMaximo, destino.alto, "en una vertical el máximo es el alto")
     }
 
@@ -88,7 +93,7 @@ class RedimensionFotoTest {
 
     @Test
     fun `el redondeo nunca deja un lado a cero`() {
-        // 5000x1 recortado a 336 dejaría el alto en 0,07 px: tiene que quedar al menos 1.
+        // 5000x1 recortado a 640 dejaría el alto en 0,128 px: tiene que quedar al menos 1.
         val destino = calcularDimensionesFoto(5000, 1)
 
         assertEquals(ladoMaximo, destino.ancho)
@@ -133,7 +138,7 @@ class RedimensionFotoTest {
         val despues = archivo.length()
         val imagen = ImageIO.read(archivo)
         assertEquals(ladoMaximo, imagen.width)
-        assertEquals(252, imagen.height)
+        assertEquals(480, imagen.height)
         assertTrue(despues < antes, "el fichero tiene que pesar menos ($antes -> $despues)")
     }
 

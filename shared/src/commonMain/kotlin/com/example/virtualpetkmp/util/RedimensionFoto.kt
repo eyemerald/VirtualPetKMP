@@ -5,19 +5,21 @@ import kotlin.math.roundToInt
 /**
  * Cuánto se reduce la foto de una mascota al guardarla.
  *
- * **De dónde sale [LADO_MAXIMO_FOTO_MASCOTA].** No es un número a ojo: la foto de la mascota se
- * pinta como mucho a **84 dp** de ancho (la cabecera de la ficha, `tamanoAvatar = 84.dp`), y la
- * densidad de pantalla más alta que usa Android en la práctica es **4,0** (xxxhdpi, 640 dpi). Por
- * encima de 84 × 4,0 = **336 px** de lado mayor, el sistema tendría que reducir la imagen para
- * pintarla: se estarían guardando megas que nunca se ven.
+ * **De dónde sale [LADO_MAXIMO_FOTO_MASCOTA].** La foto de la mascota se pinta como mucho a
+ * **84 dp** de ancho (la cabecera de la ficha, `tamanoAvatar = 84.dp`). Para verse nítida en una
+ * pantalla de alta densidad hay que guardar al menos ese tamaño en píxeles: 84 dp × 4,0 (xxxhdpi)
+ * = 336 px. Con **640 px** (1,9 veces eso) se gana margen para tres cosas concretas:
+ * 1. pantallas de densidad aún mayor y el reescalado del sistema;
+ * 2. la foto del **PDF** de la ficha, que se imprime a 46 dp: 640 px dan ~350 ppp en vez de ~180;
+ * 3. futuros tamaños de foto más grandes sin volver a tocar los ficheros guardados.
  *
- * Comprobado además que sigue dando calidad en el PDF: allí la foto se imprime a 46 dp (≈16 mm),
- * así que 336 px son más de 500 ppp.
+ * El coste está medido con fotos reales de 3072×4096: a 640 px cada foto pesa **~60-70 KB**
+ * (frente a ~20 KB a 336 px y 3,5 MB en origen), así que 40 mascotas con dos fotos son ~5 MB.
  *
- * Si algún día la foto se enseña más grande, hay que **volver a calcular** este número
+ * Si algún día la foto se enseña mucho más grande, hay que **volver a calcular** este número
  * (lado en dp × densidad) y actualizar el test.
  */
-const val LADO_MAXIMO_FOTO_MASCOTA = 336
+const val LADO_MAXIMO_FOTO_MASCOTA = 640
 
 /** Ancho y alto en píxeles. `ancho <= 0` o `alto <= 0` significa "no hay imagen válida". */
 data class DimensionesFoto(val ancho: Int, val alto: Int)
