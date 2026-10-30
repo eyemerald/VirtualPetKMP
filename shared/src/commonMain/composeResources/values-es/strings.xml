@@ -355,6 +355,13 @@
     <string name="error_id_requerido">Se necesita un id para actualizar</string>
     <string name="error_desconocido">Error desconocido</string>
     <string name="error_inesperado">Ha ocurrido un error inesperado</string>
+    <string name="error_foto_copiar">No se pudo copiar la imagen seleccionada</string>
+    <string name="error_foto_leer">No se pudo leer la imagen</string>
+    <string name="error_foto_guardar_camara">No se pudo guardar la foto hecha con la cámara</string>
+    <string name="error_foto_camara_sin_imagen">La cámara no devolvió ninguna imagen</string>
+    <string name="error_foto_sin_galeria">No hay ninguna galería de imágenes disponible</string>
+    <string name="error_foto_abrir_camara">No se pudo abrir la cámara</string>
+    <string name="error_foto_abrir_selector">No se pudo abrir el selector de imágenes</string>
 
     <!-- Errores de las operaciones de la ficha (vacunas, pesos, notas, informes...) -->
     <string name="error_cargar_ficha">No se pudo cargar la ficha: %1$s</string>

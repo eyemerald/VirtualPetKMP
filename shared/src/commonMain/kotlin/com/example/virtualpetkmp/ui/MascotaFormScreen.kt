@@ -23,6 +23,8 @@ import com.example.virtualpetkmp.util.UnidadPeso
 import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.util.parseFechaLocalizada
 import com.example.virtualpetkmp.util.parseKilos
+import com.example.virtualpetkmp.util.ErrorFoto
+import com.example.virtualpetkmp.util.claveDeErrorFoto
 import com.example.virtualpetkmp.util.rememberFotoMascota
 import com.example.virtualpetkmp.viewmodel.MascotaViewModel
 import kotlinx.datetime.Clock
@@ -101,7 +103,7 @@ fun MascotaFormScreen(
     // Foto de la mascota: ruta local de la copia guardada por la app.
     var rutaFoto by rememberSaveable { mutableStateOf<String?>(null) }
     var mostrarOpcionesFoto by rememberSaveable { mutableStateOf(false) }
-    var errorFoto by remember { mutableStateOf<String?>(null) }
+    var errorFoto by remember { mutableStateOf<ErrorFoto?>(null) }
 
     val accionesFoto = rememberFotoMascota(
         onFotoSeleccionada = { foto ->
@@ -109,8 +111,8 @@ fun MascotaFormScreen(
             rutaFoto = foto.ruta
             mostrarOpcionesFoto = false
         },
-        onError = { mensaje ->
-            errorFoto = mensaje
+        onError = { motivo ->
+            errorFoto = motivo
             mostrarOpcionesFoto = false
         }
     )
@@ -231,7 +233,7 @@ fun MascotaFormScreen(
                 if (errorFoto != null) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = errorFoto!!,
+                        text = stringResource(claveDeErrorFoto(errorFoto!!)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )

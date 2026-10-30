@@ -17,7 +17,7 @@ private const val CARPETA_FOTOS = "fotos"
 @Composable
 actual fun rememberFotoMascota(
     onFotoSeleccionada: (FotoSeleccionada) -> Unit,
-    onError: (String) -> Unit
+    onError: (ErrorFoto) -> Unit
 ): AccionesFotoMascota {
     val context = LocalContext.current
 
@@ -35,10 +35,11 @@ actual fun rememberFotoMascota(
                 if (ruta != null) {
                     onFotoSeleccionada(FotoSeleccionada(ruta = ruta, nombre = nombreOriginal))
                 } else {
-                    onError("No se pudo copiar la imagen seleccionada")
+                    onError(ErrorFoto.COPIAR)
                 }
             } catch (e: Exception) {
-                onError("Error al leer la imagen: ${e.message ?: "desconocido"}")
+                registrarFallo(e)
+                onError(ErrorFoto.LEER)
             }
         }
     }
@@ -56,14 +57,15 @@ actual fun rememberFotoMascota(
                 if (ruta != null) {
                     onFotoSeleccionada(FotoSeleccionada(ruta = ruta, nombre = "Foto de cámara"))
                 } else {
-                    onError("No se pudo guardar la foto hecha con la cámara")
+                    onError(ErrorFoto.GUARDAR_CAMARA)
                 }
             } else {
                 archivo.delete()
-                onError("La cámara no devolvió ninguna imagen")
+                onError(ErrorFoto.CAMARA_SIN_IMAGEN)
             }
         } catch (e: Exception) {
-            onError("Error al guardar la foto: ${e.message ?: "desconocido"}")
+            registrarFallo(e)
+            onError(ErrorFoto.GUARDAR_CAMARA)
         }
     }
 
@@ -73,7 +75,8 @@ actual fun rememberFotoMascota(
                 try {
                     launcherGaleria.launch("image/*")
                 } catch (e: Exception) {
-                    onError("No hay ninguna galería disponible: ${e.message ?: "desconocido"}")
+                    registrarFallo(e)
+                    onError(ErrorFoto.SIN_GALERIA)
                 }
             },
             hacerFoto = {
@@ -91,7 +94,8 @@ actual fun rememberFotoMascota(
                     launcherCamara.launch(uri)
                 } catch (e: Exception) {
                     archivoCamara[0] = null
-                    onError("No se pudo abrir la cámara: ${e.message ?: "desconocido"}")
+                    registrarFallo(e)
+                    onError(ErrorFoto.ABRIR_CAMARA)
                 }
             }
         )

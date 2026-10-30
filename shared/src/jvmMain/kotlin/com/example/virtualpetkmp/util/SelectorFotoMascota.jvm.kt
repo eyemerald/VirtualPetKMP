@@ -8,7 +8,7 @@ import javax.swing.filechooser.FileNameExtensionFilter
 @Composable
 actual fun rememberFotoMascota(
     onFotoSeleccionada: (FotoSeleccionada) -> Unit,
-    onError: (String) -> Unit
+    onError: (ErrorFoto) -> Unit
 ): AccionesFotoMascota {
     return AccionesFotoMascota(
         elegirDeArchivos = {
@@ -29,12 +29,13 @@ actual fun rememberFotoMascota(
                         if (ruta != null) {
                             onFotoSeleccionada(FotoSeleccionada(ruta = ruta, nombre = archivo.name))
                         } else {
-                            onError("No se pudo copiar la imagen seleccionada")
+                            onError(ErrorFoto.COPIAR)
                         }
                     }
                 }
             } catch (e: Exception) {
-                onError("No se pudo abrir el selector de imágenes: ${e.message ?: "desconocido"}")
+                registrarFallo(e)
+                onError(ErrorFoto.ABRIR_SELECTOR)
             }
         },
         // En escritorio no se integra cámara: el botón de hacer foto se oculta.
@@ -56,7 +57,7 @@ private fun copiarALocal(archivoOriginal: File): String? {
 
         destino.absolutePath
     } catch (e: Exception) {
-        println("Error copiando foto a local en JVM: ${e.message}")
+        registrarFallo(e)
         null
     }
 }

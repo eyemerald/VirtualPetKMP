@@ -358,6 +358,13 @@
     <string name="error_id_requerido">Zum Aktualisieren ist eine ID nötig</string>
     <string name="error_desconocido">Unbekannter Fehler</string>
     <string name="error_inesperado">Ein unerwarteter Fehler ist aufgetreten</string>
+    <string name="error_foto_copiar">Das ausgewählte Bild konnte nicht kopiert werden</string>
+    <string name="error_foto_leer">Das Bild konnte nicht gelesen werden</string>
+    <string name="error_foto_guardar_camara">Das Foto konnte nicht gespeichert werden</string>
+    <string name="error_foto_camara_sin_imagen">Die Kamera hat kein Bild geliefert</string>
+    <string name="error_foto_sin_galeria">Es ist keine Bildergalerie verfügbar</string>
+    <string name="error_foto_abrir_camara">Die Kamera konnte nicht geöffnet werden</string>
+    <string name="error_foto_abrir_selector">Die Bildauswahl konnte nicht geöffnet werden</string>
     <string name="error_cargar_ficha">Akte konnte nicht geladen werden: %1$s</string>
     <string name="error_guardar_dato">Speichern fehlgeschlagen: %1$s</string>
     <string name="error_borrar_dato">Löschen fehlgeschlagen: %1$s</string>

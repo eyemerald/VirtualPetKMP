@@ -354,6 +354,13 @@
     <string name="error_id_requerido">Serve un id per aggiornare</string>
     <string name="error_desconocido">Errore sconosciuto</string>
     <string name="error_inesperado">Si è verificato un errore imprevisto</string>
+    <string name="error_foto_copiar">Non è stato possibile copiare l'immagine selezionata</string>
+    <string name="error_foto_leer">Non è stato possibile leggere l'immagine</string>
+    <string name="error_foto_guardar_camara">Non è stato possibile salvare la foto</string>
+    <string name="error_foto_camara_sin_imagen">La fotocamera non ha restituito nessuna immagine</string>
+    <string name="error_foto_sin_galeria">Non è disponibile nessuna galleria di immagini</string>
+    <string name="error_foto_abrir_camara">Non è stato possibile aprire la fotocamera</string>
+    <string name="error_foto_abrir_selector">Non è stato possibile aprire il selettore di immagini</string>
     <string name="error_cargar_ficha">Impossibile caricare la scheda: %1$s</string>
     <string name="error_guardar_dato">Salvataggio non riuscito: %1$s</string>
     <string name="error_borrar_dato">Eliminazione non riuscita: %1$s</string>

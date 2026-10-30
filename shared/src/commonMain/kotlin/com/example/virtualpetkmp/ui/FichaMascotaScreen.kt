@@ -55,6 +55,8 @@ import com.example.virtualpetkmp.util.localizacion
 import com.example.virtualpetkmp.util.nombreArchivoPdf
 import com.example.virtualpetkmp.util.rememberAbridorArchivo
 import com.example.virtualpetkmp.util.rememberCompartidorArchivo
+import com.example.virtualpetkmp.util.ErrorFoto
+import com.example.virtualpetkmp.util.claveDeErrorFoto
 import com.example.virtualpetkmp.util.rememberFotoMascota
 import com.example.virtualpetkmp.util.rememberSelectorDestino
 import com.example.virtualpetkmp.util.toFormatoEuropeo
@@ -242,7 +244,7 @@ fun FichaMascotaScreen(
     // al instante, y se sincroniza con la mascota cuando llega una versión nueva desde la BD.
     var rutaFoto by rememberSaveable(mascota.id) { mutableStateOf(mascota.foto) }
     var mostrarOpcionesFoto by rememberSaveable { mutableStateOf(false) }
-    var errorFoto by remember { mutableStateOf<String?>(null) }
+    var errorFoto by remember { mutableStateOf<ErrorFoto?>(null) }
 
     LaunchedEffect(mascota.foto) {
         rutaFoto = mascota.foto
@@ -259,8 +261,8 @@ fun FichaMascotaScreen(
                 scope.launch { mascotaViewModel.updateFoto(id, foto.ruta) }
             }
         },
-        onError = { mensaje ->
-            errorFoto = mensaje
+        onError = { motivo ->
+            errorFoto = motivo
             mostrarOpcionesFoto = false
         }
     )
@@ -472,7 +474,7 @@ fun FichaMascotaScreen(
 
         if (errorFoto != null) {
             item(key = "error-foto") {
-                ErrorFotoTexto(errorFoto!!)
+                ErrorFotoTexto(stringResource(claveDeErrorFoto(errorFoto!!)))
             }
         }
 
@@ -545,7 +547,7 @@ fun FichaMascotaScreen(
                         }
                     )
 
-                    errorFoto?.let { ErrorFotoTexto(it) }
+                    errorFoto?.let { ErrorFotoTexto(stringResource(claveDeErrorFoto(it))) }
                 }
 
                 VerticalDivider(

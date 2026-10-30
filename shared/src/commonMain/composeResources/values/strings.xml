@@ -359,6 +359,13 @@
     <string name="error_id_requerido">An id is required to update</string>
     <string name="error_desconocido">Unknown error</string>
     <string name="error_inesperado">Something went wrong</string>
+    <string name="error_foto_copiar">The selected image could not be copied</string>
+    <string name="error_foto_leer">The image could not be read</string>
+    <string name="error_foto_guardar_camara">The photo could not be saved</string>
+    <string name="error_foto_camara_sin_imagen">The camera returned no image</string>
+    <string name="error_foto_sin_galeria">No image gallery is available</string>
+    <string name="error_foto_abrir_camara">The camera could not be opened</string>
+    <string name="error_foto_abrir_selector">The image picker could not be opened</string>
 
     <!-- Errors from the pet record operations (vaccines, weights, notes, reports...) -->
     <string name="error_cargar_ficha">Could not load the record: %1$s</string>

@@ -357,6 +357,13 @@
     <string name="error_id_requerido">É necessário um id para atualizar</string>
     <string name="error_desconocido">Erro desconhecido</string>
     <string name="error_inesperado">Ocorreu um erro inesperado</string>
+    <string name="error_foto_copiar">Não foi possível copiar a imagem selecionada</string>
+    <string name="error_foto_leer">Não foi possível ler a imagem</string>
+    <string name="error_foto_guardar_camara">Não foi possível guardar a fotografia</string>
+    <string name="error_foto_camara_sin_imagen">A câmara não devolveu nenhuma imagem</string>
+    <string name="error_foto_sin_galeria">Não há nenhuma galeria de imagens disponível</string>
+    <string name="error_foto_abrir_camara">Não foi possível abrir a câmara</string>
+    <string name="error_foto_abrir_selector">Não foi possível abrir o seletor de imagens</string>
     <string name="error_cargar_ficha">Não foi possível carregar a ficha: %1$s</string>
     <string name="error_guardar_dato">Não foi possível guardar: %1$s</string>
     <string name="error_borrar_dato">Não foi possível apagar: %1$s</string>
