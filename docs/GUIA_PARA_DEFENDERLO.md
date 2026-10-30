@@ -24,7 +24,7 @@
 13. [La interfaz: decisiones que se notan al usarla](#13-la-interfaz-decisiones-que-se-notan-al-usarla)
 14. [La app de escritorio y su instalador](#14-la-app-de-escritorio-y-su-instalador)
 15. [Firma y distribución: por qué el keystore es sagrado](#15-firma-y-distribución-por-qué-el-keystore-es-sagrado)
-16. [Las 246 pruebas: qué se prueba, qué no y por qué](#16-las-246-pruebas-qué-se-prueba-qué-no-y-por-qué)
+16. [Las 267 pruebas: qué se prueba, qué no y por qué](#16-las-267-pruebas-qué-se-prueba-qué-no-y-por-qué)
 17. [El flujo de entrega, comando a comando](#17-el-flujo-de-entrega-comando-a-comando)
 18. [Preguntas difíciles y su respuesta](#18-preguntas-difíciles-y-su-respuesta)
 19. [Debilidades conocidas (dilas tú antes de que las digan)](#19-debilidades-conocidas-dilas-tú-antes-de-que-las-digan)
@@ -32,6 +32,7 @@
 21. [Mapa: "si te preguntan por X, está en Y"](#21-mapa-si-te-preguntan-por-x-está-en-y)
 22. [Chuleta de comandos](#22-chuleta-de-comandos)
 23. [Glosario](#23-glosario)
+24. [Apéndice: cómo he comprobado cada cifra](#24-apéndice-cómo-he-comprobado-cada-cifra)
 
 ---
 
@@ -40,10 +41,12 @@
 > "Es un diario de salud para mascotas que funciona **sin servidores y sin cuenta**: los datos son
 > de quien los tiene en el móvil. Lo escribí **una sola vez en Kotlin Multiplatform** y sale para
 > **Android y Windows**, con la interfaz en Compose. La base de datos es SQLite con migraciones
-> versionadas y **246 pruebas automáticas**; el traspaso entre dispositivos es un archivo `.vpet`
+> versionadas y **267 pruebas automáticas**; el traspaso entre dispositivos es un archivo `.vpet`
 > (un ZIP con JSON y los adjuntos) que se puede restaurar, fusionar o deshacer, y **nunca borra
-> nada sin haber hecho antes una copia**. Son ~24.000 líneas de Kotlin en 154 ficheros, el 90 %
-> compartido entre las dos plataformas."
+> nada sin haber hecho antes una copia**. Son **25.372 líneas de Kotlin en 161 ficheros**, y el
+> **83,3 % del código de producción es común** a las dos plataformas (15.894 de 19.072 líneas)."
+
+> Las cifras se miden, no se recuerdan: el apéndice del final dice con qué comando sale cada una.
 
 Si te dejan 3 minutos más, añade:
 
@@ -157,8 +160,13 @@ paso se pueda probar antes de seguir:
 1. **Esquema primero.** Los 9 ficheros `.sq` (`mascotas`, `vacunas`, `preventivos`, `revisiones`,
    `tratamientos`, `pesos`, `informes`, `notas`, `veterinarios`); las **7 que cuelgan de `mascotas`
    con `FOREIGN KEY ... ON DELETE CASCADE`**. Sin tablas no hay nada que mostrar.
-2. **Migraciones desde el día 1.** `1.sqm` … `14.sqm`. La app nació sabiendo que habría versiones
-   siguientes: no se añadió la primera migración cuando ya había datos, se añadió antes.
+2. **Migraciones.** `1.sqm` … `14.sqm`. Aquí conviene ser exacto porque es una lección, no un
+   mérito: **el primer `.sqm` no llegó el día 1**. El repositorio empieza el **2026-09-04** y
+   `1.sqm` se añade el **2026-09-16** (commit `5aa7c2a`), **12 días después**. Durante esos días la
+   base de datos no tenía marcador de versión (`user_version`), y de ahí viene una limitación que
+   sigue en el código: un fichero con `user_version = 0` y tablas ya creadas entra por la rama
+   "base nueva" y falla al crear. Lo correcto habría sido **el marcador y el primer `.sqm` en el
+   mismo commit que el esquema**.
 3. **Repositorios** (9): uno por tabla, con las consultas que la app necesita de verdad, más
    `actualizadoEn` en cada escritura (esto se convierte en obligatorio después, con el traspaso).
 4. **ViewModels** (3): el estado de la pantalla y las reglas de presentación (resumen de la ficha,
@@ -194,10 +202,12 @@ la base de datos en ambos**. Con eso, las opciones eran:
 | **Tauri / Electron** | La app de escritorio sería web; la de móvil, otra cosa. Y las notificaciones exactas de Android seguirían siendo nativas. |
 | **Kotlin Multiplatform + Compose Multiplatform** | Un lenguaje, un modelo de datos, un esquema SQL y **una sola UI**: las mismas pantallas se pintan en Android y en escritorio. `expect`/`actual` queda reducido a lo que de verdad es distinto (ficheros, notificaciones, selector de archivos). |
 
-Lo que se demuestra con datos: `shared/` tiene **20 ficheros de UI y 32 de utilidades
-compartidas**, y los dos envoltorios son **un fichero Kotlin cada uno** (`MainActivity.kt` y
-`main.kt`) más su configuración. El producto está escrito prácticamente una sola vez. Ahí está la
-respuesta a "¿esto cuánto trabajo tiene?": escribir una pantalla cuesta una pantalla, no dos.
+Lo que se demuestra con datos: `shared/` tiene **22 ficheros de UI** (20 pantallas/componentes + 2 del
+tema) **y 33 de utilidades compartidas** (más 6 del paquete de copia), y los dos envoltorios son **un
+fichero Kotlin cada uno** (`MainActivity.kt` y `main.kt`) más su configuración. El producto está
+escrito prácticamente una sola vez (15.894 de las 19.072 líneas de producción son comunes: **83,3 %**).
+Ahí está la respuesta a "¿esto cuánto trabajo tiene?": escribir una pantalla cuesta una pantalla, no
+dos.
 
 ---
 
@@ -205,16 +215,24 @@ respuesta a "¿esto cuánto trabajo tiene?": escribir una pantalla cuesta una pa
 
 Es una decisión de **alcance**, no técnica, y conviene decirla así:
 
-- iOS no se puede compilar ni probar aquí (hace falta un Mac y un dispositivo). Entregar iOS sin
+- iOS no se puede compilar ni probar aquí (hace falta un Mac y un dispositivo): **[NO VERIFICADO]**. Entregar iOS sin
   haberlo ejecutado nunca sería mentir.
-- El código **ya está preparado**: todo `shared/commonMain` es común, y lo específico está aislado
-  en `expect`/`actual` (leer/escribir ficheros, selector de archivos, compartir, notificaciones,
-  versión de la app). Añadir `iosMain` es escribir esos ~14 `actual` y una pantalla de entrada, no
-  reescribir la app.
-- Lo que sí faltaría de verdad: `AlarmManager` equivalente (notificaciones locales), selector de
-  archivos (`UIDocumentPicker`) y un `.ipa` firmado. Es trabajo de días, no de meses.
+- **Lo que está comprobado:** en `shared/build.gradle.kts` solo hay dos targets, `androidLibrary`
+  y `jvm()` — **no existe `iosMain`**. Lo específico de plataforma son **43 `expect` en 14
+  ficheros** (`Archivos.kt` 18, `AccionesSistema.kt` 6, `SelectorArchivo.kt` 4, y el resto repartido):
+  ficheros, selector, compartir, notificaciones, versión de la app.
+- **Lo que NO está listo, y antes se decía en esta guía:** `commonMain` usa
+  `java.io.File` (`util/ImagenMascota.kt:4`), así que ese fichero no compila para iOS tal cual; y la
+  librería del PDF, `io.github.rikoappdev:compose-pdf:0.9.0`, **solo publica variantes `-android` y
+  `-jvm`** (no hay artefactos iOS). Añadir el target iOS hoy **no compila**: hay que sacar ese
+  `java.io.File` de común, elegir otra librería de PDF (o aislarla) y escribir los `actual` de iOS,
+  incluida la generación del PDF.
+- Y falta además lo que no se puede probar sin dispositivo: notificaciones locales equivalentes a
+  `AlarmManager`, selector de documentos (`UIDocumentPicker`) y un `.ipa` firmado. Sigue siendo
+  trabajo de días, no de meses, pero **no es "poner un target"**.
 
-Frase para usar: **"la plataforma que falta es un target, no un proyecto distinto"**.
+Frase corregida para usar: **"la plataforma que falta es un target y tres piezas de plataforma;
+el 83 % del código ya es común, pero hay dos dependencias que hoy lo impiden"**.
 
 ---
 
@@ -243,25 +261,24 @@ los `build.gradle.kts`, salvo dos excepciones documentadas abajo.
 | **Compose Multiplatform** | 1.9.3 | Es el par estable con el que está construido: CMP 1.9.3 + Material 3 1.9.0 + Kotlin 2.2.10. Subir uno obliga a revisar los otros dos y el generador de recursos. | Es lo que permite que la UI de Android y la de escritorio sean **el mismo código**. |
 | **Material 3** | 1.9.0 | Artefacto `org.jetbrains.compose.material3`, que se versiona aparte de CMP. | M3 no es capricho: `Scaffold`, `NavigationBar`, `AlertDialog` y el sistema de color ya vienen con accesibilidad y tema oscuro. |
 | **material-icons-extended** | 1.7.3 | **Fijado a mano a propósito.** JetBrains congeló ese artefacto en la rama 1.7 (el atajo `compose.materialIconsExtended` ya ni se expone y el proyecto está *deprecado*), así que su número no acompaña al resto de Compose. | Es la única entrada del catálogo con una versión "vieja": no es un descuido, es la última que se publicó. Si algún día se quita, hay que sustituir los iconos por `Icons.Default.*` de core o por vectoriales propios. |
-| **SQLDelight** | 2.3.2 | Genera clases Kotlin **tipadas** desde el SQL y sus migraciones son ficheros `.sqm` que se pueden leer y probar. | Ver §9: es la razón de no usar Room. |
+| **SQLDelight** | 2.3.2 | Genera clases Kotlin **tipadas** desde el SQL y sus migraciones son ficheros `.sqm` que se pueden leer y probar. | Ver §9: es la razón de no usar Room. **Escritorio y Android usan ya la misma versión** (antes el driver JDBC estaba fijado a 2.0.0 en el `build.gradle.kts`). |
 | **kotlinx-coroutines** | 1.8.0 | La que arrastra CMP 1.9 de forma transitiva. | Subirla sola no aporta y puede chocar con lo que espera CMP. |
 | **kotlinx-datetime** | `0.7.1-0.6.x-compat` | La 0.7 movió `Instant` a `kotlin.time`. El artefacto **de compatibilidad** mantiene `kotlinx.datetime.Instant` y `toInstant()`, que es lo que usa el código. | Reescribir 30 ficheros antes de una entrega no compensa; cuando toque, se migra de una vez y se quita el sufijo. |
 | **kotlinx-serialization-json** | 1.9.0 | El `.vpet` guarda `datos.json` y `manifiesto.json`. | Escribir y parsear JSON a mano es exactamente lo que no puede fallar cuando están en juego los datos de alguien. El lector es **tolerante** (`ignoreUnknownKeys`): un campo nuevo de una versión futura no rompe la lectura. |
-| **compose-pdf** (rikoappdev) | 0.9.0 | Genera PDF **desde código común**, así que el PDF es el mismo en Android y en escritorio, y se puede **recorrer en un test** (`previewPages`) para comprobar que el texto está y en qué orden. | Hay 36 pruebas de PDF (`ContenidoPdfTest` 28 + `ExportadorPdfTest` 8): el PDF no se "mira", se verifica. |
-| **lifecycle-viewmodel-compose** | 2.9.0 | Declarada en el catálogo. | **No se usa hoy**: los ViewModels son clases normales creadas con `remember`. Se queda en el catálogo como intención, no como dependencia. |
+| **compose-pdf** (rikoappdev) | 0.9.0 | Genera PDF **desde código común**, así que el PDF es el mismo en Android y en escritorio, y se puede **recorrer en un test** (`previewPages`) para comprobar que el texto está y en qué orden. | Hay 36 pruebas de PDF (`ContenidoPdfTest` 28 + `ExportadorPdfTest` 8): el PDF no se "mira", se verifica. **Ojo:** solo publica variantes `-android` y `-jvm`, así que hoy bloquea el target iOS. |
 
-### Las dos excepciones (dilas tú, no dejes que las encuentren)
+### Lo que antes eran "dos excepciones" ya está arreglado (revisión 1.13)
 
-1. **`shared/build.gradle.kts` fija `app.cash.sqldelight:sqlite-driver:2.0.0` a mano** en
-   `jvmMain`, mientras el catálogo tiene la 2.3.2. Funciona (tests y app de escritorio en
-   producción), pero es una inconsistencia real: lo correcto es `libs.sqldelight.sqlite.driver`.
-   Está apuntado como deuda; cambiarlo implica regenerar el ejecutable de escritorio, así que se
-   hace con subida de versión, no de tapadillo.
-2. **El catálogo conserva entradas heredadas de la plantilla KMP que ningún módulo usa**:
-   `pdfkmp`, `androidx-appcompat`, `androidx-espresso-core`, `androidx-testExt-junit`,
-   `kotlin-testJunit`, `junit`, `sqldelight-native-driver`. Borrarlas no cambia nada del build
-   (ningún `build.gradle.kts` las referencia), pero mientras estén, la respuesta honesta es "es
-   limpieza pendiente del catálogo, no una dependencia del producto".
+1. **El driver de escritorio estaba fijado a mano a `sqlite-driver:2.0.0`** mientras el catálogo
+   decía 2.3.2 (así desde el primer commit). Ahora usa `libs.sqldelight.sqlite.driver`, o sea la
+   2.3.2, y eso sube también el motor SQLite de escritorio de **3.42.0.0 a 3.51.3.0**. Los 267
+   tests pasan; el ejecutable empaquetado se arrancó a mano contra una copia de la base real y
+   abrió bien. **Lo que queda por probar es el `.exe` instalado en Windows** (ver lista de pruebas
+   manuales al final).
+2. **Las 9 entradas muertas del catálogo** (`pdfkmp`, `androidx-appcompat`, `androidx-espresso-core`,
+   `androidx-testExt-junit`, `kotlin-testJunit`, `junit`, `sqldelight-native-driver`, y las dos de
+   lifecycle) y las 5 versiones que solo usaban ellas: **borradas**. El build no cambia porque
+   ningún `build.gradle.kts` las referenciaba.
 
 ---
 
@@ -279,20 +296,24 @@ SQLDelight            db/             VirtualPetDatabase (generado)
 SQLite                virtualpet.db
 ```
 
-**Cómo se inyecta todo:** no hay framework de DI. En `App.kt` se crean los 9 repositorios y 3
-ViewModels con `remember`: **12 objetos** (más la base de datos) que caben en 20 líneas. Hilt o Koin
-aquí añadirían un plugin de compilación, anotaciones y un tiempo de build mayor para resolver algo
-que `remember` ya resuelve. Si mañana hay 40 dependencias, se cambia; hoy sería ceremonia.
+**Cómo se inyecta todo:** no hay framework de DI. En `App.kt` se crean todas las dependencias con
+`remember`: **14 piezas** — 9 repositorios + 3 ViewModels + el programador de notificaciones + la
+base de datos — y caben en 20 líneas. (En esta guía ponía "12" y luego "13": el criterio correcto es
+contar la base de datos y el programador, que también se construyen ahí; el comando del apéndice lo
+saca de `App.kt`.) Hilt o Koin aquí añadirían un plugin de compilación, anotaciones y un tiempo de
+build mayor para resolver algo que `remember` ya resuelve. Si mañana hay 40 dependencias, se cambia;
+hoy sería ceremonia.
 
 **Lo que sí está separado de verdad y por qué:**
 
-- **`util/` (32 ficheros comunes)**: todo lo que tiene lógica propia y se puede probar sin pantalla:
-  `EscalaPeso`, `SeriesPeso`, `FiltrosPeso`, `TraduccionesDatos`, `Localizacion`, `Posposiciones`,
-  `PreferenciaVista`, el paquete de copia (`util/copia/`, 6 ficheros), etc. **Regla del proyecto:
-  si tiene un `if` que puede fallar, va aquí y lleva test.**
+- **`util/` (33 ficheros comunes + 6 del paquete de copia)**: todo lo que tiene lógica propia y se
+  puede probar sin pantalla: `EscalaPeso`, `SeriesPeso`, `FiltrosPeso`, `TraduccionesDatos`,
+  `Localizacion`, `Posposiciones`, `PreferenciaVista`, `RedimensionFoto`, etc. **Regla del
+  proyecto: si tiene un `if` que puede fallar, va aquí y lleva test.**
 - **`expect`/`actual` (lo único distinto por plataforma)**: leer/escribir bytes, listar carpeta,
   SHA-256, ZIP, `DatabaseFactory`, selector de archivo, compartir, programador de notificaciones,
-  versión de la app. Ahí están **20 ficheros en `androidMain` y 16 en `jvmMain`**.
+  reducción de fotos, versión de la app. Son **44 declaraciones `expect` en 14 ficheros**, con sus
+  `actual` repartidos en **21 ficheros de `androidMain` y 18 de `jvmMain`**.
   **Nada de lógica de negocio ahí.**
 - **`Localizacion` y `TraduccionesDatos`**: se decide **una sola vez** en `App.kt` y se publica con
   un `CompositionLocal`, para que no haya dos pantallas que opinen distinto sobre kilos/libras o
@@ -316,16 +337,37 @@ son ficheros SQL que se leen y se prueban**:
 
 **Los tres detalles que casi nadie tiene y que aquí sí:**
 
-1. **`SqlSchemaDelegado`** envuelve el esquema. Sin envolverlo, el driver abre el fichero y las
-   migraciones `.sqm` **no se aplican**: te encuentras un esquema viejo (columnas que faltan) al
-   arrancar. Está explicado en `data/DatabaseFactory.kt`.
-2. **`PRAGMA foreign_keys = ON`** explícito: SQLite las tiene **desactivadas** por defecto, así que
-   el `ON DELETE CASCADE` de las **7 tablas hijas** (todas las que cuelgan de `mascotas`) no borraba
-   nada. Fue un fallo real: borrabas una mascota y quedaban sus vacunas huérfanas.
-3. **En escritorio, `PRAGMA user_version` se marca a mano.** El driver de Android lo actualiza;
-   el de JDBC **no**. Sin marcarlo, el fichero se quedaba en versión 0 y cada arranque intentaba
-   crear las tablas otra vez. Por eso `abrirBaseDeDatos()` es una función aparte y **probable con
-   un driver en memoria**.
+1. **`SqlSchemaDelegado` ya no existe** (revisión 1.13). Era un envoltorio vacío: reenviaba
+   `version`, `create` y `migrate` sin añadir nada, y su KDoc decía que **sin él** las migraciones
+   no se aplicarían. Se comprobó borrándolo y pasando `VirtualPetDatabase.Schema` directo: los 246
+   tests de entonces (eran los de la 1.12) seguían en verde. Lo que de verdad aplica las migraciones es
+   `abrirBaseDeDatos()` llamando a `esquema.migrate(...)`, y en Android el
+   `AndroidSqliteDriver.Callback`. **Si alguien encuentra `SqlSchemaDelegado` en un tutorial o en
+   una versión antigua: no hacía nada.**
+2. **`PRAGMA foreign_keys` es de cada conexión, no de la base de datos.** Esto fue el fallo grave:
+   en escritorio, `JdbcSqliteDriver` abre **una conexión nueva por sentencia** (su
+   `ThreadedConnectionManager` cierra y olvida la conexión cuando la sentencia no va en una
+   transacción, verificado en el bytecode), así que el `PRAGMA` ejecutado una vez al abrir no
+   llegaba a los borrados de `Dispatchers.IO`: el `ON DELETE CASCADE` de las **7 tablas hijas** no
+   se aplicaba y cada mascota borrada dejaba huérfanas sus vacunas, pesos, informes… **Reproducido
+   con 19 filas** sobre una copia de la base real y arreglado de dos formas:
+   - Escritorio: `Properties(foreign_keys=true)` al `DriverManager`, así **todas** las conexiones
+     nacen con las claves foráneas activas. Test con base **en fichero** que borra por el
+     repositorio y comprueba 0 huérfanas en las 7 tablas (antes fallaba).
+   - Android: `setForeignKeyConstraintsEnabled(true)` desde `onConfigure` del `Callback`, que es
+     configuración del **pool** de conexiones (antes había un `PRAGMA` suelto que funcionaba solo
+     por cómo ordena Android sus escrituras). Verificado en el emulador borrando una mascota con 19
+     filas hijas desde la interfaz: 0 huérfanas.
+   - Y como ya había ficheros con huérfanas, al abrir se hace **una limpieza única**: si
+     `PRAGMA foreign_key_check` devuelve filas, se copia el `.db` a
+     `virtualpet-antes-de-limpiar.db`, se borran en una transacción y se deja constancia en consola.
+3. **En escritorio, `PRAGMA user_version` se marca a mano.** El driver de Android lo actualiza; el
+   de JDBC **no**. Sin marcarlo, el fichero se quedaba en versión 0 y cada arranque intentaba crear
+   las tablas otra vez. Por eso `abrirBaseDeDatos()` es una función aparte y **probable con un
+   driver en memoria**. Ahora ese marcador **solo sube**: si el fichero es más nuevo que la app, no
+   se toca nada y se lanza `BaseDeDatosMasNuevaException` (mensaje en español); y antes de migrar se
+   copia el fichero a `virtualpet-antes-de-migrar-vN.db` y la migración va **en una transacción**
+   (`migrate` + `user_version`), así que o entra entera o no cambia nada.
 
 **Migraciones aditivas siempre.** Ninguna migración borra ni renombra datos del usuario: se añaden
 columnas (con valor por defecto o relleno) y se crean índices con `IF NOT EXISTS`. La 13 rellenó
@@ -497,40 +539,57 @@ servidor y cuenta de Google; aquí no hay backend por decisión.
 - **Aviso obligatorio al tester**: "no desinstales para actualizar". Un cambio de firma obliga a
   desinstalar y eso **borra los datos** — pasó de verdad, con la 1.3 firmada en debug: hubo que
   rescatar los datos con `run-as` y un `.vpet` construido a mano. Está documentado en el README.
-- **`isMinifyEnabled = false`**: la app no usa reflexión propia, y depurar un fallo de R8 en una APK
-  repartida a mano cuesta más que los megas que ahorra (16,8 MB sin ofuscar).
+- **`isMinifyEnabled = false`**: la razón escrita en el `build.gradle.kts` ("la app no tiene
+  reflexión propia") **es incorrecta**. Sí hay reflexión: `Class.forName("android.app.ActivityThread")`
+  en 4 ficheros de `androidMain` (`Archivos`, `CarpetaDatos`, `GuardarArchivo`, `VersionApp`) para
+  obtener el `Application` sin pasar el `Context`. Es reflexión sobre una clase del framework (no se
+  ofusca) y la serialización usa serializers explícitos, así que **R8 probablemente no rompería
+  nada — pero no se ha probado**. Hoy está desactivado por eso: por no haberlo probado, no porque
+  sea imposible.
 - **Por qué no está en Play Store**: no hay cuenta, ni ficha, ni revisión de traducciones, ni
-  política de datos. Técnicamente podría publicarse; el reparto directo es coherente con "tus datos
-  son tuyos y no pasan por nadie".
+  política de datos. Técnicamente podría publicarse; la decisión de repartir a mano es coherencia
+  con el resto del proyecto, no una limitación técnica.
+- **Ojo con el argumento de la privacidad, porque tiene matices**: `allowBackup="true"`, así que
+  **Android sí copia los datos** —base de datos, fotos e informes— a la copia de seguridad del
+  usuario (Google Drive). Lo que se hace es **dejar fuera las copias automáticas internas**
+  (`files/copias`) para no duplicar el tamaño, con `data_extraction_rules.xml` (Android 12+) y
+  `backup_rules.xml` (Android 8–11). Verificado en el emulador con el transporte de backup local:
+  20.009.984 B con 12,5 MB metidos en `files/copias` → **7.490.048 B** al aplicar las reglas (medido con el transporte **local** del emulador; **[NO VERIFICADO]** contra una cuenta de Google real). La
+  frase honesta es "los datos son tuyos y se quedan en tu móvil salvo la copia que el propio
+  Android haga, que puedes desactivar"; **"no pasan por nadie" no es cierto**.
 - **Lo que la app NO pide** (defensa de privacidad, y se puede demostrar en el manifiesto): nada de
   almacenamiento —`WRITE_EXTERNAL_STORAGE` y `READ_EXTERNAL_STORAGE` están **eliminados
   explícitamente** con `tools:node="remove"` porque alguna librería los arrastraba—, nada de
   contactos, nada de ubicación, nada de `READ_PHONE_STATE`. Solo tres permisos:
   `POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM` y `RECEIVE_BOOT_COMPLETED`. Y **cero** conexiones de
-  red.
+  red: la app no tiene el permiso `INTERNET` ni una sola llamada de red.
 
 ---
 
-## 16. Las 246 pruebas: qué se prueba, qué no y por qué
+## 16. Las 267 pruebas: qué se prueba, qué no y por qué
 
-**Números reales:** 246 pruebas en 32 clases. Se ejecutan con `./gradlew :shared:jvmTest` (unas 2
+**Números reales:** 267 pruebas en 35 clases. Se ejecutan con `./gradlew :shared:jvmTest` (unas 2
 minutos) sobre **SQLite en memoria creado desde el esquema**: no son mocks, es el motor de verdad.
 
 | Bloque | Clases | Qué demuestra |
 | --- | --- | --- |
 | Migraciones | `MigracionesTest` (7) | Cada migración, desde cada versión anterior, deja las 9 tablas con sus columnas e índices y los datos intactos. |
+| Apertura de la base | `AperturaBaseDatosTest` (4) | Base más nueva que la app → rechazada y **sin tocar**; migración que falla a mitad → el marcador no sube y la base se puede reabrir; copia `virtualpet-antes-de-migrar-vN.db`. |
+| Claves foráneas | `CascadaEscritorioTest` (5) | Con base **en fichero** y borrado por el repositorio: 0 huérfanas en las 7 tablas hijas; claves foráneas activas en otro hilo; limpieza de huérfanas con copia previa. |
 | Repositorios | 7 clases | Altas, bajas, `ON DELETE CASCADE`, cálculos de peso ideal, errores. |
 | Cálculos de peso | `EscalaPesoTest` (11), `SeriesPesoTest` (7), `FiltrosPesoTest` (19), `GraficoPesoTest` (8) | La escala, la granularidad, los filtros y la geometría del gráfico. |
 | Traspaso | `CopiaDatosTest` (9), `FusionTest` (10), `IdentificadorUniversalTest` (7) | Ida y vuelta sin pérdidas, fusión por `uuid`, conflictos, retención de copias. |
 | Avisos | `RecordatoriosTratamientoTest` (18), `ReprogramadorNotificacionesTest` (9), `PosposicionesTest` (6) | Qué hora se programa, que la posposición gane, que sobreviva al reinicio simulado. |
 | PDF | `ContenidoPdfTest` (28), `ExportadorPdfTest` (8) | Que el PDF **contiene** lo que debe y en el orden correcto. |
 | Idioma y formato | `LocalizacionTest` (10), `TraduccionesDatosTest` (8), `ParidadTraduccionesTest` (8), `IdiomaEnTiempoDeEjecucionTest` (2) | Kilos/libras, orden de fecha, decimal, paridad de los 6 idiomas. |
+| Fotos | `RedimensionFotoTest` (12) | Cálculo del tamaño (horizontal, vertical, cuadrada, ya pequeña, límite, tamaño 0) y la reducción real de un fichero, incluido PNG con transparencia. |
 | UI con lógica | `BuscadorMascotasTest` (8), `FichaMascotaResumenTest`, `FichaMascotaErroresTest`, `ErroresAppTest`, `PreferenciaVistaTest` (5) | Lo que se puede probar sin pintar: filtrado, resumen de la ficha, errores visibles. |
 
 **Filosofía del proyecto:** *"al arreglar un fallo, añade el test que lo habría cazado"*. Ejemplos
 reales de tests que nacieron de un fallo: `PosposicionesTest` (aviso pospuesto perdido tras
 reinicio), `MigracionesTest` (mascotas sin `uuid` tras migrar), `FichaMascotaErroresTest` (una
-operación fallida parecía haber ido bien).
+operación fallida parecía haber ido bien), `CascadaEscritorioTest` (19 huérfanas al borrar en
+escritorio) y `AperturaBaseDatosTest` (el marcador de versión bajando).
 
 **Qué NO se prueba y cómo se compensa:**
 - **No hay tests instrumentados de Compose** (ni Espresso): requieren emulador y son lentos y
@@ -590,7 +649,7 @@ git -c http.sslBackend=openssl push origin entrega-X.Y
 ## 18. Preguntas difíciles y su respuesta
 
 **"¿Esto es una app de verdad o un proyecto de clase?"**
-> 24.000 líneas de Kotlin, 154 ficheros, 246 pruebas, dos plataformas, un instalador para Windows,
+> 25.372 líneas de Kotlin, 161 ficheros, 267 pruebas, dos plataformas, un instalador para Windows,
 > migraciones de esquema desde la versión 1, y hay usuarios reales probándola con datos reales. La
 > parte de "clase" sería el tamaño: es un producto pequeño hecho con cuidado.
 
@@ -617,7 +676,7 @@ git -c http.sslBackend=openssl push origin entrega-X.Y
 > viene a resolver.
 
 **"¿Por qué no usas Hilt/Koin?"**
-> Porque hay 13 objetos y se cablean en 20 líneas con `remember`. Una librería de DI añadiría
+> Porque son 14 piezas (9 repositorios, 3 ViewModels, la base de datos y el programador de avisos) y se cablean en 20 líneas con `remember`. Una librería de DI añadiría
 > procesado de anotaciones y tiempo de build para resolver un problema que aquí no existe.
 
 **"¿Y los avisos, por qué fallaban?"**
@@ -641,15 +700,17 @@ git -c http.sslBackend=openssl push origin entrega-X.Y
 > grandes son para 5 animales, no para 40.
 
 **"¿Cuánto tardarías en hacerlo para iPhone?"**
-> La app ya compila el 90 % del código para iOS; falta lo específico de plataforma (ficheros,
-> notificaciones locales, selector de documentos) y un `.ipa` firmado con un Mac. Días de trabajo,
-> no un proyecto nuevo.
+> El 83,3 % del código de producción es común, pero hoy **no compila para iOS tal cual**: hay un
+> `java.io.File` en un fichero de `commonMain` y la librería del PDF no publica artefactos iOS.
+> Habría que sacar esos dos, escribir los `actual` de iOS (ficheros, notificaciones locales,
+> selector de documentos, generación del PDF) y firmar un `.ipa` con un Mac. Días de trabajo, no un
+> proyecto nuevo — pero no es "poner un target".
 
 **"¿Qué es lo que más te costó?"**
 > Admitir que dos fallos no eran de Android sino de mi código: el `ON DELETE CASCADE` que no
-> borraba nada (SQLite tiene las claves foráneas apagadas por defecto) y el aviso que llegaba tarde
-> (alarma inexacta). Y el que más miedo dio: la pérdida de firma con la 1.3, que se resolvió
-> rescatando los datos con `run-as` y construyendo un `.vpet` a mano.
+> borraba nada (el `PRAGMA` era de la conexión, no de la base; dejaba 19 filas huérfanas) y el aviso
+> que llegaba tarde (alarma inexacta). Y el que más miedo dio: la pérdida de firma con la 1.3, que
+> se resolvió rescatando los datos con `run-as` y construyendo un `.vpet` a mano.
 
 **"¿Qué harías distinto?"**
 > Haber metido `uuid` desde el primer esquema, en vez de añadirlo en la 14 cuando el traspaso lo
@@ -666,11 +727,12 @@ Están en el README como "Pendiente", pero tenlas en la cabeza con su explicaci�
 | --- | --- |
 | **Los borrados no se propagan entre dispositivos.** Borras una mascota en el móvil y sigue en el PC hasta que la borras allí. | Es una decisión, no un olvido: propagar borrados pide "lápidas" (`borradoEn`) y una regla de fusión nueva; hacerlo mal **borra datos de más**, que es el peor fallo posible. Prefiero que sobre una ficha un rato a perder historial. |
 | **Traducciones de de/pt/fr/it sin revisar por un nativo.** | Están con aviso explícito en el README; la paridad de claves la garantiza un test. Lo que más varía son los nombres de raza. Contratar una revisión es de las primeras cosas antes de publicar. |
-| **`sqlite-driver` fijado a 2.0.0 en escritorio** mientras el catálogo dice 2.3.2. | Es una inconsistencia real que no ha dado problemas (tests y app en producción), pero está apuntada: se corrige con subida de versión y regeneración del ejecutable. |
-| **Entradas muertas en el catálogo de versiones** (`pdfkmp`, `appcompat`, `espresso`…). | Herencia de la plantilla KMP; ningún módulo las usa. Limpieza pendiente, cero impacto funcional. |
+| **Las fotos que ya estaban guardadas NO se reducen.** La reducción es al guardar, así que las antiguas siguen con sus MB. Medido en el emulador: siguen a 3072×4096 y 3,55 / 3,67 MB. | Es a propósito: tocar ficheros que el usuario ya tiene sin que lo pida es justo lo que no se hace. Un proceso de un solo uso (con copia previa) bajaría cada una a ~20 KB; está propuesto, **no implementado**, a la espera de decidirlo. |
+| **La copia de Google puede pasar de 25 MB por los informes**, no por las fotos. | Con las fotos reducidas (40 mascotas × 2 × ~20 KB ≈ 1,6 MB) el peso lo ponen los PDF de informes, que no se reducen porque tienen que seguir legibles: 80 ficheros × ~250 KB ≈ 20 MB, más base y fotos ≈ 22 MB. Cabe, pero sin mucho margen. Si se quiere garantizar, hay que excluir también `files/informes` de la nube (decisión pendiente, no implementada). |
 | **Sin tests de UI instrumentados.** | Los requiere un emulador estable y son frágiles; la lógica está extraída a `util/` y probada, y lo visual se ha verificado en dispositivo real. Con más tiempo, `Compose UI test` para los flujos críticos. |
 | **Un solo desarrollador y un solo Android de pruebas** (POCO con HyperOS). | Las peculiaridades de HyperOS (batería, inicio automático) están documentadas en el mensaje para testers, y hay un emulador aparte. Más marcas = más confianza; por eso existen los testers. |
 | **Un `.vpet` recibido no se abre desde WhatsApp con doble toque.** | Requiere un `intent-filter` para la extensión. Hoy: guardar y elegirlo en "Importar y fusionar" (3 toques). Está en la lista. |
+| **[NO VERIFICADO]** El ejecutable de escritorio con SQLite 3.51 solo se ha arrancado a mano, no instalado desde el ZIP como usuario final. | Los 267 tests y el arranque contra una **copia** de la base real cubren el riesgo funcional; queda la prueba manual del instalador (está en la lista de pruebas antes de fusionar). |
 
 ---
 
@@ -682,7 +744,7 @@ En este orden (el orden también demuestra criterio):
    puede confundir de verdad a quien use dos dispositivos.
 2. **Abrir `.vpet` desde el gestor de archivos / WhatsApp** (`intent-filter` + `ACTION_VIEW`).
 3. **Revisión nativa de las traducciones** (alemán primero: peor caso de longitud de texto).
-4. **Subir `targetSdk` a 35** con revisión de insets y receptores, y `sqlite-driver` a 2.3.2.
+4. **Subir `targetSdk` a 35** con revisión de insets y receptores.
 5. **Tests de UI de los flujos críticos** (crear mascota, importar, posponer un aviso).
 6. **`.msi`** si se instala WiX (mejor integración con "Aplicaciones instaladas" y despliegue por
    GPO en una protectora).
@@ -719,7 +781,7 @@ En este orden (el orden también demuestra criterio):
 ```powershell
 $env:GRADLE_USER_HOME="$PWD\.gradle-home"      # caché de Gradle dentro del proyecto
 
-.\gradlew.bat :shared:jvmTest --console=plain           # 246 pruebas (~2 min)
+.\gradlew.bat :shared:jvmTest --console=plain           # 267 pruebas (~2 min)
 .\gradlew.bat :androidApp:assembleDebug --console=plain  # APK de pruebas
 .\gradlew.bat :androidApp:assembleRelease --console=plain# APK firmada de release
 .\gradlew.bat :desktopApp:run --console=plain            # app de escritorio
@@ -762,7 +824,7 @@ git -c http.sslBackend=openssl push origin main
 | **`uuid`** | Identificador de 32 hex estable entre dispositivos; lo que permite fusionar sin duplicar. |
 | **`actualizadoEn`** | Epoch millis de la última escritura; decide quién gana en una fusión. |
 | **`.vpet`** | Paquete de datos: ZIP con `manifiesto.json` + `datos.json` + `archivos/`. |
-| **`FOREIGN KEY ... ON DELETE CASCADE`** | Borrar la mascota borra sus filas hijas (requiere `PRAGMA foreign_keys=ON`). |
+| **`FOREIGN KEY ... ON DELETE CASCADE`** | Borrar la mascota borra sus filas hijas. **Requiere que las claves foráneas estén activas en esa conexión**: en escritorio van por `Properties(foreign_keys=true)`, en Android por `setForeignKeyConstraintsEnabled(true)` en `onConfigure`. |
 | **WAL** | Modo de diario de SQLite; por eso no se copia el `.db` a pelo. |
 | **Alarma exacta** | `setExactAndAllowWhileIdle` con permiso `SCHEDULE_EXACT_ALARM`; sin él, Android agrupa. |
 | **`PendingIntent`** | Acción que otra app (o el sistema) puede disparar en tu nombre: los botones Aceptar/Posponer. |
@@ -774,3 +836,45 @@ git -c http.sslBackend=openssl push origin main
 | **`StateFlow`** | Flujo de estado observable; la UI se suscribe y se redibuja. |
 | **`rememberSaveable`** | Estado que sobrevive a girar la pantalla (no a cerrar la app). |
 | **CompositionLocal** | Pasar un valor (idioma/región) a todo el árbol de UI sin pasarlo a mano. |
+
+---
+
+## 24. Apéndice: cómo he comprobado cada cifra
+
+Todas las cifras de esta guía salen de un comando, no de la memoria. Estos son, para que puedas
+repetirlos (y para que nadie te pille improvisando):
+
+| Cifra | Comando |
+| --- | --- |
+| Líneas y ficheros por sourceSet | `foreach ($ss in 'commonMain','androidMain','jvmMain','jvmTest') { $f = Get-ChildItem "shared/src/$ss" -Recurse -Include *.kt; "$ss $($f.Count) ficheros $((($f | % { (Get-Content $_).Count }) | Measure-Object -Sum).Sum) lineas" }` |
+| Producción y % común | Producción = commonMain + androidMain + jvmMain + los dos envoltorios = **19.072** líneas; común = **15.894** → 15.894 / 19.072 = **83,3 %** |
+| Total de líneas | 19.072 producción + 6.300 de test = **25.372** |
+| Nº de pruebas y de clases | `Get-ChildItem shared/build/test-results/jvmTest/*.xml \| % { ([xml](Get-Content $_)).testsuite } \| Measure-Object tests -Sum` (y `.Count` de ficheros = clases) |
+| `expect`/`actual` | `Select-String -Path (gci shared/src/commonMain -Recurse -Include *.kt).FullName -Pattern '\bexpect\b' \| Measure-Object` → 44 en 14 ficheros |
+| Targets de la app | `Select-String shared/build.gradle.kts -Pattern 'androidLibrary|jvm\(\)\|ios'` → solo `androidLibrary` y `jvm()` |
+| `java.io.File` en común | `Select-String -Path (gci shared/src/commonMain -Recurse -Include *.kt).FullName -Pattern '^import java\.'` → `ImagenMascota.kt:4` |
+| compose-pdf sin iOS | listar el grupo en la caché de Gradle: solo `compose-pdf-android` y `compose-pdf-jvm` |
+| Versión del esquema y `.sqm` | `(Get-ChildItem shared/src/commonMain/sqldelight/migrations/*.sqm).Count` = 14 → esquema 15 |
+| Fecha del primer `.sqm` | `git log --format='%h %ad %s' --date=short --diff-filter=A -- shared/src/commonMain/sqldelight/migrations/1.sqm` → `5aa7c2a 2026-09-16`; el commit inicial es `1b9a8d6 2026-09-04` |
+| Huérfanas del escritorio | programa JDBC aparte sobre una **copia** de la base real: conexión A con `foreign_keys=1`, conexión B sin él, `DELETE` en B → **19 huérfanas** en la mascota 3 |
+| Limpieza al abrir | `CascadaEscritorioTest` (5 tests) con base en fichero y copia `virtualpet-antes-de-limpiar.db` |
+| Android y claves foráneas | emulador: `logcat` del `onConfigure` (temperal, ya quitado) + borrado de una mascota con 19 filas hijas desde la interfaz → `PRAGMA foreign_key_check` = 0 |
+| `PreviewActivity` fuera del release | abrir la APK como ZIP y buscar `compose/ui/tooling/PreviewActivity` en los `classes*.dex`: aparece en `dist/VirtualPet-1.12.apk` y **no** en la recién compilada |
+| Tamaño de la copia de Google | `adb shell bmgr backupnow com.example.virtualpetkmp` con transporte local: 20.009.984 B con 12,5 MB en `files/copias` → 7.490.048 B con las reglas |
+| Fotos antes/después | test temporal con las dos fotos reales del `.vpet` de rescate: 3.469 KB → 21 KB y 3.588 KB → 18 KB; `.vpet` resultante 40 KB (original 7,27 MB) |
+| Tamaño de una foto ya guardada | `run-as ... ls -l files/fotos` en el emulador: nuevas 4.433 B (252×336); antiguas 3.552.909 y 3.674.882 B (3072×4096) |
+| Objetos cableados en `App.kt` | leer `App.kt:58-71`: 9 repositorios + 3 ViewModels + `programador` + `database` = **14** |
+| Warnings de compilación | `.\gradlew.bat :shared:compileKotlinJvm --rerun-tasks --no-build-cache` y contar líneas `^w:` → **116** (casi todas por el artefacto *compat* de `kotlinx-datetime`) |
+
+### Lo que NO he podido verificar (marcado también como `[NO VERIFICADO]`)
+
+- **La copia de Google real**: aquí se usa el transporte **local** del emulador. Que Google acepte el
+  respaldo y respete las reglas en una cuenta real no se ha probado (mismo formato de reglas, pero
+  es otra implementación).
+- **iOS**: no hay Mac ni dispositivo; todo lo de iOS es análisis del build, no ejecución.
+- **El `.msi`**: no existe, falta WiX.
+- **El `.exe` de la 1.13 instalado con el instalador de Windows**: se arrancó el binario empaquetado
+  a mano contra una copia de la base; la instalación desde el ZIP no se ha repetido tras los cambios.
+- **El móvil real con la 1.13**: los cambios de esta revisión están probados en el emulador (que es
+  un Android distinto del HyperOS del usuario).
+- **Traducciones de de/pt/fr/it**: siguen sin revisión nativa.
