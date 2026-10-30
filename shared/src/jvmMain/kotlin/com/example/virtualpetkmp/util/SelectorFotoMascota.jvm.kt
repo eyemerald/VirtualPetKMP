@@ -50,6 +50,10 @@ private fun copiarALocal(archivoOriginal: File): String? {
         val nombreSeguro = archivoOriginal.name.replace(Regex("[^A-Za-z0-9._-]"), "_")
         val destino = File(carpeta, "${System.currentTimeMillis()}_$nombreSeguro")
         archivoOriginal.copyTo(destino, overwrite = true)
+
+        // Se guarda ya reducida: en la ficha se ve a 84 dp (ver `RedimensionFoto.jvm.kt`).
+        reducirFotoDeMascota(destino.absolutePath)
+
         destino.absolutePath
     } catch (e: Exception) {
         println("Error copiando foto a local en JVM: ${e.message}")

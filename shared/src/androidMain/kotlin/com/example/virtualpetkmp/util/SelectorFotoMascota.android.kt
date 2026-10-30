@@ -153,6 +153,10 @@ private fun copiarABiblioteca(context: Context, uri: Uri, nombreOriginal: String
             return null
         }
 
+        // La foto se guarda ya reducida (ver `RedimensionFoto.android.kt`): en la ficha se ve a
+        // 84 dp, así que guardar 12 MP es ocupar espacio para píxeles que nunca se pintan.
+        reducirFotoDeMascota(archivoDestino.absolutePath)
+
         archivoDestino.absolutePath
     } catch (e: Exception) {
         println("Error copiando foto a local: ${e.message}")
