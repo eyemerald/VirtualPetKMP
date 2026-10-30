@@ -1,4 +1,4 @@
-﻿# Guía del proyecto para defenderlo
+# Guía del proyecto para defenderlo
 
 > Documento **personal**: no es para los testers ni para el README. Explica cómo está hecho
 > VirtualPetKMP, **por qué** cada pieza está así, qué alternativas se descartaron y qué responder
@@ -252,7 +252,7 @@ los `build.gradle.kts`, salvo dos excepciones documentadas abajo.
 | **Kotlin** | 2.2.10 | Trae el compilador de Compose integrado (`org.jetbrains.kotlin.plugin.compose` con la misma versión). Ya no hay que casar dos versiones. | Kotlin mayor → hay que subir CMP a la par. |
 | **compileSdk** | 37 | Es el SDK instalado y el que pide la librería de PDF/Compose nueva. | El proyecto **rechaza** versiones menores distintas de cero a propósito: el DSL de librería KMP no expone `compileSdkMinor`, y los dos módulos compilarían contra plataformas distintas. |
 | **minSdk** | 26 (Android 8) | **Canales de notificación** (`NotificationChannel`) son API 26: por debajo habría que meter `if (SDK_INT >= 26)` en todo el código de avisos. Cubre la práctica totalidad de móviles en uso. | Bajar a 24 obliga a ramas por versión en notificaciones; subir deja fuera móviles viejos sin ganar nada. |
-| **targetSdk** | 34 | Comportamiento estable. Aquí **no hay Play Store** que exija 35, y cada subida de target cambia reglas (Android 15 fuerza edge-to-edge, Android 14 restringe receptores, etc.). | Subir a 35 es trabajo real (revisar insets y receptores), no un cambio de número. |
+| **targetSdk** | 36 (Android 16) | Lo **exige** Play desde el 31 de agosto de 2026 para apps y actualizaciones nuevas (prórroga hasta el 1 de noviembre). Subir de 34 a 36 salta dos versiones de reglas, así que se revisaron una a una: el detalle está en `docs/PLAY_STORE.md`. | Bajarlo impide publicar. Volver a subirlo obliga a repetir esa revisión: Android 15 fuerza borde a borde y Android 16 ignora orientación y tamaño fijo en pantallas grandes. |
 
 ### Librerías
 
@@ -732,8 +732,10 @@ git -c http.sslBackend=openssl push origin entrega-X.Y
 
 **"¿Por qué no está en la Play Store?"**
 > Porque no hay cuenta de desarrollador, ni ficha, ni revisión de traducciones, ni política de
-> datos. Técnicamente sí podría publicarse (targetSdk 34, firma propia). Repartir la APK a mano es
-> coherente con el resto: sin intermediarios.
+> datos. Técnicamente **ya está todo listo** para publicarla: el App Bundle se genera y se firma, el
+> `targetSdk` es 36 (lo que pide Play), el manifiesto del release no es depurable y los permisos son
+> tres. Lo que hay preparado está en `docs/PLAY_STORE.md`; lo que falta es la cuenta y una decisión.
+> Hoy se reparte la APK a mano, que es coherente con el resto: sin intermediarios.
 
 **"¿Se sostiene con 40 animales?"**
 > Sí, y por eso existe la 1.12: índice por `uuid` en las 9 tablas, consultas siempre filtradas por
@@ -785,8 +787,11 @@ En este orden (el orden también demuestra criterio):
 1. **Propagar borrados con lápidas** (`borradoEn` + regla de fusión) y su test. Es lo único que hoy
    puede confundir de verdad a quien use dos dispositivos.
 2. **Abrir `.vpet` desde el gestor de archivos / WhatsApp** (`intent-filter` + `ACTION_VIEW`).
-3. **Revisión nativa de las traducciones** (alemán primero: peor caso de longitud de texto).
-4. **Subir `targetSdk` a 35** con revisión de insets y receptores.
+3. **Interceptar "atrás"** con un `BackHandler` que use el `volverAtras` que ya existe en `App.kt`:
+   hoy, desde la ficha de una mascota, el gesto del sistema cierra la app en vez de volver a la
+   lista (verificado en Android 8 y en Android 16/17). No es un fallo de `targetSdk` —se comporta
+   igual antes y después—, pero en una app publicada se nota.
+4. **Revisión nativa de las traducciones** (alemán primero: peor caso de longitud de texto).
 5. **Tests de UI de los flujos críticos** (crear mascota, importar, posponer un aviso).
 6. **`.msi`** si se instala WiX (mejor integración con "Aplicaciones instaladas" y despliegue por
    GPO en una protectora).
@@ -840,7 +845,7 @@ apksigner verify --print-certs dist\VirtualPet-1.12.apk
 adb devices
 adb -s <serie> install -r dist\VirtualPet-1.12.apk
 adb -s <serie> push dist\VirtualPet-1.12.apk /sdcard/Download/
-adb -s <serie> shell "dumpsys package com.example.virtualpetkmp | grep versionName"
+adb -s <serie> shell "dumpsys package io.github.eyemerald.virtualpet | grep versionName"
 adb -s <serie> shell "dumpsys alarm | grep -i exact"      # comprobar alarmas exactas
 adb -s <serie> shell "screencap -p /sdcard/p.png"         # captura de pantalla
 
@@ -851,7 +856,9 @@ git -c http.sslBackend=openssl push origin main
 ```
 
 **Datos de la app en cada plataforma:**
-- Android: `/data/data/com.example.virtualpetkmp/` (`virtualpet.db`, fotos, informes, copias).
+- Android: `/data/data/io.github.eyemerald.virtualpet/` (`virtualpet.db`, fotos, informes, copias).
+  Ojo: el id de la app cambió en la 1.13 (`com.example.virtualpetkmp` → `io.github.eyemerald.virtualpet`),
+  así que **una instalación nueva no ve los datos de la vieja**: hay que traspasarlos con un `.vpet`.
 - Windows: `%USERPROFILE%\.virtualpet\` (la misma carpeta tanto desde Gradle como instalado).
 
 ---
@@ -904,7 +911,7 @@ repetirlos (y para que nadie te pille improvisando):
 | Limpieza al abrir | `CascadaEscritorioTest` (5 tests) con base en fichero y copia `virtualpet-antes-de-limpiar.db` |
 | Android y claves foráneas | emulador: `logcat` del `onConfigure` (temperal, ya quitado) + borrado de una mascota con 19 filas hijas desde la interfaz → `PRAGMA foreign_key_check` = 0 |
 | `PreviewActivity` fuera del release | abrir la APK como ZIP y buscar `compose/ui/tooling/PreviewActivity` en los `classes*.dex`: aparece en `dist/VirtualPet-1.12.apk` y **no** en la recién compilada |
-| Tamaño de la copia de Google | `adb shell bmgr backupnow com.example.virtualpetkmp` con transporte local: 20.009.984 B con 12,5 MB en `files/copias` → 7.490.048 B con las reglas |
+| Tamaño de la copia de Google | `adb shell bmgr backupnow io.github.eyemerald.virtualpet` con transporte local: 20.009.984 B con 12,5 MB en `files/copias` → 7.490.048 B con las reglas (medido con el id anterior; las reglas de respaldo son las mismas) |
 | Fotos antes/después (640 px) | test temporal con las dos fotos reales del `.vpet` de rescate: 3.469 KB → **60 KB** y 3.588 KB → **53 KB**; `.vpet` con las dos **115 KB** (original 7,27 MB) |
 | Tamaño de una foto ya guardada | `run-as ... ls -l files/fotos` en el emulador: la nueva **5.657 B (480×640)**; antiguas 3.552.909 y 3.674.882 B (3072×4096, sin tocar) |
 | Objetos cableados en `App.kt` | leer `App.kt:58-71`: 9 repositorios + 3 ViewModels + `programador` + `database` = **14** |
