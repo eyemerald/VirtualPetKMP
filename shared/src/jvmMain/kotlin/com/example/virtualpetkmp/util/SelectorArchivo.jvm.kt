@@ -66,7 +66,7 @@ actual fun rememberSelectorDestino(
             val selector = JFileChooser()
             selector.dialogTitle = runBlocking { getString(Res.string.dialogo_guardar_pdf) }
             selector.fileSelectionMode = JFileChooser.FILES_ONLY
-            selector.selectedFile = File(System.getProperty("user.home"), nombreSugerido.ifBlank { "ficha-mascota.pdf" })
+            selector.selectedFile = File(System.getProperty("user.home"), nombreSugerido.ifBlank { "VirtualPet-mascota.pdf" })
 
             val resultado = selector.showSaveDialog(null)
             if (resultado == JFileChooser.APPROVE_OPTION) {
@@ -120,7 +120,7 @@ actual fun rememberSelectorDestinoCopia(
 ): () -> Unit {
     return {
         try {
-            val sugerido = nombreSugerido.ifBlank { "VirtualPet-copia.vpet" }
+            val sugerido = nombreSugerido.ifBlank { "VirtualPet.vpet" }
             val carpetaInicial = carpetaDeDrive() ?: File(System.getProperty("user.home"))
             val selector = JFileChooser().apply {
                 dialogTitle = runBlocking { getString(Res.string.dialogo_guardar_copia) }

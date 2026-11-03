@@ -110,11 +110,17 @@ internal fun textoDeFallo(fallo: FalloCopia, detalle: String): String {
     }
 }
 
-/** Nombre sugerido del paquete: "VirtualPet-copia-2026-10-22.vpet". */
+/**
+ * Nombre sugerido del paquete completo: "VirtualPet-2026-10-22.vpet".
+ *
+ * Sin la palabra "copia": este nombre lo ve el usuario en su carpeta de Descargas y basta con la
+ * fecha. Las copias automáticas internas se llaman "copia-…" y eso **no se toca**: de ese prefijo
+ * depende la limpieza que conserva las tres últimas.
+ */
 private fun nombreSugeridoDelDia(): String {
     val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
     fun dos(valor: Int) = valor.toString().padStart(2, '0')
-    return "VirtualPet-copia-${hoy.year}-${dos(hoy.monthNumber)}-${dos(hoy.dayOfMonth)}.vpet"
+    return "VirtualPet-${hoy.year}-${dos(hoy.monthNumber)}-${dos(hoy.dayOfMonth)}.vpet"
 }
 
 /**

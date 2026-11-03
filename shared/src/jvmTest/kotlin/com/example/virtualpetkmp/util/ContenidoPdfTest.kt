@@ -405,11 +405,11 @@ class ContenidoPdfTest {
 
     @Test
     fun `el nombre del archivo quita lo que no vale en un sistema de archivos`() {
-        assertEquals("ficha-Luna.pdf", nombreArchivoPdf("Luna"))
-        assertEquals("ficha-Rocky-Balboa.pdf", nombreArchivoPdf("Rocky Balboa"))
-        assertEquals("ficha-Nino.pdf", nombreArchivoPdf("Niño"))
-        assertEquals("ficha-mascota.pdf", nombreArchivoPdf("   "))
-        assertEquals("ficha-mascota.pdf", nombreArchivoPdf("***"))
+        assertEquals("VirtualPet-Luna.pdf", nombreArchivoPdf("Luna"))
+        assertEquals("VirtualPet-Rocky-Balboa.pdf", nombreArchivoPdf("Rocky Balboa"))
+        assertEquals("VirtualPet-Nino.pdf", nombreArchivoPdf("Niño"))
+        assertEquals("VirtualPet-mascota.pdf", nombreArchivoPdf("   "))
+        assertEquals("VirtualPet-mascota.pdf", nombreArchivoPdf("***"))
     }
 
     @Test
@@ -417,7 +417,7 @@ class ContenidoPdfTest {
         val nombre = nombreArchivoPdf("a".repeat(200))
 
         assertTrue(nombre.length <= 50, "nombre demasiado largo: ${nombre.length}")
-        assertTrue(nombre.startsWith("ficha-"))
+        assertTrue(nombre.startsWith("VirtualPet-"))
         assertTrue(nombre.endsWith(".pdf"))
     }
 }

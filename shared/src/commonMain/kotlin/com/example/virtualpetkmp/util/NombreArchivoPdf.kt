@@ -6,6 +6,9 @@ package com.example.virtualpetkmp.util
  * Se usa tanto al compartir (Android necesita un nombre porque el archivo va a la caché) como
  * al guardar (es el nombre que aparece preseleccionado en el diálogo del sistema).
  *
+ * Empieza por "VirtualPet-" y no por el nombre de la mascota: el archivo puede acabar en el correo
+ * del veterinario o en una carpeta compartida, y así se sabe de qué app sale sin abrirlo.
+ *
  * El nombre de una mascota lo escribe una persona, así que lleva acentos, eñes y espacios. Un
  * nombre de archivo, en cambio, tiene que valer en cualquier sistema: aquí los acentos se
  * convierten a su letra base ("Ñuño" → "Nuno") en lugar de tirarlos, y todo lo que no sea una
@@ -27,11 +30,13 @@ fun nombreArchivoPdf(nombreMascota: String): String {
     }
         .trim('-')
         .replace(Regex("-{2,}"), "-")
-        .take(40)
+        // 33 y no 40: con el prefijo "VirtualPet-" y la extensión, el nombre entero queda por
+        // debajo de 50 caracteres, que es el límite que se prueba.
+        .take(33)
         .trim('-')
         .ifEmpty { "mascota" }
 
-    return "ficha-$base.pdf"
+    return "VirtualPet-$base.pdf"
 }
 
 /**

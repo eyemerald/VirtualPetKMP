@@ -89,14 +89,14 @@ actual fun rememberSelectorDestino(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
     ) { uri: Uri? ->
         if (uri != null) {
-            val nombreFinal = nombreSugerido.ifBlank { "ficha-mascota.pdf" }
+            val nombreFinal = nombreSugerido.ifBlank { "VirtualPet-mascota.pdf" }
             onDestinoSeleccionado(nombreFinal, uri.toString())
         }
     }
 
     return {
         try {
-            launcher.launch(nombreSugerido.ifBlank { "ficha-mascota.pdf" })
+            launcher.launch(nombreSugerido.ifBlank { "VirtualPet-mascota.pdf" })
         } catch (e: Exception) {
             println("Error abriendo selector destino: ${e.message}")
         }
@@ -151,13 +151,13 @@ actual fun rememberSelectorDestinoCopia(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream")
     ) { uri: Uri? ->
         if (uri != null) {
-            onElegido(nombreSugerido.ifBlank { "VirtualPet-copia.vpet" }, uri.toString())
+            onElegido(nombreSugerido.ifBlank { "VirtualPet.vpet" }, uri.toString())
         }
     }
 
     return {
         try {
-            launcher.launch(nombreSugerido.ifBlank { "VirtualPet-copia.vpet" })
+            launcher.launch(nombreSugerido.ifBlank { "VirtualPet.vpet" })
         } catch (e: Exception) {
             println("[SelectorDestinoCopia] error: ${e.message}")
         }
