@@ -1,4 +1,4 @@
-VIRTUAL PET 1.12 PARA WINDOWS
+VIRTUAL PET 1.13 PARA WINDOWS
 ============================
 
 COMO INSTALARLO
@@ -9,12 +9,13 @@ COMO INSTALARLO
 
 No hace falta ser administrador: se instala en tu carpeta de usuario
 (%LOCALAPPDATA%\Programs\Virtual Pet) y no toca nada mas del sistema.
+No hay que instalar Java: la aplicacion lo lleva dentro.
 
 
 SI WINDOWS AVISA AL INSTALAR
-- "Windows protegio tu PC" (SmartScreen): "Mas informacion" -> "Ejecutar de todas formas".
-  Sale porque el instalador no esta firmado con un certificado de pago; el archivo no se ha
-  modificado desde que se genero (SHA-256 en el mensaje de entrega).
+- "Windows protegio su PC" (SmartScreen): pulsa "Mas informacion" y luego "Ejecutar de todas
+  formas". Sale porque el programa no esta firmado con un certificado de pago; el archivo no se ha
+  modificado desde que se genero (el SHA-256 va en el mensaje de entrega).
 - Si el antivirus se queja: es un script de PowerShell que copia ficheros y crea accesos directos.
   Puedes abrirlo con el Bloc de notas para ver exactamente lo que hace.
 
@@ -24,6 +25,26 @@ DONDE ESTAN TUS DATOS
 - Si ya venias usando la app desde el entorno de desarrollo, esa MISMA carpeta es la que usara la
   version instalada: no hay que pasar nada, tus mascotas aparecen tal cual.
 - Desinstalar la aplicacion NO borra esos datos.
+
+
+COMO HACER UNA COPIA (hazla antes de tocar el ordenador)
+1. En la app: menu de ajustes (icono de la rueda, arriba a la derecha) -> "Copia de seguridad".
+2. "Guardar copia" y elige donde: por ejemplo un pendrive o una carpeta de OneDrive/Drive.
+3. El archivo se llama VirtualPet-AAAA-MM-DD.vpet y lleva TODO: mascotas, historial, fotos e
+   informes. Guardalo fuera del PC: si el ordenador se rompe, ese archivo es lo unico que hace
+   falta para recuperar los datos.
+4. Para recuperarlo: menu -> "Restaurar copia" y elige el .vpet. La app guarda sola una copia de
+   lo que habia antes de restaurar, por si te equivocas (se puede deshacer desde el aviso).
+
+
+COMO ACTUALIZAR SIN PERDER DATOS
+1. Haz la copia del apartado anterior (por si acaso).
+2. Descomprime el ZIP nuevo en otra carpeta.
+3. Doble clic en INSTALAR.bat: instala ENCIMA de la version anterior.
+4. Abre la app: tus mascotas siguen ahi, porque los datos viven en %USERPROFILE%\.virtualpet y el
+   instalador no toca esa carpeta.
+No hace falta desinstalar antes. Si un dia la app no arranca despues de actualizar, desinstala,
+vuelve a instalar la version anterior y restaura la copia del paso 1.
 
 
 COMO DESINSTALARLO
@@ -36,5 +57,6 @@ Tus datos se quedan; si quieres borrarlos tambien, elimina la carpeta .virtualpe
 QUE INCLUYE
 - La aplicacion con su propio Java incluido: no hay que instalar nada mas.
 - Tus datos son locales: la app no se conecta a internet.
-- Novedades de esta version: buscador de mascotas por nombre (da igual mayusculas o acentos) y dos
-  formas de ver la lista (tarjetas con foto o listado compacto), con el boton de la derecha.
+- Novedades de esta version: la tecla/gesto de atras vuelve a la pantalla anterior, los nombres
+  de los archivos que guardas empiezan por "VirtualPet-" (asi se sabe de donde salen) y los avisos
+  de error ya no ensenan detalles tecnicos.
