@@ -25,8 +25,8 @@ Marca de cada dato:
 | `applicationId` (id del paquete en Play) | `io.github.eyemerald.virtualpet` | VERIFICADO (`androidApp/build.gradle.kts`) |
 | `namespace` del código | `com.example.virtualpetkmp` | VERIFICADO |
 | Nombre visible | `Virtual Pet` | VERIFICADO (`application-label` del APK de release) |
-| `versionCode` | `13` | VERIFICADO |
-| `versionName` | `1.12` | VERIFICADO |
+| `versionCode` | `14` | VERIFICADO |
+| `versionName` | `1.13` | VERIFICADO |
 | `minSdk` | `26` (Android 8.0) | VERIFICADO |
 | `targetSdk` | `36` (Android 16) | VERIFICADO |
 | `compileSdk` | `37` | VERIFICADO |
@@ -35,7 +35,7 @@ Comprobado con:
 
 ```
 aapt2 dump badging build\apks\extraidos\base-master.apk
-package: name='io.github.eyemerald.virtualpet' versionCode='13' versionName='1.12'
+package: name='io.github.eyemerald.virtualpet' versionCode='14' versionName='1.13'
 minSdkVersion:'26'
 targetSdkVersion:'36'
 application-label:'Virtual Pet'
@@ -144,7 +144,7 @@ Lo que tiene que verse (VERIFICADO):
 | Comprobación | Resultado |
 | --- | --- |
 | `debuggable` | **no aparece** → la app de release no es depurable |
-| `versionCode` / `versionName` | `13` / `1.12` |
+| `versionCode` / `versionName` | `14` / `1.13` |
 | `minSdkVersion` / `targetSdkVersion` | `26` / `36` |
 | Permisos | `POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM`, `RECEIVE_BOOT_COMPLETED` |
 | Permiso propio | `io.github.eyemerald.virtualpet.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (nivel `signature`, lo añade AndroidX) |
@@ -335,8 +335,8 @@ la app en esos idiomas en la ficha hasta que alguien las revise.
 | --- | --- | --- |
 | Icono de la tienda | 512×512 PNG, 32 bits | NO VERIFICADO (hay que exportarlo del icono de la app) |
 | Gráfico destacado | 1024×500 PNG o JPG | NO VERIFICADO |
-| Capturas de teléfono | 2–8, lado corto ≥ 320 px | Se pueden sacar de `build/b3-lista.png`, `build/b3-ficha.png`, `build/b4-copia.png`… |
-| Capturas de tablet 7" y 10" | Obligatorias si se declara compatibilidad con tablet | Pendiente: hay capturas de tablet (`build/b3-tablet-*.png`) pero a resolución forzada |
+| Capturas de teléfono | 2–8, lado corto ≥ 320 px | **Hechas** (1280×2772): `docs/capturas-play/01-lista.png`, `02-ficha.png`, `03-vacunas.png`, `04-aviso.png`; 1,86 MB en total |
+| Capturas de tablet 7" y 10" | Obligatorias si se declara compatibilidad con tablet | Pendiente: las de `build/b3-tablet-*.png` son de emulador y a resolución forzada; hay que repetirlas en un tablet real o restringir la app a teléfonos |
 | Vídeo | Opcional | — |
 
 La app sí funciona en tablet (VERIFICADO en una ventana de 800×1280 dp y en 1280×800 dp). Si no se
@@ -451,23 +451,16 @@ Contacto: <correio de contacto>
 
 ## 9. Decisiones pendientes antes de publicar
 
-Estas cuatro cosas **no** se han tocado porque cambian el comportamiento o el reparto y las tiene
-que decidir quien publica:
+Quedan **dos** cosas que cambian el comportamiento o el reparto y las tiene que decidir quien
+publica. (El `versionCode` ya está en `14`/`1.13` y la vuelta atrás del sistema ya está
+implementada: las dos pendientes de la ronda anterior están cerradas.)
 
-1. **`versionCode`.** El bundle sale con `13`, el mismo número que ya tienen los testers en la APK
-   de depuración. Play acepta ese número como primera subida, pero conviene subirlo (por ejemplo a
-   `14`/`1.13`) para que el bundle publicado no se confunda con lo repartido a mano.
-2. **Ofuscación (R8).** Probado en una rama aparte y **revertido** (ver `docs/` y el resumen de la
+1. **Ofuscación (R8).** Probado en una rama aparte y **revertido** (ver `docs/` y el resumen de la
    fase): con R8 la APK de release pasa de 17.531.219 a 6.324.218 bytes (−64 %) y la app funciona
    (arranca, da de alta una mascota, abre la ficha). No se ha activado porque un fallo de R8 es más
    difícil de diagnosticar que el espacio que ahorra. Si se activa, hay que repetir la batería de
    pruebas manuales sobre el APK de release.
-3. **Botón "atrás" del sistema.** La app navega con su botón flotante de volver y **no** intercepta
-   la vuelta atrás: desde la ficha de una mascota, el gesto de atrás cierra la app (VERIFICADO en
-   Android 8 y en Android 16/17). No es un fallo de esta fase —se comporta igual con `targetSdk`
-   34—, pero en una app publicada se espera que "atrás" vuelva a la lista. Se arregla con un
-   `BackHandler` que use el `volverAtras` que ya existe en `App.kt`.
-4. **`USE_EXACT_ALARM` frente a `SCHEDULE_EXACT_ALARM`.** Se mantiene `SCHEDULE_EXACT_ALARM` porque
+2. **`USE_EXACT_ALARM` frente a `SCHEDULE_EXACT_ALARM`.** Se mantiene `SCHEDULE_EXACT_ALARM` porque
    `USE_EXACT_ALARM` está reservado a apps de reloj y calendario (SUPUESTO: Play lo revisa en la
    revisión manual; la documentación de Android lo dice explícitamente).
 
@@ -478,6 +471,6 @@ que decidir quien publica:
 - `firma/virtualpet-release.jks` y `keystore.properties` (fuera de git).
 - `androidApp-release.aab` recién generado y verificado con `jarsigner`.
 - Icono de la tienda (512×512) y gráfico destacado (1024×500).
-- Capturas de teléfono y de tablet.
+- Capturas de teléfono (ya están en `docs/capturas-play/`) y **de tablet**, que siguen pendientes.
 - Política de privacidad publicada en una URL.
 - Correo de contacto para la ficha.
