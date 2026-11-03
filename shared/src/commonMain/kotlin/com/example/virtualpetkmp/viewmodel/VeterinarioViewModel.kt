@@ -2,7 +2,7 @@ package com.example.virtualpetkmp.viewmodel
 
 import com.example.virtualpetkmp.Veterinario
 import com.example.virtualpetkmp.data.VeterinarioRepository
-import com.example.virtualpetkmp.util.detalleDeError
+import com.example.virtualpetkmp.util.registrarFallo
 import com.example.virtualpetkmp.util.textoDeFallo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +45,8 @@ class VeterinarioViewModel(private val repository: VeterinarioRepository) {
             try {
                 _veterinarios.value = repository.getAllVeterinarios()
             } catch (e: Exception) {
-                _errorMessage.value = getString(Res.string.error_cargar_veterinarios, detalleDeError(e))
+                registrarFallo(e)
+                _errorMessage.value = getString(Res.string.error_cargar_veterinarios)
             } finally {
                 _isLoading.value = false
             }
@@ -86,7 +87,8 @@ class VeterinarioViewModel(private val repository: VeterinarioRepository) {
                 loadVeterinarios()
                 onSuccess()
             } catch (e: Exception) {
-                _errorMessage.value = getString(Res.string.error_borrar_veterinario, detalleDeError(e))
+                registrarFallo(e)
+                _errorMessage.value = getString(Res.string.error_borrar_veterinario)
             } finally {
                 _isLoading.value = false
             }

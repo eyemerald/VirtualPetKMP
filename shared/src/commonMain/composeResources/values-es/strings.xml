@@ -343,13 +343,13 @@
     <string name="aviso_aceptar">Aceptar</string>
     <string name="aviso_posponer">Posponer %1$d min</string>
 
-    <string name="error_cargar_mascotas">Error al cargar mascotas: %1$s</string>
-    <string name="error_cargar_veterinarios">Error al cargar veterinarios: %1$s</string>
-    <string name="error_borrar_mascota">Error al borrar mascota: %1$s</string>
-    <string name="error_borrar_veterinario">Error al borrar veterinario: %1$s</string>
-    <string name="error_guardar_foto">No se pudo guardar la foto: %1$s</string>
+    <string name="error_cargar_mascotas">Error al cargar mascotas</string>
+    <string name="error_cargar_veterinarios">Error al cargar veterinarios</string>
+    <string name="error_borrar_mascota">Error al borrar mascota</string>
+    <string name="error_borrar_veterinario">Error al borrar veterinario</string>
+    <string name="error_guardar_foto">No se pudo guardar la foto</string>
     <string name="error_guardar_foto_corto">No se pudo guardar la foto</string>
-    <string name="error_guardar_peso_ideal">No se pudo guardar el peso ideal: %1$s</string>
+    <string name="error_guardar_peso_ideal">No se pudo guardar el peso ideal</string>
     <string name="error_guardar_peso_ideal_corto">No se pudo guardar el peso ideal</string>
     <string name="error_nombre_duplicado">Ya existe una mascota con ese nombre</string>
     <string name="error_id_requerido">Se necesita un id para actualizar</string>
@@ -375,7 +375,7 @@
     <string name="dialogo_filtro_copia">Copia de Virtual Pet (*.vpet)</string>
 
     <!-- Errores de las operaciones de la ficha (vacunas, pesos, notas, informes...) -->
-    <string name="error_cargar_ficha">No se pudo cargar la ficha: %1$s</string>
+    <string name="error_cargar_ficha">No se pudo cargar la ficha</string>
     <string name="error_guardar_dato">No se pudo guardar: %1$s</string>
     <string name="error_borrar_dato">No se pudo borrar: %1$s</string>
 

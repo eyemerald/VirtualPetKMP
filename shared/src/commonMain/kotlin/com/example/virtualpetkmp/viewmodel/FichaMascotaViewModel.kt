@@ -17,7 +17,7 @@ import com.example.virtualpetkmp.data.VacunaRepository
 import com.example.virtualpetkmp.util.Localizacion
 import com.example.virtualpetkmp.util.ProgramadorNotificaciones
 import com.example.virtualpetkmp.util.ReprogramadorNotificaciones
-import com.example.virtualpetkmp.util.detalleDeError
+import com.example.virtualpetkmp.util.registrarFallo
 import com.example.virtualpetkmp.util.ErrorAppException
 import com.example.virtualpetkmp.util.textoDeFallo
 import kotlinx.coroutines.CoroutineDispatcher
@@ -211,7 +211,8 @@ class FichaMascotaViewModel(
                 // ejecutarse es también el que ha leído los datos más recientes.
                 mutexResumen.withLock { leerYRecalcular() }
             } catch (e: Exception) {
-                _errorMessage.value = getString(Res.string.error_cargar_ficha, detalleDeError(e))
+                registrarFallo(e)
+                _errorMessage.value = getString(Res.string.error_cargar_ficha)
             } finally {
                 _isLoading.value = false
             }
@@ -338,13 +339,14 @@ class FichaMascotaViewModel(
 
     /**
      * Texto del error: los motivos de dominio ya saben traducirse solos; para el resto se usa el
-     * mensaje de la pantalla más el detalle técnico, que es lo que permite diagnosticar.
+     * aviso propio de la pantalla, sin añadidos, y el detalle técnico va al registro.
      */
     private suspend fun textoDeError(clave: StringResource, fallo: Throwable): String =
         if (fallo is ErrorAppException) {
             textoDeFallo(fallo)
         } else {
-            getString(clave, detalleDeError(fallo))
+            registrarFallo(fallo)
+            getString(clave)
         }
 
     /**

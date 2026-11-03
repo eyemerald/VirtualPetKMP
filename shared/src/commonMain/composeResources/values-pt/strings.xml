@@ -345,13 +345,13 @@
     <string name="aviso_aceptar">Aceitar</string>
     <string name="aviso_posponer">Adiar %1$d min</string>
 
-    <string name="error_cargar_mascotas">Erro ao carregar animais: %1$s</string>
-    <string name="error_cargar_veterinarios">Erro ao carregar veterinários: %1$s</string>
-    <string name="error_borrar_mascota">Erro ao eliminar animal: %1$s</string>
-    <string name="error_borrar_veterinario">Erro ao eliminar veterinário: %1$s</string>
-    <string name="error_guardar_foto">Não foi possível guardar a foto: %1$s</string>
+    <string name="error_cargar_mascotas">Erro ao carregar animais</string>
+    <string name="error_cargar_veterinarios">Erro ao carregar veterinários</string>
+    <string name="error_borrar_mascota">Erro ao eliminar animal</string>
+    <string name="error_borrar_veterinario">Erro ao eliminar veterinário</string>
+    <string name="error_guardar_foto">Não foi possível guardar a foto</string>
     <string name="error_guardar_foto_corto">Não foi possível guardar a foto</string>
-    <string name="error_guardar_peso_ideal">Não foi possível guardar o peso ideal: %1$s</string>
+    <string name="error_guardar_peso_ideal">Não foi possível guardar o peso ideal</string>
     <string name="error_guardar_peso_ideal_corto">Não foi possível guardar o peso ideal</string>
     <string name="error_nombre_duplicado">Já existe um animal com esse nome</string>
     <string name="error_id_requerido">É necessário um id para atualizar</string>
@@ -375,7 +375,7 @@
     <string name="dialogo_elegir_foto">Escolher fotografia do animal</string>
     <string name="dialogo_filtro_imagenes">Imagens</string>
     <string name="dialogo_filtro_copia">Cópia do Virtual Pet (*.vpet)</string>
-    <string name="error_cargar_ficha">Não foi possível carregar a ficha: %1$s</string>
+    <string name="error_cargar_ficha">Não foi possível carregar a ficha</string>
     <string name="error_guardar_dato">Não foi possível guardar: %1$s</string>
     <string name="error_borrar_dato">Não foi possível apagar: %1$s</string>
 

@@ -3,7 +3,7 @@ package com.example.virtualpetkmp.viewmodel
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.data.MascotaRepository
 import com.example.virtualpetkmp.data.PesoRepository
-import com.example.virtualpetkmp.util.detalleDeError
+import com.example.virtualpetkmp.util.registrarFallo
 import com.example.virtualpetkmp.util.textoDeFallo
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -76,7 +76,8 @@ class MascotaViewModel(
                     emptyMap()
                 }
             } catch (e: Exception) {
-                _errorMessage.value = getString(Res.string.error_cargar_mascotas, detalleDeError(e))
+                registrarFallo(e)
+                _errorMessage.value = getString(Res.string.error_cargar_mascotas)
             } finally {
                 _isLoading.value = false
             }
@@ -124,7 +125,8 @@ class MascotaViewModel(
                     loadMascotas()
                 }
             } catch (e: Exception) {
-                _errorMessage.value = getString(Res.string.error_guardar_foto, detalleDeError(e))
+                registrarFallo(e)
+                _errorMessage.value = getString(Res.string.error_guardar_foto)
             }
         }
     }
@@ -146,7 +148,8 @@ class MascotaViewModel(
                     loadMascotas()
                 }
             } catch (e: Exception) {
-                _errorMessage.value = getString(Res.string.error_guardar_peso_ideal, detalleDeError(e))
+                registrarFallo(e)
+                _errorMessage.value = getString(Res.string.error_guardar_peso_ideal)
             }
         }
     }
@@ -159,7 +162,8 @@ class MascotaViewModel(
                 loadMascotas()
                 onSuccess()
             } catch (e: Exception) {
-                _errorMessage.value = getString(Res.string.error_borrar_mascota, detalleDeError(e))
+                registrarFallo(e)
+                _errorMessage.value = getString(Res.string.error_borrar_mascota)
             } finally {
                 _isLoading.value = false
             }

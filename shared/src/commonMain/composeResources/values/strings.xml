@@ -347,13 +347,13 @@
     <string name="aviso_aceptar">Accept</string>
     <string name="aviso_posponer">Snooze %1$d min</string>
 
-    <string name="error_cargar_mascotas">Error loading pets: %1$s</string>
-    <string name="error_cargar_veterinarios">Error loading vets: %1$s</string>
-    <string name="error_borrar_mascota">Error deleting pet: %1$s</string>
-    <string name="error_borrar_veterinario">Error deleting vet: %1$s</string>
-    <string name="error_guardar_foto">Could not save the photo: %1$s</string>
+    <string name="error_cargar_mascotas">Error loading pets</string>
+    <string name="error_cargar_veterinarios">Error loading vets</string>
+    <string name="error_borrar_mascota">Error deleting pet</string>
+    <string name="error_borrar_veterinario">Error deleting vet</string>
+    <string name="error_guardar_foto">Could not save the photo</string>
     <string name="error_guardar_foto_corto">Could not save the photo</string>
-    <string name="error_guardar_peso_ideal">Could not save the ideal weight: %1$s</string>
+    <string name="error_guardar_peso_ideal">Could not save the ideal weight</string>
     <string name="error_guardar_peso_ideal_corto">Could not save the ideal weight</string>
     <string name="error_nombre_duplicado">A pet with that name already exists</string>
     <string name="error_id_requerido">An id is required to update</string>
@@ -379,7 +379,7 @@
     <string name="dialogo_filtro_copia">Virtual Pet backup (*.vpet)</string>
 
     <!-- Errors from the pet record operations (vaccines, weights, notes, reports...) -->
-    <string name="error_cargar_ficha">Could not load the record: %1$s</string>
+    <string name="error_cargar_ficha">Could not load the record</string>
     <string name="error_guardar_dato">Could not save: %1$s</string>
     <string name="error_borrar_dato">Could not delete: %1$s</string>
 

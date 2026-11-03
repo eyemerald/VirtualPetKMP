@@ -342,13 +342,13 @@
     <string name="aviso_aceptar">Accetta</string>
     <string name="aviso_posponer">Posticipa di %1$d min</string>
 
-    <string name="error_cargar_mascotas">Errore durante il caricamento degli animali: %1$s</string>
-    <string name="error_cargar_veterinarios">Errore durante il caricamento dei veterinari: %1$s</string>
-    <string name="error_borrar_mascota">Errore durante l\'eliminazione dell\'animale: %1$s</string>
-    <string name="error_borrar_veterinario">Errore durante l\'eliminazione del veterinario: %1$s</string>
-    <string name="error_guardar_foto">Impossibile salvare la foto: %1$s</string>
+    <string name="error_cargar_mascotas">Errore durante il caricamento degli animali</string>
+    <string name="error_cargar_veterinarios">Errore durante il caricamento dei veterinari</string>
+    <string name="error_borrar_mascota">Errore durante l\'eliminazione dell\'animale</string>
+    <string name="error_borrar_veterinario">Errore durante l\'eliminazione del veterinario</string>
+    <string name="error_guardar_foto">Impossibile salvare la foto</string>
     <string name="error_guardar_foto_corto">Impossibile salvare la foto</string>
-    <string name="error_guardar_peso_ideal">Impossibile salvare il peso ideale: %1$s</string>
+    <string name="error_guardar_peso_ideal">Impossibile salvare il peso ideale</string>
     <string name="error_guardar_peso_ideal_corto">Impossibile salvare il peso ideale</string>
     <string name="error_nombre_duplicado">Esiste già un animale con questo nome</string>
     <string name="error_id_requerido">Serve un id per aggiornare</string>
@@ -372,7 +372,7 @@
     <string name="dialogo_elegir_foto">Scegli la foto dell'animale</string>
     <string name="dialogo_filtro_imagenes">Immagini</string>
     <string name="dialogo_filtro_copia">Copia di Virtual Pet (*.vpet)</string>
-    <string name="error_cargar_ficha">Impossibile caricare la scheda: %1$s</string>
+    <string name="error_cargar_ficha">Impossibile caricare la scheda</string>
     <string name="error_guardar_dato">Salvataggio non riuscito: %1$s</string>
     <string name="error_borrar_dato">Eliminazione non riuscita: %1$s</string>
 

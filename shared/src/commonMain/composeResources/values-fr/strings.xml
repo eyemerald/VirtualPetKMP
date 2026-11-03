@@ -346,13 +346,13 @@
     <string name="aviso_aceptar">Accepter</string>
     <string name="aviso_posponer">Reporter de %1$d min</string>
 
-    <string name="error_cargar_mascotas">Erreur lors du chargement des animaux : %1$s</string>
-    <string name="error_cargar_veterinarios">Erreur lors du chargement des vétérinaires : %1$s</string>
-    <string name="error_borrar_mascota">Erreur lors de la suppression de l\'animal : %1$s</string>
-    <string name="error_borrar_veterinario">Erreur lors de la suppression du vétérinaire : %1$s</string>
-    <string name="error_guardar_foto">Impossible d\'enregistrer la photo : %1$s</string>
+    <string name="error_cargar_mascotas">Erreur lors du chargement des animaux</string>
+    <string name="error_cargar_veterinarios">Erreur lors du chargement des vétérinaires</string>
+    <string name="error_borrar_mascota">Erreur lors de la suppression de l\'animal</string>
+    <string name="error_borrar_veterinario">Erreur lors de la suppression du vétérinaire</string>
+    <string name="error_guardar_foto">Impossible d\'enregistrer la photo</string>
     <string name="error_guardar_foto_corto">Impossible d\'enregistrer la photo</string>
-    <string name="error_guardar_peso_ideal">Impossible d\'enregistrer le poids idéal : %1$s</string>
+    <string name="error_guardar_peso_ideal">Impossible d\'enregistrer le poids idéal</string>
     <string name="error_guardar_peso_ideal_corto">Impossible d\'enregistrer le poids idéal</string>
     <string name="error_nombre_duplicado">Un animal portant ce nom existe déjà</string>
     <string name="error_id_requerido">Un identifiant est nécessaire pour la mise à jour</string>
@@ -376,7 +376,7 @@
     <string name="dialogo_elegir_foto">Choisir la photo de l'animal</string>
     <string name="dialogo_filtro_imagenes">Images</string>
     <string name="dialogo_filtro_copia">Sauvegarde Virtual Pet (*.vpet)</string>
-    <string name="error_cargar_ficha">Impossible de charger la fiche : %1$s</string>
+    <string name="error_cargar_ficha">Impossible de charger la fiche</string>
     <string name="error_guardar_dato">Échec de l\'enregistrement : %1$s</string>
     <string name="error_borrar_dato">Échec de la suppression : %1$s</string>
 

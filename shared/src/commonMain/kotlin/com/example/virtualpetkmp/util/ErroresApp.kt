@@ -73,13 +73,9 @@ internal fun registrarFallo(e: Throwable?) {
     e.printStackTrace()
 }
 
-/**
- * Detalle técnico para los mensajes del tipo "No se pudo guardar el cambio: <detalle>".
- *
- * Nunca devuelve una cadena vacía: si la excepción no trae mensaje se usa el nombre de su clase
- * y, si tampoco, un interrogante. Un hueco detrás de los dos puntos se lee como un fallo del
- * programa, no como un error de la base de datos.
+/*
+ * Aquí vivía `detalleDeError`, que pegaba el mensaje de la excepción detrás de avisos como
+ * "No se pudo cargar la lista: <mensaje>". Se quitó en la 1.13: ese mensaje está escrito para
+ * quien programa (nombres de columnas, rutas, códigos) y en un solo idioma. Ahora los avisos usan
+ * su texto traducido, sin añadidos, y el detalle va al registro con [registrarFallo].
  */
-fun detalleDeError(e: Throwable?): String =
-    e?.message ?: e?.let { it::class.simpleName } ?: "?"
-

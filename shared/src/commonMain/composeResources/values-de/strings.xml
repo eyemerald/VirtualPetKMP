@@ -346,13 +346,13 @@
     <string name="aviso_aceptar">Akzeptieren</string>
     <string name="aviso_posponer">Um %1$d Min. verschieben</string>
 
-    <string name="error_cargar_mascotas">Fehler beim Laden der Tiere: %1$s</string>
-    <string name="error_cargar_veterinarios">Fehler beim Laden der Tierärzte: %1$s</string>
-    <string name="error_borrar_mascota">Fehler beim Löschen des Tieres: %1$s</string>
-    <string name="error_borrar_veterinario">Fehler beim Löschen des Tierarztes: %1$s</string>
-    <string name="error_guardar_foto">Foto konnte nicht gespeichert werden: %1$s</string>
+    <string name="error_cargar_mascotas">Fehler beim Laden der Tiere</string>
+    <string name="error_cargar_veterinarios">Fehler beim Laden der Tierärzte</string>
+    <string name="error_borrar_mascota">Fehler beim Löschen des Tieres</string>
+    <string name="error_borrar_veterinario">Fehler beim Löschen des Tierarztes</string>
+    <string name="error_guardar_foto">Foto konnte nicht gespeichert werden</string>
     <string name="error_guardar_foto_corto">Foto konnte nicht gespeichert werden</string>
-    <string name="error_guardar_peso_ideal">Idealgewicht konnte nicht gespeichert werden: %1$s</string>
+    <string name="error_guardar_peso_ideal">Idealgewicht konnte nicht gespeichert werden</string>
     <string name="error_guardar_peso_ideal_corto">Idealgewicht konnte nicht gespeichert werden</string>
     <string name="error_nombre_duplicado">Ein Tier mit diesem Namen existiert bereits</string>
     <string name="error_id_requerido">Zum Aktualisieren ist eine ID nötig</string>
@@ -376,7 +376,7 @@
     <string name="dialogo_elegir_foto">Foto des Tieres auswählen</string>
     <string name="dialogo_filtro_imagenes">Bilder</string>
     <string name="dialogo_filtro_copia">Virtual Pet-Sicherung (*.vpet)</string>
-    <string name="error_cargar_ficha">Akte konnte nicht geladen werden: %1$s</string>
+    <string name="error_cargar_ficha">Akte konnte nicht geladen werden</string>
     <string name="error_guardar_dato">Speichern fehlgeschlagen: %1$s</string>
     <string name="error_borrar_dato">Löschen fehlgeschlagen: %1$s</string>
 
