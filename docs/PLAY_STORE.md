@@ -64,7 +64,8 @@ $env:GRADLE_USER_HOME="$PWD\.gradle-home"
 ```
 
 Sale en `androidApp/build/outputs/bundle/release/androidApp-release.aab`
-(**17.159.685 bytes**, VERIFICADO).
+(**17.157.058 bytes**, VERIFICADO; se comprueba que dentro va `versionCode 14` / `versionName 1.13`
+con `java -jar bundletool.jar dump manifest --bundle=…`).
 
 ### 2.2. Comprobar que va firmado
 
@@ -449,20 +450,29 @@ Contacto: <correio de contacto>
 
 ---
 
-## 9. Decisiones pendientes antes de publicar
+## 9. Decisiones tomadas y lo que sigue pendiente
 
-Quedan **dos** cosas que cambian el comportamiento o el reparto y las tiene que decidir quien
-publica. (El `versionCode` ya está en `14`/`1.13` y la vuelta atrás del sistema ya está
-implementada: las dos pendientes de la ronda anterior están cerradas.)
+**Ya decidido** (no hace falta volver a discutirlo):
 
-1. **Ofuscación (R8).** Probado en una rama aparte y **revertido** (ver `docs/` y el resumen de la
-   fase): con R8 la APK de release pasa de 17.531.219 a 6.324.218 bytes (−64 %) y la app funciona
-   (arranca, da de alta una mascota, abre la ficha). No se ha activado porque un fallo de R8 es más
-   difícil de diagnosticar que el espacio que ahorra. Si se activa, hay que repetir la batería de
-   pruebas manuales sobre el APK de release.
-2. **`USE_EXACT_ALARM` frente a `SCHEDULE_EXACT_ALARM`.** Se mantiene `SCHEDULE_EXACT_ALARM` porque
-   `USE_EXACT_ALARM` está reservado a apps de reloj y calendario (SUPUESTO: Play lo revisa en la
-   revisión manual; la documentación de Android lo dice explícitamente).
+- **Versión**: `versionCode 14` / `versionName 1.13` en Android y `1.13.0` en el paquete de
+  escritorio.
+- **Vuelta atrás del sistema**: implementada (`BotonAtrasSistema`, expect/actual). Ficha → lista y
+  formulario → pantalla anterior; en la lista, atrás cierra la app.
+- **Alarmas exactas**: se mantiene **`SCHEDULE_EXACT_ALARM`**. `USE_EXACT_ALARM` queda descartado
+  porque está reservado a apps de reloj y calendario (SUPUESTO: Play lo revisa en la revisión
+  manual; la documentación de Android lo dice explícitamente). La app funciona sin el permiso, con
+  avisos inexactos y un aviso en su menú.
+- **Ofuscación (R8)**: **no entra ahora**. Probado en una rama aparte y revertido: la APK de
+  release baja de 17.531.219 a 6.324.218 bytes (−64 %) y la app funciona, pero un fallo de R8 es
+  más difícil de diagnosticar que el espacio que ahorra. Queda como mejora futura, y si se activa
+  hay que repetir la batería de pruebas manuales sobre el APK de release.
+
+**Pendiente** (fuera de este repositorio, sin prisa):
+
+- Cuenta de desarrollador de Play, ficha, clasificación de contenido y seguridad de datos.
+- Icono de tienda (512×512) y gráfico destacado (1024×500).
+- Capturas de tablet (las de móvil ya están en `docs/capturas-play/`).
+- Política de privacidad publicada en una URL y correo de contacto.
 
 ---
 
