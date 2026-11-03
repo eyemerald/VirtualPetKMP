@@ -28,6 +28,7 @@ import com.example.virtualpetkmp.ui.MascotaListScreen
 import com.example.virtualpetkmp.ui.VeterinarioFormScreen
 import com.example.virtualpetkmp.ui.VeterinariosListScreen
 import com.example.virtualpetkmp.ui.theme.VirtualPetTheme
+import com.example.virtualpetkmp.util.BotonAtrasSistema
 import com.example.virtualpetkmp.util.ConLocalizacion
 import com.example.virtualpetkmp.util.ReprogramadorNotificaciones
 import com.example.virtualpetkmp.util.localizacionDelSistema
@@ -171,6 +172,11 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
             selectedMascotaId = null
         }
     }
+
+    // El gesto y el botón de atrás del sistema hacen lo mismo que el botón flotante de volver:
+    // desde la ficha vuelven a la lista y desde el formulario a la pantalla de la que se vino.
+    // En la lista no se engancha nada (`null`), así que ahí atrás sigue cerrando la app.
+    BotonAtrasSistema(volverAtras)
 
     // La configuración regional se decide UNA vez aquí y se publica al resto de la interfaz:
     // unidades, orden de fecha y separador decimal salen siempre de este valor, así que no
