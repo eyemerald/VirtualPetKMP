@@ -39,7 +39,13 @@ import virtualpetkmp.shared.generated.resources.borrar_mascota_mensaje_sin_nombr
 import virtualpetkmp.shared.generated.resources.borrar_mascota_titulo
 import virtualpetkmp.shared.generated.resources.filtro_vacunas_pendientes
 import virtualpetkmp.shared.generated.resources.filtro_preventivos_pendientes
+import virtualpetkmp.shared.generated.resources.filtro_vencida
+import virtualpetkmp.shared.generated.resources.filtro_proxima
 import virtualpetkmp.shared.generated.resources.filtro_sin_resultados
+import com.example.virtualpetkmp.util.DosisPendiente
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import virtualpetkmp.shared.generated.resources.buscar_mascota
 import virtualpetkmp.shared.generated.resources.buscar_mascota_sin_resultados
 import virtualpetkmp.shared.generated.resources.lista_mascotas_reintentar
@@ -173,16 +179,16 @@ fun MascotaListScreen(
                     // mascotas que no se estan viendo.
                     val buscadas = remember(mascotas, consulta) { filtrarMascotas(mascotas, consulta) }
                     val cuantasVacunas = remember(buscadas, vacunasPendientes) {
-                        buscadas.count { it.id != null && it.id in vacunasPendientes }
+                        buscadas.count { it.id != null && vacunasPendientes.containsKey(it.id) }
                     }
                     val cuantosPreventivos = remember(buscadas, preventivosPendientes) {
-                        buscadas.count { it.id != null && it.id in preventivosPendientes }
+                        buscadas.count { it.id != null && preventivosPendientes.containsKey(it.id) }
                     }
                     val visibles = remember(buscadas, filtroVacunas, filtroPreventivos, vacunasPendientes, preventivosPendientes) {
                         buscadas.filter { mascota ->
                             val id = mascota.id
-                            val vacunaOk = !filtroVacunas || (id != null && id in vacunasPendientes)
-                            val preventivoOk = !filtroPreventivos || (id != null && id in preventivosPendientes)
+                            val vacunaOk = !filtroVacunas || (id != null && vacunasPendientes.containsKey(id))
+                            val preventivoOk = !filtroPreventivos || (id != null && preventivosPendientes.containsKey(id))
                             vacunaOk && preventivoOk
                         }
                     }
@@ -252,6 +258,16 @@ fun MascotaListScreen(
                                         mascota.id?.let { showDeleteDialog = it }
                                     }
 
+                                    // Con un filtro puesto se dice QUÉ está pendiente y para
+                                    // cuándo: "Rabia · vencida el 12/03/2026". Sin filtro la lista
+                                    // se queda como estaba.
+                                    val avisos = if (hayFiltro) {
+                                        avisosDe(mascota, filtroVacunas, filtroPreventivos, vacunasPendientes, preventivosPendientes)
+                                    } else {
+                                        emptyList()
+                                    }
+
+                                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     when (modo) {
                                         ModoLista.TARJETAS -> MascotaCard(
                                             mascota = mascota,
@@ -268,6 +284,15 @@ fun MascotaListScreen(
                                             onEdit = alPulsar,
                                             onDelete = alBorrar
                                         )
+                                    }
+                                    if (avisos.isNotEmpty()) {
+                                        Text(
+                                            text = avisos.joinToString(" · "),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                                            modifier = Modifier.padding(horizontal = 12.dp)
+                                        )
+                                    }
                                     }
                                 }
                             }
@@ -662,5 +687,40 @@ private fun FiltrosPendientes(
                 Text("${stringResource(Res.string.filtro_preventivos_pendientes)} ($cuantosPreventivos)")
             }
         )
+    }
+}
+
+/**
+ * Lo que hay que enseñar bajo una mascota cuando hay un filtro puesto: **qué** dosis está pendiente
+ * y **para cuándo** ("Rabia · vencida el 12/03/2026").
+ *
+ * Devuelve los textos ya montados porque es la pantalla la que tiene los recursos de idioma; así la
+ * lógica de qué está pendiente vive en `Pendientes`/`Dosis`, que sí se prueba sin interfaz.
+ */
+@Composable
+private fun avisosDe(
+    mascota: com.example.virtualpetkmp.Mascota,
+    filtroVacunas: Boolean,
+    filtroPreventivos: Boolean,
+    vacunasPendientes: Map<Long, List<DosisPendiente>>,
+    preventivosPendientes: Map<Long, List<DosisPendiente>>
+): List<String> {
+    val id = mascota.id ?: return emptyList()
+    val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val formato = localizacion
+
+    val dosis = buildList {
+        if (filtroVacunas) addAll(vacunasPendientes[id].orEmpty())
+        if (filtroPreventivos) addAll(preventivosPendientes[id].orEmpty())
+    }
+
+    return dosis.map { pendiente ->
+        val cuando = formato.formatearFecha(pendiente.fecha)
+        val texto = if (pendiente.vencida(hoy)) {
+            stringResource(Res.string.filtro_vencida, cuando)
+        } else {
+            stringResource(Res.string.filtro_proxima, cuando)
+        }
+        "${pendiente.nombre} · $texto"
     }
 }

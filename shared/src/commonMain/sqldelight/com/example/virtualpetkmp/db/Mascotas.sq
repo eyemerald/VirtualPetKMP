@@ -61,35 +61,17 @@ SELECT last_insert_rowid() AS id;
 deleteAll:
 DELETE FROM mascotas;
 
--- --- Filtros de la lista: mascotas con vacunas o preventivos pendientes ---------------------
---
--- "Pendiente" es lo mismo que dicen los avisos: la proxima dosis ya paso o cae dentro de los
--- proximos 30 dias. Se mira el ULTIMO registro de cada vacuna (por nombre), no cada fila suelta:
--- una vacuna puesta cinco veces no son cinco pendientes, es una.
---
--- La fecha límite la pone quien llama (hoy + 30 dias) para que la regla de "cuanto es proximo"
--- viva en un solo sitio y no se quede escrita en el SQL.
--- Se devuelven los ids y no las mascotas enteras: la pantalla ya tiene la lista cargada.
-selectIdsConVacunaPendiente:
-SELECT m.id FROM mascotas m
-WHERE EXISTS (
-    SELECT 1 FROM vacunas v
-    WHERE v.mascotaId = m.id
-      AND v.fechaProximaDosis <= :limite
-      AND v.fechaAplicacion = (
-          SELECT MAX(v2.fechaAplicacion) FROM vacunas v2
-          WHERE v2.mascotaId = v.mascotaId AND v2.nombre = v.nombre
-      )
-);
 
-selectIdsConPreventivoPendiente:
-SELECT m.id FROM mascotas m
-WHERE EXISTS (
-    SELECT 1 FROM preventivos p
-    WHERE p.mascotaId = m.id
-      AND p.fechaProximaDosis <= :limite
-      AND p.fechaAplicacion = (
-          SELECT MAX(p2.fechaAplicacion) FROM preventivos p2
-          WHERE p2.mascotaId = p.mascotaId AND p2.nombre = p.nombre
-      )
-);
+-- --- Dosis para los filtros y la ficha ------------------------------------------------------
+--
+-- Se traen las dos columnas que hacen falta de TODAS las vacunas y preventivos, y el agrupado por
+-- nombre (sin tildes ni mayusculas) se hace en Kotlin: SQLite no sabe quitar tildes sin una cadena
+-- de `replace` larguisima, y la regla tiene que ser la misma que use la ficha.
+--
+-- Es una sola consulta por tabla (no una por mascota): con 500 mascotas y 2.500 dosis son 2.500
+-- filas de tres columnas, y el filtro tarda milisegundos (medido en FiltrosPendientesTest).
+selectDosisVacunas:
+SELECT mascotaId, nombre, fechaAplicacion, fechaProximaDosis FROM vacunas;
+
+selectDosisPreventivos:
+SELECT mascotaId, nombre, fechaAplicacion, fechaProximaDosis FROM preventivos;

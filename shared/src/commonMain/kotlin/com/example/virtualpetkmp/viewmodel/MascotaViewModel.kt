@@ -3,6 +3,7 @@ package com.example.virtualpetkmp.viewmodel
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.data.MascotaRepository
 import com.example.virtualpetkmp.data.PesoRepository
+import com.example.virtualpetkmp.util.DosisPendiente
 import com.example.virtualpetkmp.util.registrarFallo
 import com.example.virtualpetkmp.util.textoDeFallo
 import kotlinx.coroutines.CoroutineDispatcher
@@ -61,11 +62,12 @@ class MascotaViewModel(
      * Se calculan en la base de datos (ver `MascotaRepository`) y no recorriendo la lista: el
      * filtro tiene que costar lo mismo con 4 mascotas que con 500. Se recargan con la lista.
      */
-    private val _vacunasPendientes = MutableStateFlow<Set<Long>>(emptySet())
-    val vacunasPendientes: StateFlow<Set<Long>> = _vacunasPendientes.asStateFlow()
+    private val _vacunasPendientes = MutableStateFlow<Map<Long, List<DosisPendiente>>>(emptyMap())
+    val vacunasPendientes: StateFlow<Map<Long, List<DosisPendiente>>> = _vacunasPendientes.asStateFlow()
 
-    private val _preventivosPendientes = MutableStateFlow<Set<Long>>(emptySet())
-    val preventivosPendientes: StateFlow<Set<Long>> = _preventivosPendientes.asStateFlow()
+    private val _preventivosPendientes = MutableStateFlow<Map<Long, List<DosisPendiente>>>(emptyMap())
+    val preventivosPendientes: StateFlow<Map<Long, List<DosisPendiente>>> =
+        _preventivosPendientes.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -93,14 +95,14 @@ class MascotaViewModel(
                 // Igual que los pesos: si fallara, la lista se sigue viendo sin los filtros.
                 val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
                 _vacunasPendientes.value = try {
-                    repository.getIdsConVacunaPendiente(hoy)
+                    repository.getVacunasPendientes(hoy)
                 } catch (e: Exception) {
-                    emptySet()
+                    emptyMap()
                 }
                 _preventivosPendientes.value = try {
-                    repository.getIdsConPreventivoPendiente(hoy)
+                    repository.getPreventivosPendientes(hoy)
                 } catch (e: Exception) {
-                    emptySet()
+                    emptyMap()
                 }
             } catch (e: Exception) {
                 registrarFallo(e)

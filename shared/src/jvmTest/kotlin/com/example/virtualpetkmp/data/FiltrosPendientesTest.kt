@@ -3,6 +3,7 @@ package com.example.virtualpetkmp.data
 import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.db.VirtualPetDatabase
 import com.example.virtualpetkmp.ui.filtrarMascotas
+import com.example.virtualpetkmp.util.Dosis
 import com.example.virtualpetkmp.util.Pendientes
 import java.io.File
 import java.nio.file.Files
@@ -64,7 +65,7 @@ class FiltrosPendientesTest {
         vacunas.insertVacuna(luna, "Polivalente", LocalDate(2024, 1, 1), LocalDate(2026, 1, 1), veterinario = null, lote = null)
         vacunas.insertVacuna(luna, "Polivalente", LocalDate(2026, 5, 1), fechaEnDias(90), veterinario = null, lote = null)
 
-        val pendientes = mascotas.getIdsConVacunaPendiente(hoy)
+        val pendientes = mascotas.getVacunasPendientes(hoy).keys
 
         assertTrue(pendientes.isEmpty(), "una vacuna ya repetida no puede salir como pendiente: $pendientes")
     }
@@ -74,7 +75,7 @@ class FiltrosPendientesTest {
         val luna = crearMascota("Luna")
         vacunas.insertVacuna(luna, "Rabia", LocalDate(2025, 1, 1), fechaEnDias(-5), veterinario = null, lote = null)
 
-        assertEquals(setOf(luna), mascotas.getIdsConVacunaPendiente(hoy))
+        assertEquals(setOf(luna), mascotas.getVacunasPendientes(hoy).keys)
     }
 
     @Test
@@ -82,7 +83,7 @@ class FiltrosPendientesTest {
         val luna = crearMascota("Luna")
         vacunas.insertVacuna(luna, "Rabia", LocalDate(2025, 1, 1), fechaEnDias(10), veterinario = null, lote = null)
 
-        assertEquals(setOf(luna), mascotas.getIdsConVacunaPendiente(hoy))
+        assertEquals(setOf(luna), mascotas.getVacunasPendientes(hoy).keys)
     }
 
     @Test
@@ -90,7 +91,7 @@ class FiltrosPendientesTest {
         val luna = crearMascota("Luna")
         vacunas.insertVacuna(luna, "Rabia", LocalDate(2025, 1, 1), fechaEnDias(90), veterinario = null, lote = null)
 
-        assertTrue(mascotas.getIdsConVacunaPendiente(hoy).isEmpty())
+        assertTrue(mascotas.getVacunasPendientes(hoy).isEmpty())
     }
 
     @Test
@@ -98,19 +99,19 @@ class FiltrosPendientesTest {
         // El día 30 entra y el 31 no: es la frontera de la ventana, la que se rompe al cambiarla.
         val luna = crearMascota("Luna")
         vacunas.insertVacuna(luna, "Rabia", LocalDate(2025, 1, 1), fechaEnDias(30), veterinario = null, lote = null)
-        assertEquals(setOf(luna), mascotas.getIdsConVacunaPendiente(hoy))
+        assertEquals(setOf(luna), mascotas.getVacunasPendientes(hoy).keys)
 
         val michi = crearMascota("Michi")
         vacunas.insertVacuna(michi, "Rabia", LocalDate(2025, 1, 1), fechaEnDias(31), veterinario = null, lote = null)
-        assertEquals(setOf(luna), mascotas.getIdsConVacunaPendiente(hoy))
+        assertEquals(setOf(luna), mascotas.getVacunasPendientes(hoy).keys)
     }
 
     @Test
     fun `una mascota sin vacunas no esta pendiente`() = runBlocking {
         crearMascota("Luna")
 
-        assertTrue(mascotas.getIdsConVacunaPendiente(hoy).isEmpty())
-        assertTrue(mascotas.getIdsConPreventivoPendiente(hoy).isEmpty())
+        assertTrue(mascotas.getVacunasPendientes(hoy).isEmpty())
+        assertTrue(mascotas.getPreventivosPendientes(hoy).isEmpty())
     }
 
     // --- Preventivos -----------------------------------------------------------------------
@@ -124,8 +125,8 @@ class FiltrosPendientesTest {
         vacunas.insertVacuna(luna, "Rabia", LocalDate(2025, 1, 1), fechaEnDias(-2), veterinario = null, lote = null)
         preventivos.insertPreventivo(michi, "Interno", "Pipeta", LocalDate(2025, 1, 1), fechaEnDias(-2), veterinario = null, lote = null)
 
-        assertEquals(setOf(luna), mascotas.getIdsConVacunaPendiente(hoy))
-        assertEquals(setOf(michi), mascotas.getIdsConPreventivoPendiente(hoy))
+        assertEquals(setOf(luna), mascotas.getVacunasPendientes(hoy).keys)
+        assertEquals(setOf(michi), mascotas.getPreventivosPendientes(hoy).keys)
     }
 
     @Test
@@ -134,7 +135,7 @@ class FiltrosPendientesTest {
         preventivos.insertPreventivo(luna, "Externo", "Pipeta", LocalDate(2024, 1, 1), LocalDate(2025, 1, 1), veterinario = null, lote = null)
         preventivos.insertPreventivo(luna, "Externo", "Pipeta", LocalDate(2026, 6, 1), fechaEnDias(60), veterinario = null, lote = null)
 
-        assertTrue(mascotas.getIdsConPreventivoPendiente(hoy).isEmpty())
+        assertTrue(mascotas.getPreventivosPendientes(hoy).isEmpty())
     }
 
     // --- Combinación con la búsqueda por nombre --------------------------------------------
@@ -148,7 +149,7 @@ class FiltrosPendientesTest {
             vacunas.insertVacuna(id, "Rabia", LocalDate(2025, 1, 1), fechaEnDias(-2), veterinario = null, lote = null)
         }
 
-        val pendientes = mascotas.getIdsConVacunaPendiente(hoy)
+        val pendientes = mascotas.getVacunasPendientes(hoy).keys
         val todas = mascotas.getAllMascotas()
 
         // Es exactamente lo que hace la pantalla: primero el nombre, después el filtro.
@@ -197,7 +198,7 @@ class FiltrosPendientesTest {
         // el calentamiento de la JVM y no representa al usuario.
         val tiempos = (1..5).map {
             val t0 = System.nanoTime()
-            val ids = mascotas.getIdsConVacunaPendiente(hoy)
+            val ids = mascotas.getVacunasPendientes(hoy).keys
             val ms = (System.nanoTime() - t0) / 1_000_000
             assertEquals(250, ids.size, "la mitad de 500 mascotas tiene la dosis vencida")
             ms
@@ -210,6 +211,45 @@ class FiltrosPendientesTest {
             mediana < 2_000,
             "filtrar 500 mascotas no puede tardar 2 segundos (tardo ${mediana}ms)"
         )
+    }
+
+    // --- Normalizacion del nombre: "la misma vacuna" --------------------------------------
+
+    @Test
+    fun `el nombre se compara sin espacios, mayusculas ni tildes`() {
+        val rabia = listOf("Rabia", "rabia ", "RÁBIA").map { Dosis.normalizarNombre(it) }
+
+        assertEquals(1, rabia.toSet().size, "las tres formas tienen que ser la misma vacuna: $rabia")
+        assertEquals("rabia", rabia.first())
+        assertEquals("leishmania", Dosis.normalizarNombre("  Leishmánia "))
+        assertEquals("nino", Dosis.normalizarNombre("Ñiño"))
+    }
+
+    @Test
+    fun `una vacuna escrita de dos formas no cuenta dos veces en el filtro`() = runBlocking {
+        val luna = crearMascota("Luna")
+        // La vieja esta vencida; la nueva, escrita con tilde y espacio, no vence hasta 2027.
+        vacunas.insertVacuna(luna, "Rabia", LocalDate(2024, 1, 1), fechaEnDias(-30), veterinario = null, lote = null)
+        vacunas.insertVacuna(luna, " RÁBIA ", LocalDate(2026, 5, 1), LocalDate(2027, 5, 1), veterinario = null, lote = null)
+
+        assertTrue(
+            mascotas.getVacunasPendientes(hoy).isEmpty(),
+            "el ultimo registro manda aunque el nombre se escriba distinto"
+        )
+    }
+
+    @Test
+    fun `el filtro dice que vacuna esta pendiente y con que fecha`() = runBlocking {
+        val luna = crearMascota("Luna")
+        val vencida = fechaEnDias(-12)
+        vacunas.insertVacuna(luna, "Rabia", LocalDate(2025, 1, 1), vencida, veterinario = null, lote = null)
+
+        val pendientes = mascotas.getVacunasPendientes(hoy).getValue(luna)
+
+        assertEquals(1, pendientes.size)
+        assertEquals("Rabia", pendientes.single().nombre)
+        assertEquals(vencida, pendientes.single().fecha)
+        assertTrue(pendientes.single().vencida(hoy), "hoy es ${fechaEnDias(0)} y vencia el $vencida")
     }
 
     // --- Ayudas ----------------------------------------------------------------------------

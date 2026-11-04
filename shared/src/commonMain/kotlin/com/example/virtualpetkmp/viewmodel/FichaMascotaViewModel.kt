@@ -17,6 +17,8 @@ import com.example.virtualpetkmp.data.VacunaRepository
 import com.example.virtualpetkmp.util.Localizacion
 import com.example.virtualpetkmp.util.ProgramadorNotificaciones
 import com.example.virtualpetkmp.util.ReprogramadorNotificaciones
+import com.example.virtualpetkmp.util.Dosis
+import com.example.virtualpetkmp.util.FilaDosis
 import com.example.virtualpetkmp.util.registrarFallo
 import com.example.virtualpetkmp.util.ErrorAppException
 import com.example.virtualpetkmp.util.textoDeFallo
@@ -239,11 +241,14 @@ class FichaMascotaViewModel(
         }
 
         _resumen.value = ResumenFicha(
-                vacunasVencidas = vacunas.count { it.fechaProximaDosis < hoy },
-                vacunasProximas = vacunas.count { it.fechaProximaDosis >= hoy && it.fechaProximaDosis <= hoyMas15 },
+                // Sobre el ULTIMO registro de cada vacuna, no sobre cada fila: una vacuna puesta
+                // varias veces es una vacuna, y su dosis vieja no puede seguir saliendo como
+                // vencida cuando ya hay una posterior. Las ventanas (15 y 5 dias) no cambian.
+                vacunasVencidas = Dosis.contarParaFicha(vacunas.map { it.aFilaDosis() }, hoy, 15).first,
+                vacunasProximas = Dosis.contarParaFicha(vacunas.map { it.aFilaDosis() }, hoy, 15).second,
                 totalVacunas = vacunas.size,
-                preventivosVencidos = preventivos.count { it.fechaProximaDosis < hoy },
-                preventivosProximos = preventivos.count { it.fechaProximaDosis >= hoy && it.fechaProximaDosis <= hoyMas5 },
+                preventivosVencidos = Dosis.contarParaFicha(preventivos.map { it.aFilaDosis() }, hoy, 5).first,
+                preventivosProximos = Dosis.contarParaFicha(preventivos.map { it.aFilaDosis() }, hoy, 5).second,
                 totalPreventivos = preventivos.size,
                 totalRevisiones = revisiones.size,
                 tratamientosActivos = tratamientos.count {
@@ -797,4 +802,19 @@ class FichaMascotaViewModel(
             cerrarOperacion(resultado, Res.string.error_borrar_dato)
         }
     }
+
+    /** La vacuna o el preventivo reducido a lo que necesitan las cuentas de la ficha. */
+    private fun com.example.virtualpetkmp.Vacuna.aFilaDosis() = FilaDosis(
+        mascotaId = mascotaId,
+        nombre = nombre,
+        fechaAplicacion = fechaAplicacion,
+        fechaProximaDosis = fechaProximaDosis
+    )
+
+    private fun com.example.virtualpetkmp.Preventivo.aFilaDosis() = FilaDosis(
+        mascotaId = mascotaId,
+        nombre = nombre,
+        fechaAplicacion = fechaAplicacion,
+        fechaProximaDosis = fechaProximaDosis
+    )
 }

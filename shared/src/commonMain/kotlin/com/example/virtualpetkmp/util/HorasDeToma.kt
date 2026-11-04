@@ -141,4 +141,19 @@ object HorasDeToma {
         if (hayRepetidas(conHora)) return ErrorHoras.REPETIDAS
         return ErrorHoras.NINGUNO
     }
+
+    /**
+     * La pauta de un tratamiento para la lista: "3 tomas al día · 08:00, 14:00, 22:00".
+     *
+     * Devuelve `null` cuando el tratamiento tiene una sola toma (o ninguna definida): en ese caso
+     * la fila se queda como estaba antes de la 1.14, sin una línea de más que repetiría la hora.
+     *
+     * @param plantilla texto traducido con `%1$s` donde va el número de tomas.
+     */
+    fun textoPautaTomas(tratamiento: Tratamiento, plantilla: String): String? =
+        tratamiento.vecesAlDia?.takeIf { it > 1 }?.let { veces ->
+            val cabecera = plantilla.replace("%1\$s", veces.toString())
+            val horas = horasDelTratamiento(tratamiento)
+            if (horas.isEmpty()) cabecera else cabecera + " · " + horas.joinToString(", ")
+        }
 }

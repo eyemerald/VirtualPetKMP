@@ -144,6 +144,39 @@ class HorasDeTomaTest {
         )
     }
 
+    // --- La pauta que enseña la fila de la lista -------------------------------------------
+
+    @Test
+    fun `con varias tomas la fila dice cuantas y a que horas`() {
+        val texto = HorasDeToma.textoPautaTomas(
+            tratamiento(notificar = true, hora = "08:00", vecesAlDia = 3, horas = "08:00,14:00,22:00"),
+            "%1\$s tomas al día"
+        )
+
+        assertEquals("3 tomas al día · 08:00, 14:00, 22:00", texto)
+    }
+
+    @Test
+    fun `con una sola toma la fila no anade nada`() {
+        assertNull(
+            HorasDeToma.textoPautaTomas(
+                tratamiento(notificar = true, hora = "08:30"),
+                "%1\$s tomas al día"
+            ),
+            "un tratamiento de una toma se tiene que ver como antes de la 1.14"
+        )
+    }
+
+    @Test
+    fun `sin tomas definidas tampoco se anade nada`() {
+        assertNull(
+            HorasDeToma.textoPautaTomas(
+                tratamiento(notificar = true, hora = null, vecesAlDia = 1),
+                "%1\$s tomas al día"
+            )
+        )
+    }
+
     private fun tratamiento(
         notificar: Boolean,
         hora: String?,

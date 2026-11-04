@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.virtualpetkmp.util.HorasDeToma
 import com.example.virtualpetkmp.Informe
 import com.example.virtualpetkmp.Nota
 import com.example.virtualpetkmp.Preventivo
@@ -94,6 +95,7 @@ import virtualpetkmp.shared.generated.resources.hoja_sin_tratamientos
 import virtualpetkmp.shared.generated.resources.hoja_sin_vacunas
 import virtualpetkmp.shared.generated.resources.hoja_sin_visitas
 import virtualpetkmp.shared.generated.resources.hoja_tratamiento_cronico
+import virtualpetkmp.shared.generated.resources.tratamiento_tomas_al_dia
 import virtualpetkmp.shared.generated.resources.hoja_tratamiento_finalizado
 import virtualpetkmp.shared.generated.resources.hoja_tratamiento_hasta
 import virtualpetkmp.shared.generated.resources.hoja_tratamiento_recordatorio
@@ -493,7 +495,16 @@ fun HojaSaludYSeguimiento(
                         }
                         TarjetaContenidoHoja(
                             titulo = tratamiento.nombreMedicamento,
-                            subtitulo = listOfNotNull(tratamiento.dosis, tratamiento.frecuencia)
+                            subtitulo = listOfNotNull(
+                                tratamiento.dosis,
+                                tratamiento.frecuencia,
+                                // Con varias tomas se dice cuántas y a qué horas; con una sola,
+                                // la fila se queda como estaba.
+                                HorasDeToma.textoPautaTomas(
+                                    tratamiento,
+                                    stringResource(Res.string.tratamiento_tomas_al_dia)
+                                )
+                            )
                                 .joinToString(" · ")
                                 .ifBlank { null },
                             detalle = listOfNotNull(
@@ -539,7 +550,14 @@ fun HojaSaludYSeguimiento(
                         items(finalizados, key = { it.id ?: 0 }) { tratamiento ->
                             TarjetaContenidoHoja(
                                 titulo = tratamiento.nombreMedicamento,
-                                subtitulo = listOfNotNull(tratamiento.dosis, tratamiento.frecuencia)
+                                subtitulo = listOfNotNull(
+                                    tratamiento.dosis,
+                                    tratamiento.frecuencia,
+                                    HorasDeToma.textoPautaTomas(
+                                        tratamiento,
+                                        stringResource(Res.string.tratamiento_tomas_al_dia)
+                                    )
+                                )
                                     .joinToString(" · ")
                                     .ifBlank { null },
                                 detalle = stringResource(

@@ -500,7 +500,10 @@
     <string name="buscar_mascota_sin_resultados">No pet matches that name.</string>
     <string name="a11y_ver_como_listado">Show as a list</string>
     <string name="a11y_ver_como_tarjetas">Show as cards</string>
-    <string name="filtro_vacunas_pendientes">Pending vaccines</string>
-    <string name="filtro_preventivos_pendientes">Pending preventives</string>
+    <string name="filtro_vacunas_pendientes">Vaccines: overdue or in 30 days</string>
+    <string name="filtro_preventivos_pendientes">Preventives: overdue or in 30 days</string>
     <string name="filtro_sin_resultados">No pet matches the filter</string>
+    <string name="filtro_vencida">overdue since %1$s</string>
+    <string name="filtro_proxima">due %1$s</string>
+    <string name="tratamiento_tomas_al_dia">%1$s doses a day</string>
 </resources>

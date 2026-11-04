@@ -4,6 +4,9 @@ import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.db.VirtualPetDatabase
 import com.example.virtualpetkmp.util.ErrorApp
 import com.example.virtualpetkmp.util.ErrorAppException
+import com.example.virtualpetkmp.util.Dosis
+import com.example.virtualpetkmp.util.DosisPendiente
+import com.example.virtualpetkmp.util.FilaDosis
 import com.example.virtualpetkmp.util.Pendientes
 import com.example.virtualpetkmp.util.ahoraMillis
 import com.example.virtualpetkmp.util.nuevoIdentificadorUniversal
@@ -30,31 +33,50 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
     }
 
     /**
-     * Ids de las mascotas con alguna **vacuna pendiente** (vencida o con la próxima dosis en los
-     * próximos [Pendientes.VENTANA_DIAS] días).
+     * Las **dosis pendientes** de cada mascota: vacunas vencidas o con la próxima dosis en los
+     * próximos [Pendientes.VENTANA_DIAS] días, mirando solo el último registro de cada vacuna.
      *
-     * Se resuelve en SQL y no recorriendo mascotas en Kotlin: con 40 animales daría igual, pero la
-     * lista tiene que seguir abriendo igual de rápida con 500, y esto se llama cada vez que se
-     * recarga. La cuenta la hace la base de datos con un `EXISTS` e índice por `(mascotaId, nombre)`.
+     * Devuelve también el nombre y la fecha de cada una, porque la lista tiene que poder decir
+     * *qué* está pendiente ("Rabia · vencida el 12/03/2026") y no solo cuántas.
      *
-     * Solo se miran los **últimos** registros de cada vacuna: la misma vacuna puesta cinco veces es
-     * una vacuna, no cinco pendientes.
+     * Va en una sola consulta por tabla: agrupar por nombre en Kotlin es lo que permite comparar
+     * "Rabia", "rabia " y "RÁBIA" como la misma vacuna (SQLite no quita tildes sin una cadena de
+     * `replace` enorme) y garantiza que la ficha y el filtro usen **la misma** regla.
      */
-    suspend fun getIdsConVacunaPendiente(hoy: LocalDate): Set<Long> = withContext(Dispatchers.IO) {
-        database.mascotasQueries
-            .selectIdsConVacunaPendiente(Pendientes.limite(hoy).toString())
-            .executeAsList()
-            .toSet()
-    }
+    suspend fun getVacunasPendientes(hoy: LocalDate): Map<Long, List<DosisPendiente>> =
+        withContext(Dispatchers.IO) {
+            database.mascotasQueries.selectDosisVacunas()
+                .executeAsList()
+                .map { fila ->
+                    FilaDosis(
+                        mascotaId = fila.mascotaId,
+                        nombre = fila.nombre,
+                        fechaAplicacion = LocalDate.parse(fila.fechaAplicacion),
+                        fechaProximaDosis = LocalDate.parse(fila.fechaProximaDosis)
+                    )
+                }
+                .groupBy { it.mascotaId }
+                .mapValues { (_, filas) -> Dosis.pendientesDe(filas, hoy) }
+                .filterValues { it.isNotEmpty() }
+        }
 
-    /** Lo mismo que [getIdsConVacunaPendiente], para preventivos. Es independiente: un animal
-     *  puede tener la vacuna al día y la pipeta vencida. */
-    suspend fun getIdsConPreventivoPendiente(hoy: LocalDate): Set<Long> = withContext(Dispatchers.IO) {
-        database.mascotasQueries
-            .selectIdsConPreventivoPendiente(Pendientes.limite(hoy).toString())
-            .executeAsList()
-            .toSet()
-    }
+    /** Lo mismo que [getVacunasPendientes], para preventivos. Son independientes a propósito. */
+    suspend fun getPreventivosPendientes(hoy: LocalDate): Map<Long, List<DosisPendiente>> =
+        withContext(Dispatchers.IO) {
+            database.mascotasQueries.selectDosisPreventivos()
+                .executeAsList()
+                .map { fila ->
+                    FilaDosis(
+                        mascotaId = fila.mascotaId,
+                        nombre = fila.nombre,
+                        fechaAplicacion = LocalDate.parse(fila.fechaAplicacion),
+                        fechaProximaDosis = LocalDate.parse(fila.fechaProximaDosis)
+                    )
+                }
+                .groupBy { it.mascotaId }
+                .mapValues { (_, filas) -> Dosis.pendientesDe(filas, hoy) }
+                .filterValues { it.isNotEmpty() }
+        }
 
     suspend fun getMascotaById(id: Long): Mascota? = withContext(Dispatchers.IO) {
         database.mascotasQueries.selectById(id)
