@@ -1,4 +1,4 @@
-VIRTUAL PET 1.13 PARA WINDOWS
+VIRTUAL PET 1.14 PARA WINDOWS
 ============================
 
 COMO INSTALARLO
@@ -57,6 +57,6 @@ Tus datos se quedan; si quieres borrarlos tambien, elimina la carpeta .virtualpe
 QUE INCLUYE
 - La aplicacion con su propio Java incluido: no hay que instalar nada mas.
 - Tus datos son locales: la app no se conecta a internet.
-- Novedades de esta version: la tecla/gesto de atras vuelve a la pantalla anterior, los nombres
-  de los archivos que guardas empiezan por "VirtualPet-" (asi se sabe de donde salen) y los avisos
-  de error ya no ensenan detalles tecnicos.
+- Novedades de esta version: un tratamiento puede tener varias tomas al dia (cada una con su
+  hora y su aviso), y la lista de mascotas tiene dos filtros para ver de un vistazo quien tiene
+  vacunas o preventivos pendientes.
