@@ -275,6 +275,34 @@ class MigracionesTest {
     }
 
     @Test
+    fun `de la 15 a la 16 el tratamiento conserva sus datos y estrena columnas vacias`() {
+        // Lo que se juega la 1.14: nadie puede quedarse sin la medicacion que ya tenia apuntada.
+        val driver = nuevoDriver()
+        crearEsquemaV1(driver)
+        VirtualPetDatabase.Schema.migrate(driver, 1, 15).value
+        insertarMascota(driver)
+        driver.ejecutar(
+            "INSERT INTO tratamientos " +
+                "(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin, hora, " +
+                "notificar, uuid, actualizadoEn) VALUES " +
+                "(1, 'Oticoear', '4 gotas', 'Cada 12 horas', '2026-01-01', '2026-02-01', '08:30', " +
+                "1, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa2', 1);"
+        )
+
+        VirtualPetDatabase.Schema.migrate(driver, 15, versionFinal).value
+
+        val fila = driver.consulta(
+            "SELECT nombreMedicamento, dosis, hora, notificar, vecesAlDia, horas FROM tratamientos;",
+            columnas = 6
+        )
+        assertEquals(
+            listOf(listOf<String?>("Oticoear", "4 gotas", "08:30", "1", null, null)),
+            fila,
+            "el tratamiento antiguo tiene que seguir igual, con las columnas nuevas vacias"
+        )
+    }
+
+    @Test
     fun `migrar deja la base marcada con la ultima version`() {
         // Sin marcarla, el arranque siguiente volvería a migrar y fallaría con
         // "duplicate column name" o "table already exists".

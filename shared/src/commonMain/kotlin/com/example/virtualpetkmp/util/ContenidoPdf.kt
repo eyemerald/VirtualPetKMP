@@ -18,7 +18,9 @@ import virtualpetkmp.shared.generated.resources.pdf_microchip
 import virtualpetkmp.shared.generated.resources.pdf_minimo
 import virtualpetkmp.shared.generated.resources.pdf_nombre
 import virtualpetkmp.shared.generated.resources.pdf_peso_actual
+import virtualpetkmp.shared.generated.resources.pdf_horas
 import virtualpetkmp.shared.generated.resources.pdf_peso_ideal
+import virtualpetkmp.shared.generated.resources.pdf_veces_al_dia
 import virtualpetkmp.shared.generated.resources.pdf_primero
 import virtualpetkmp.shared.generated.resources.pdf_raza
 import virtualpetkmp.shared.generated.resources.pdf_sexo
@@ -186,6 +188,23 @@ fun filaTratamientoPdf(tratamiento: Tratamiento, formato: Localizacion): List<St
     formato.formatearFecha(tratamiento.fechaInicio),
     tratamiento.fechaFin?.let { formato.formatearFecha(it) } ?: SIN_DATO_PDF
 )
+
+/**
+ * Pauta de un tratamiento para el PDF: cuántas tomas al día y a qué horas.
+ *
+ * Va aparte de [filaTratamientoPdf] porque no son columnas de la tabla: son dos datos que solo
+ * existen desde la 1.14 y que, puestos como columnas, dejarían media tabla vacía en los
+ * tratamientos antiguos. Sin horas guardadas, la línea de horas no sale.
+ */
+fun pautaTratamientoPdf(tratamiento: Tratamiento): List<DatoPdf> = buildList {
+    tratamiento.vecesAlDia?.takeIf { it > 0 }?.let { veces ->
+        add(DatoPdf(Res.string.pdf_veces_al_dia, veces.toString()))
+    }
+    val horas = HorasDeToma.leerHoras(tratamiento.horas)
+    if (horas.isNotEmpty()) {
+        add(DatoPdf(Res.string.pdf_horas, horas.joinToString(" · ")))
+    }
+}
 
 /** Lo que se enseña de una vacuna, con su estado calculado como en la pantalla. */
 fun fichaVacunaPdf(vacuna: Vacuna, hoy: LocalDate, formato: Localizacion): DosisPdf = DosisPdf(

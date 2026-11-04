@@ -240,7 +240,10 @@
 
     <string name="form_medicamento">Medicamento</string>
     <string name="form_dosis">Dosis (ej: ½ comprimido)</string>
-    <string name="form_frecuencia">Frecuencia (ej: cada 24h)</string>
+    <string name="form_frecuencia">Indicaciones (opcional)</string>
+    <string name="form_veces_al_dia">Veces al día</string>
+    <string name="form_horas_repetidas">Hay dos tomas a la misma hora</string>
+    <string name="form_horas_incompletas">Falta la hora de alguna toma</string>
     <string name="form_hora">Hora</string>
     <string name="form_hora_anadir">Añadir hora</string>
     <string name="form_recordarme">Recordarme</string>
@@ -392,6 +395,8 @@
     <string name="pdf_color">Color</string>
     <string name="pdf_microchip">Microchip</string>
     <string name="pdf_peso_actual">Peso actual</string>
+    <string name="pdf_veces_al_dia">Veces al día</string>
+    <string name="pdf_horas">Horas</string>
     <string name="pdf_peso_ideal">Peso ideal</string>
     <string name="pdf_proxima_dosis">Próxima dosis</string>
     <string name="pdf_veterinario">Veterinario</string>

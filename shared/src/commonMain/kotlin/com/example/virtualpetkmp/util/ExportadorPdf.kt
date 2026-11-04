@@ -146,6 +146,8 @@ class ExportadorPdf {
 
         val activos = tratamientosActivosPdf(tratamientos, hoy).map { filaTratamientoPdf(it, localizacion) }
         val terminados = tratamientosTerminadosPdf(tratamientos, hoy).map { filaTratamientoPdf(it, localizacion) }
+        val pautasActivos = pautasPdf(tratamientosActivosPdf(tratamientos, hoy))
+        val pautasTerminados = pautasPdf(tratamientosTerminadosPdf(tratamientos, hoy))
         val vacunasPdf = vacunas.sortedBy { it.fechaAplicacion }.map { fichaVacunaPdf(it, hoy, localizacion) }
         val preventivosPdf = preventivos.sortedBy { it.fechaAplicacion }
             .map { fichaPreventivoPdf(it, hoy, localizacion) }
@@ -203,6 +205,8 @@ class ExportadorPdf {
                     t = t,
                     activos = activos,
                     terminados = terminados,
+                    pautasActivos = pautasActivos,
+                    pautasTerminados = pautasTerminados,
                     vacunas = vacunasPdf,
                     preventivos = preventivosPdf,
                     filasRevisiones = filasRevisiones,
@@ -213,6 +217,7 @@ class ExportadorPdf {
                 VersionPdf.RESUMIDA -> resumenCuidador(
                     t = t,
                     activos = activos,
+                    pautasActivos = pautasActivos,
                     proximas = proximas,
                     peso = pesoDelCuidador,
                     notas = textosNotas
@@ -263,6 +268,8 @@ class ExportadorPdf {
         t: TextosPdf,
         activos: List<List<String>>,
         terminados: List<List<String>>,
+        pautasActivos: List<Pair<String, List<Pair<String, String>>>>,
+        pautasTerminados: List<Pair<String, List<Pair<String, String>>>>,
         vacunas: List<DosisPdf>,
         preventivos: List<DosisPdf>,
         filasRevisiones: List<List<String>>,
@@ -273,11 +280,13 @@ class ExportadorPdf {
         if (activos.isNotEmpty()) {
             seccion(t.tratamientosActivos)
             tablaTratamientos(t, activos)
+            listaPautas(pautasActivos)
         }
 
         if (terminados.isNotEmpty()) {
             seccion(t.historialTratamientos)
             tablaTratamientos(t, terminados)
+            listaPautas(pautasTerminados)
         }
 
         if (vacunas.isNotEmpty()) {
@@ -326,6 +335,7 @@ class ExportadorPdf {
     private fun ContainerScope.resumenCuidador(
         t: TextosPdf,
         activos: List<List<String>>,
+        pautasActivos: List<Pair<String, List<Pair<String, String>>>>,
         proximas: List<Pair<String, String>>,
         peso: List<Pair<String, String>>,
         notas: List<String>
@@ -347,6 +357,7 @@ class ExportadorPdf {
                 // De la fila completa del tratamiento solo interesan estas cuatro columnas.
                 activos.forEach { fila -> row(fila[0], fila[1], fila[2], fila[4]) }
             }
+            listaPautas(pautasActivos)
         }
 
         if (proximas.isNotEmpty()) {
@@ -444,6 +455,34 @@ class ExportadorPdf {
     }
 
     /** Las dos tablas de tratamientos comparten columnas: medicamento, dosis, pauta y fechas. */
+    /**
+     * Pauta de cada tratamiento que la tenga (veces al día y horas), ya traducida.
+     *
+     * Se devuelve pegada al nombre del medicamento porque en el PDF no hay columnas de las que
+     * tirar: sin el nombre, dos tratamientos con pauta dejarían dos bloques de líneas sueltas que
+     * no se sabe a cuál pertenecen.
+     */
+    private suspend fun pautasPdf(
+        tratamientos: List<Tratamiento>
+    ): List<Pair<String, List<Pair<String, String>>>> =
+        tratamientos.mapNotNull { tratamiento ->
+            val pauta = pautaTratamientoPdf(tratamiento)
+            if (pauta.isEmpty()) {
+                null
+            } else {
+                tratamiento.nombreMedicamento to pauta.map { getString(it.etiqueta) to it.valor }
+            }
+        }
+
+    /** Las líneas de pauta, debajo de la tabla de tratamientos a la que pertenecen. */
+    private fun ContainerScope.listaPautas(pautas: List<Pair<String, List<Pair<String, String>>>>) {
+        pautas.forEach { (medicamento, lineas) ->
+            spacer(3.dp)
+            text(medicamento, TextStyle(fontSize = 8.sp, fontWeight = FontWeight.Bold))
+            lineas.forEach { (etiqueta, valor) -> keyValue(etiqueta, valor) }
+        }
+    }
+
     private fun ContainerScope.tablaTratamientos(t: TextosPdf, filas: List<List<String>>) {
         tabla(
             columns = listOf(

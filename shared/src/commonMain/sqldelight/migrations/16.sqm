@@ -1,0 +1,11 @@
+-- Migracion 16: varias tomas al dia en un tratamiento.
+--
+-- Es ADITIVA a proposito: solo anade dos columnas, no recrea la tabla ni toca los datos que ya
+-- hay. Los tratamientos antiguos quedan con las dos columnas a NULL y se siguen comportando como
+-- hasta ahora (una toma al dia a la hora de `hora`), asi que la actualizacion no puede perder ni
+-- una fila de medicacion de nadie.
+--
+-- `vecesAlDia`: cuantas tomas tiene el tratamiento (1..6).
+-- `horas`: las horas de esas tomas, en "HH:mm" separadas por comas ("08:00,14:00,22:00").
+ALTER TABLE tratamientos ADD COLUMN vecesAlDia INTEGER;
+ALTER TABLE tratamientos ADD COLUMN horas TEXT;

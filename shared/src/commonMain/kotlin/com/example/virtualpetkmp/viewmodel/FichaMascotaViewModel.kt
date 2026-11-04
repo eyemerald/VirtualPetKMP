@@ -485,7 +485,9 @@ class FichaMascotaViewModel(
         fechaInicio: LocalDate,
         fechaFin: LocalDate?,
         hora: String? = null,
-        notificar: Boolean = false
+        notificar: Boolean = false,
+        vecesAlDia: Int? = null,
+        horas: String? = null
     ) {
         if (nombreMedicamento.isBlank()) return
         scope.launch {
@@ -498,7 +500,9 @@ class FichaMascotaViewModel(
                     fechaInicio = fechaInicio,
                     fechaFin = fechaFin,
                     hora = hora,
-                    notificar = notificar
+                    notificar = notificar,
+                    vecesAlDia = vecesAlDia,
+                    horas = horas
                 )
             }
             cerrarOperacion(resultado, Res.string.error_guardar_dato)
@@ -635,7 +639,9 @@ class FichaMascotaViewModel(
         fechaInicio: LocalDate,
         fechaFin: LocalDate?,
         hora: String? = null,
-        notificar: Boolean = false
+        notificar: Boolean = false,
+        vecesAlDia: Int? = null,
+        horas: String? = null
     ) {
         if (nombreMedicamento.isBlank()) return
         scope.launch {
@@ -648,7 +654,9 @@ class FichaMascotaViewModel(
                     fechaInicio = fechaInicio,
                     fechaFin = fechaFin,
                     hora = hora,
-                    notificar = notificar
+                    notificar = notificar,
+                    vecesAlDia = vecesAlDia,
+                    horas = horas
                 )
             }
             cerrarOperacion(resultado, Res.string.error_guardar_dato)

@@ -812,8 +812,8 @@ fun FichaMascotaScreen(
 
         is FormularioHoja.Tratamiento -> FormularioTratamiento(
             onCancelar = { formularioActivo = FormularioHoja.Ninguno },
-            onGuardar = { nombre, dosis, frecuencia, inicio, fin, hora, notificar ->
-                viewModel.agregarTratamiento(nombre, dosis, frecuencia, inicio, fin, hora, notificar)
+            onGuardar = { nombre, dosis, frecuencia, inicio, fin, hora, notificar, vecesAlDia, horas ->
+                viewModel.agregarTratamiento(nombre, dosis, frecuencia, inicio, fin, hora, notificar, vecesAlDia, horas)
                 formularioActivo = FormularioHoja.Ninguno
             }
         )
@@ -864,9 +864,9 @@ fun FichaMascotaScreen(
         is EdicionHoja.Tratamiento -> FormularioTratamiento(
             tratamiento = edicion.tratamiento,
             onCancelar = { edicionActiva = EdicionHoja.Ninguna },
-            onGuardar = { nombre, dosis, frecuencia, inicio, fin, hora, notificar ->
+            onGuardar = { nombre, dosis, frecuencia, inicio, fin, hora, notificar, vecesAlDia, horas ->
                 edicion.tratamiento.id?.let { id ->
-                    viewModel.actualizarTratamiento(id, nombre, dosis, frecuencia, inicio, fin, hora, notificar)
+                    viewModel.actualizarTratamiento(id, nombre, dosis, frecuencia, inicio, fin, hora, notificar, vecesAlDia, horas)
                 }
                 edicionActiva = EdicionHoja.Ninguna
             }

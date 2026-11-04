@@ -356,6 +356,8 @@ class ImportadorFusion(
                                 fechaFin = fila.fechaFin,
                                 hora = fila.hora,
                                 notificar = fila.notificar.toLong(),
+                                vecesAlDia = fila.vecesAlDia?.toLong(),
+                                horas = fila.horas,
                                 uuid = fila.uuid,
                                 actualizadoEn = fila.actualizadoEn
                             )
@@ -371,6 +373,8 @@ class ImportadorFusion(
                                 fechaFin = fila.fechaFin,
                                 hora = fila.hora,
                                 notificar = fila.notificar.toLong(),
+                                vecesAlDia = fila.vecesAlDia?.toLong(),
+                                horas = fila.horas,
                                 actualizadoEn = fila.actualizadoEn,
                                 id = idLocal
                             )

@@ -155,7 +155,9 @@ class ExportadorCopia(
                         fechaInicio = fila.fechaInicio,
                         fechaFin = fila.fechaFin,
                         hora = fila.hora,
-                        notificar = fila.notificar.toInt()
+                        notificar = fila.notificar.toInt(),
+                        vecesAlDia = fila.vecesAlDia?.toInt(),
+                        horas = fila.horas
                     )
                 }
             }

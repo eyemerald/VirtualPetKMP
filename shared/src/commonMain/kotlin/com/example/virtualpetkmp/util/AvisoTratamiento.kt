@@ -30,6 +30,8 @@ data class AvisoTratamiento(
     val mensaje: String,
     val fechaDisparoMillis: Long,
     val hora: String,
+    /** Indice de la toma dentro del tratamiento (0 = la primera). Ver HorasDeToma. */
+    val toma: Int = 0,
     val fechaFin: LocalDate? = null,
     val textoAceptar: String = "",
     val textoPosponer: String = ""

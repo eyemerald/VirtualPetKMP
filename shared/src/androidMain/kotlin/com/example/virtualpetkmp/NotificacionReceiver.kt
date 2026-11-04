@@ -70,7 +70,7 @@ class NotificacionReceiver : BroadcastReceiver() {
             // El aviso ha vuelto a salir: la posposición ya está consumida. Se limpia ANTES de
             // programar el de mañana, porque `programarSiguiente` escribe en la misma alarma y
             // no debe encontrarse la posposición todavía viva.
-            Posposiciones.borrar(it.tratamientoId)
+            Posposiciones.borrar(it.notificacionId)
             programarSiguiente(context, it)
         }
     }

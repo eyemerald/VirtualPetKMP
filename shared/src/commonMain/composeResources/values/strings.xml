@@ -244,7 +244,10 @@
 
     <string name="form_medicamento">Medication</string>
     <string name="form_dosis">Dose (e.g. ½ tablet)</string>
-    <string name="form_frecuencia">Frequency (e.g. every 24h)</string>
+    <string name="form_frecuencia">Indications (optional)</string>
+    <string name="form_veces_al_dia">Times a day</string>
+    <string name="form_horas_repetidas">Two doses at the same time</string>
+    <string name="form_horas_incompletas">One of the doses has no time</string>
     <string name="form_hora">Time</string>
     <string name="form_hora_anadir">Add a time</string>
     <string name="form_recordarme">Remind me</string>
@@ -396,6 +399,8 @@
     <string name="pdf_color">Colour</string>
     <string name="pdf_microchip">Microchip</string>
     <string name="pdf_peso_actual">Current weight</string>
+    <string name="pdf_veces_al_dia">Times a day</string>
+    <string name="pdf_horas">Times</string>
     <string name="pdf_peso_ideal">Ideal weight</string>
     <string name="pdf_proxima_dosis">Next dose</string>
     <string name="pdf_veterinario">Vet</string>

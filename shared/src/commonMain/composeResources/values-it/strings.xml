@@ -241,7 +241,10 @@
 
     <string name="form_medicamento">Farmaco</string>
     <string name="form_dosis">Dose (es. ½ compressa)</string>
-    <string name="form_frecuencia">Frequenza (es. ogni 24h)</string>
+    <string name="form_frecuencia">Indicazioni (facoltativo)</string>
+    <string name="form_veces_al_dia">Assunzioni al giorno</string>
+    <string name="form_horas_repetidas">Due assunzioni alla stessa ora</string>
+    <string name="form_horas_incompletas">Manca l'ora di un'assunzione</string>
     <string name="form_hora">Ora</string>
     <string name="form_hora_anadir">Aggiungi un'ora</string>
     <string name="form_recordarme">Ricordamelo</string>
@@ -389,6 +392,8 @@
     <string name="pdf_color">Colore</string>
     <string name="pdf_microchip">Microchip</string>
     <string name="pdf_peso_actual">Peso attuale</string>
+    <string name="pdf_veces_al_dia">Assunzioni al giorno</string>
+    <string name="pdf_horas">Orari</string>
     <string name="pdf_peso_ideal">Peso ideale</string>
     <string name="pdf_proxima_dosis">Prossima dose</string>
     <string name="pdf_veterinario">Veterinario</string>

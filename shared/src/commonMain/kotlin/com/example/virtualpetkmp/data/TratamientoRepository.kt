@@ -1,6 +1,7 @@
 package com.example.virtualpetkmp.data
 
 import com.example.virtualpetkmp.Tratamiento
+import com.example.virtualpetkmp.db.Tratamientos
 import com.example.virtualpetkmp.db.VirtualPetDatabase
 import com.example.virtualpetkmp.util.ahoraMillis
 import com.example.virtualpetkmp.util.nuevoIdentificadorUniversal
@@ -17,7 +18,8 @@ import kotlinx.datetime.LocalDate
  *
  * El recordatorio se guarda como dos columnas (`hora` en "HH:mm" y `notificar` en 0/1) y aquí se
  * convierte al modelo: `notificar` es un `Boolean` en Kotlin porque en el resto de la app no tiene
- * sentido ir arrastrando un entero.
+ * sentido ir arrastrando un entero. Desde la 1.14 hay además `vecesAlDia` y `horas` (las tomas del
+ * día); los tratamientos anteriores las tienen a `null` y se leen como una sola toma a la hora.
  */
 class TratamientoRepository(private val database: VirtualPetDatabase) {
 
@@ -25,16 +27,18 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
         database.tratamientosQueries.selectByMascotaId(mascotaId)
             .executeAsList()
             .map { fila ->
-                Tratamiento(
+                aModelo(
                     id = fila.id,
                     mascotaId = fila.mascotaId,
                     nombreMedicamento = fila.nombreMedicamento,
                     dosis = fila.dosis,
                     frecuencia = fila.frecuencia,
-                    fechaInicio = LocalDate.parse(fila.fechaInicio),
-                    fechaFin = fila.fechaFin?.let { LocalDate.parse(it) },
+                    fechaInicio = fila.fechaInicio,
+                    fechaFin = fila.fechaFin,
                     hora = fila.hora,
-                    notificar = fila.notificar == 1L
+                    notificar = fila.notificar,
+                    vecesAlDia = fila.vecesAlDia,
+                    horas = fila.horas
                 )
             }
     }
@@ -50,16 +54,18 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
             database.tratamientosQueries.selectConRecordatorio()
                 .executeAsList()
                 .map { fila ->
-                    Tratamiento(
+                    aModelo(
                         id = fila.id,
                         mascotaId = fila.mascotaId,
                         nombreMedicamento = fila.nombreMedicamento,
                         dosis = fila.dosis,
                         frecuencia = fila.frecuencia,
-                        fechaInicio = LocalDate.parse(fila.fechaInicio),
-                        fechaFin = fila.fechaFin?.let { LocalDate.parse(it) },
+                        fechaInicio = fila.fechaInicio,
+                        fechaFin = fila.fechaFin,
                         hora = fila.hora,
-                        notificar = fila.notificar == 1L
+                        notificar = fila.notificar,
+                        vecesAlDia = fila.vecesAlDia,
+                        horas = fila.horas
                     ) to fila.nombreMascota
                 }
         }
@@ -73,6 +79,8 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
         fechaFin: LocalDate?,
         hora: String? = null,
         notificar: Boolean = false,
+        vecesAlDia: Int? = null,
+        horas: String? = null,
         uuid: String = nuevoIdentificadorUniversal(),
         actualizadoEn: Long = ahoraMillis()
     ): Result<Unit> = withContext(Dispatchers.IO) {
@@ -86,6 +94,8 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
                 fechaFin = fechaFin?.toString(),
                 hora = hora,
                 notificar = if (notificar) 1L else 0L,
+                vecesAlDia = vecesAlDia?.toLong(),
+                horas = horas,
                 uuid = uuid,
                 actualizadoEn = actualizadoEn
             )
@@ -104,6 +114,8 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
         fechaFin: LocalDate?,
         hora: String? = null,
         notificar: Boolean = false,
+        vecesAlDia: Int? = null,
+        horas: String? = null,
         actualizadoEn: Long = ahoraMillis()
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
@@ -115,6 +127,8 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
                 fechaFin = fechaFin?.toString(),
                 hora = hora,
                 notificar = if (notificar) 1L else 0L,
+                vecesAlDia = vecesAlDia?.toLong(),
+                horas = horas,
                 actualizadoEn = actualizadoEn,
                 id = id
             )
@@ -132,4 +146,38 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
             Result.failure(e)
         }
     }
+
+    /**
+     * Fila de SQLite → modelo.
+     *
+     * Recibe las columnas una a una y no la fila generada porque hay **dos** consultas que
+     * devuelven tratamientos con tipos generados distintos (una añade el nombre de la mascota), y
+     * con dos mapeos separados una columna nueva se añade en uno y se olvida en el otro.
+     */
+    private fun aModelo(
+        id: Long,
+        mascotaId: Long,
+        nombreMedicamento: String,
+        dosis: String?,
+        frecuencia: String?,
+        fechaInicio: String,
+        fechaFin: String?,
+        hora: String?,
+        notificar: Long,
+        vecesAlDia: Long?,
+        horas: String?
+    ): Tratamiento =
+        Tratamiento(
+            id = id,
+            mascotaId = mascotaId,
+            nombreMedicamento = nombreMedicamento,
+            dosis = dosis,
+            frecuencia = frecuencia,
+            fechaInicio = LocalDate.parse(fechaInicio),
+            fechaFin = fechaFin?.let { LocalDate.parse(it) },
+            hora = hora,
+            notificar = notificar == 1L,
+            vecesAlDia = vecesAlDia?.toInt(),
+            horas = horas
+        )
 }

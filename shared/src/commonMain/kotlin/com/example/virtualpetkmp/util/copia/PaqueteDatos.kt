@@ -156,7 +156,17 @@ data class FilaTratamiento(
     val fechaInicio: String,
     val fechaFin: String? = null,
     val hora: String? = null,
-    val notificar: Int = 0
+    val notificar: Int = 0,
+    /**
+     * Tomas al día (1..6), o 
+ull en un paquete escrito por una version anterior a la 1.14.
+     * Al restaurar, 
+ull se lee como "una toma a la hora de [hora]".
+     */
+    val vecesAlDia: Int? = null,
+    /** Horas de las tomas, en "HH:mm" separadas por comas. 
+ull si no se definieron. */
+    val horas: String? = null
 )
 
 @Serializable

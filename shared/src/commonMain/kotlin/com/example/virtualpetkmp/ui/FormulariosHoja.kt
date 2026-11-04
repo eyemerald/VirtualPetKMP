@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.virtualpetkmp.util.Localizacion
+import com.example.virtualpetkmp.util.HorasDeToma
 import com.example.virtualpetkmp.util.RecordatoriosTratamiento
 import com.example.virtualpetkmp.util.TraduccionesDatos
 import com.example.virtualpetkmp.util.UnidadPeso
@@ -75,6 +76,9 @@ import virtualpetkmp.shared.generated.resources.form_fecha_aplicacion
 import virtualpetkmp.shared.generated.resources.form_fecha_fin
 import virtualpetkmp.shared.generated.resources.form_fecha_inicio
 import virtualpetkmp.shared.generated.resources.form_frecuencia
+import virtualpetkmp.shared.generated.resources.form_horas_incompletas
+import virtualpetkmp.shared.generated.resources.form_horas_repetidas
+import virtualpetkmp.shared.generated.resources.form_veces_al_dia
 import virtualpetkmp.shared.generated.resources.form_hora
 import virtualpetkmp.shared.generated.resources.form_hora_anadir
 import virtualpetkmp.shared.generated.resources.form_recordarme
@@ -400,7 +404,9 @@ fun FormularioTratamiento(
         inicio: LocalDate,
         fin: LocalDate?,
         hora: String?,
-        notificar: Boolean
+        notificar: Boolean,
+        vecesAlDia: Int?,
+        horas: String?
     ) -> Unit
 ) {
     val formato = localizacion
@@ -413,6 +419,8 @@ fun FormularioTratamiento(
     val textoErrorPeso = textos.errorPeso
     val textoErrorFecha = textos.errorFecha
     val textoErrorFechas = textos.errorFechas
+    val textoHorasRepetidas = stringResource(Res.string.form_horas_repetidas)
+    val textoHorasIncompletas = stringResource(Res.string.form_horas_incompletas)
     // Se pide el permiso de notificaciones al encender el interruptor: es cuando el usuario
     // pide avisos, no al abrir la app sin venir a cuento.
     val pedirPermisoNotificaciones = rememberPermisoNotificaciones()
@@ -424,7 +432,23 @@ fun FormularioTratamiento(
     var nombre by rememberSaveable { mutableStateOf(tratamiento?.nombreMedicamento ?: "") }
     var dosis by rememberSaveable { mutableStateOf(tratamiento?.dosis ?: "") }
     var frecuencia by rememberSaveable { mutableStateOf(tratamiento?.frecuencia ?: "") }
-    var hora by rememberSaveable { mutableStateOf(tratamiento?.hora ?: "") }
+    // Horas de partida: las guardadas, o la única de un tratamiento antiguo, o las que se proponen
+    // para el número de tomas. Se guardan como un solo texto "08:00,14:00" para que
+    // `rememberSaveable` no tenga que serializar una lista.
+    val horasIniciales = remember {
+        val guardadas = HorasDeToma.leerHoras(tratamiento?.horas)
+        if (guardadas.isNotEmpty()) {
+            guardadas
+        } else {
+            val unica = RecordatoriosTratamiento.leerHora(tratamiento?.hora)
+                ?.let { (h, m) -> RecordatoriosTratamiento.formatearHora(h, m) }
+            listOfNotNull(unica).ifEmpty { HorasDeToma.horasPorDefecto(tratamiento?.vecesAlDia ?: 1) }
+        }
+    }
+    var vecesAlDia by rememberSaveable {
+        mutableStateOf((tratamiento?.vecesAlDia ?: horasIniciales.size).coerceIn(HorasDeToma.MINIMO, HorasDeToma.MAXIMO))
+    }
+    var horasTexto by rememberSaveable { mutableStateOf(horasIniciales.joinToString(",")) }
     var notificar by rememberSaveable { mutableStateOf(tratamiento?.notificar ?: false) }
     var inicio by rememberSaveable {
         mutableStateOf(tratamiento?.fechaInicio?.let { formato.formatearFecha(it) } ?: fechaHoy)
@@ -491,16 +515,40 @@ fun FormularioTratamiento(
                         esError = error != null
                     )
                 }
-                CampoHora(
-                    valor = hora,
-                    // Si se borra la hora, el recordatorio se apaga solo: sin hora no hay aviso.
-                    onValorCambia = {
-                        hora = it
-                        if (it.isBlank()) notificar = false
-                    },
-                    etiqueta = stringResource(Res.string.form_hora),
-                    modifier = Modifier.fillMaxWidth()
+                // Veces al día: un selector de 1 a 6. Debajo, una hora por toma, ya repartidas por
+                // defecto y editables; el usuario solo tiene que corregir las que no le encajen.
+                Text(
+                    text = stringResource(Res.string.form_veces_al_dia),
+                    style = androidx.compose.material3.MaterialTheme.typography.bodyLarge
                 )
+                androidx.compose.foundation.layout.Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    (HorasDeToma.MINIMO..HorasDeToma.MAXIMO).forEach { numero ->
+                        androidx.compose.material3.FilterChip(
+                            selected = vecesAlDia == numero,
+                            onClick = {
+                                vecesAlDia = numero
+                                horasTexto = HorasDeToma.ajustar(HorasDeToma.desdeTexto(horasTexto), numero)
+                                    .joinToString(",")
+                                if (error != null) error = null
+                            },
+                            label = { Text(numero.toString()) }
+                        )
+                    }
+                }
+                HorasDeToma.desdeTexto(horasTexto).take(vecesAlDia).forEachIndexed { indice, valor ->
+                    CampoHora(
+                        valor = valor,
+                        onValorCambia = { nuevo ->
+                            horasTexto = HorasDeToma.conHoraEn(horasTexto, indice, nuevo)
+                            if (error != null) error = null
+                        },
+                        etiqueta = stringResource(Res.string.form_hora) + " " + (indice + 1),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
                 androidx.compose.foundation.layout.Row(
                     verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -520,9 +568,6 @@ fun FormularioTratamiento(
                         checked = notificar,
                         onCheckedChange = { activo ->
                             if (activo) {
-                                // Sin hora no se puede avisar: se propone una y el usuario la
-                                // cambia si quiere.
-                                if (hora.isBlank()) hora = HORA_RECORDATORIO_POR_DEFECTO
                                 sinPermiso = !pedirPermisoNotificaciones()
                                 // Si no se pueden programar alarmas exactas, se abre la pantalla del
                                 // sistema para concederlo: sin eso el recordatorio llega tarde.
@@ -557,6 +602,29 @@ fun FormularioTratamiento(
                         error = textoErrorMedicamento
                         return@TextButton
                     }
+                    // Las horas se validan solo si se va a avisar: un tratamiento sin recordatorio
+                    // no necesita horario, y exigirlo sería un estorbo.
+                    val horas = HorasDeToma.desdeTexto(horasTexto).take(vecesAlDia)
+                    if (notificar) {
+                        when (HorasDeToma.validar(horas, vecesAlDia)) {
+                            HorasDeToma.ErrorHoras.REPETIDAS -> {
+                                error = textoHorasRepetidas
+                                return@TextButton
+                            }
+
+                            HorasDeToma.ErrorHoras.INCOMPLETAS -> {
+                                error = textoHorasIncompletas
+                                return@TextButton
+                            }
+
+                            HorasDeToma.ErrorHoras.NINGUNO -> Unit
+                        }
+                    }
+                    val normalizadas = horas.mapNotNull {
+                        RecordatoriosTratamiento.leerHora(it)?.let { (h, m) ->
+                            RecordatoriosTratamiento.formatearHora(h, m)
+                        }
+                    }
                     try {
                         onGuardar(
                             nombre.trim(),
@@ -564,12 +632,14 @@ fun FormularioTratamiento(
                             frecuencia.ifBlank { null },
                             parseFechaLocalizada(inicio, formato.ordenFechaMostrada)!!,
                             if (cronico || fin.isBlank()) null else parseFechaLocalizada(fin, formato.ordenFechaMostrada)!!,
-                            // Se guarda normalizada ("8:30" → "08:30"); si no es una hora válida,
-                            // no se guarda hora y por tanto no hay recordatorio.
-                            RecordatoriosTratamiento.leerHora(hora)?.let {
-                                RecordatoriosTratamiento.formatearHora(it.first, it.second)
-                            },
-                            notificar && RecordatoriosTratamiento.leerHora(hora) != null
+                            // La primera hora se sigue guardando en su columna: es lo que leen los
+                            // lectores antiguos y lo que hace que un `.vpet` de la 1.13 importe bien.
+                            normalizadas.firstOrNull(),
+                            notificar && normalizadas.size == vecesAlDia,
+                            // `null` (y no 1) cuando no hay varias tomas: así un tratamiento de una
+                            // sola toma se guarda exactamente como antes de la 1.14.
+                            vecesAlDia.takeIf { normalizadas.size > 1 },
+                            HorasDeToma.escribirHoras(normalizadas).takeIf { normalizadas.size > 1 }
                         )
                     } catch (e: Exception) {
                         error = textoErrorFechas

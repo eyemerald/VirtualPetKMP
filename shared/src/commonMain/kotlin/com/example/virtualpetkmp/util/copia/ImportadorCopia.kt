@@ -194,6 +194,8 @@ class ImportadorCopia(
                                 fechaFin = tratamiento.fechaFin,
                                 hora = tratamiento.hora,
                                 notificar = tratamiento.notificar.toLong(),
+                                vecesAlDia = tratamiento.vecesAlDia?.toLong(),
+                                horas = tratamiento.horas,
                                 uuid = tratamiento.uuid,
                                 actualizadoEn = tratamiento.actualizadoEn
                             )

@@ -245,7 +245,10 @@
 
     <string name="form_medicamento">Medikament</string>
     <string name="form_dosis">Dosis (z. B. ½ Tablette)</string>
-    <string name="form_frecuencia">Häufigkeit (z. B. alle 24h)</string>
+    <string name="form_frecuencia">Hinweise (optional)</string>
+    <string name="form_veces_al_dia">Einnahmen pro Tag</string>
+    <string name="form_horas_repetidas">Zwei Einnahmen zur selben Zeit</string>
+    <string name="form_horas_incompletas">Bei einer Einnahme fehlt die Uhrzeit</string>
     <string name="form_hora">Uhrzeit</string>
     <string name="form_hora_anadir">Uhrzeit hinzufügen</string>
     <string name="form_recordarme">Erinnern</string>
@@ -393,6 +396,8 @@
     <string name="pdf_color">Farbe</string>
     <string name="pdf_microchip">Mikrochip</string>
     <string name="pdf_peso_actual">Aktuelles Gewicht</string>
+    <string name="pdf_veces_al_dia">Einnahmen pro Tag</string>
+    <string name="pdf_horas">Uhrzeiten</string>
     <string name="pdf_peso_ideal">Idealgewicht</string>
     <string name="pdf_proxima_dosis">Nächste Dosis</string>
     <string name="pdf_veterinario">Tierarzt</string>

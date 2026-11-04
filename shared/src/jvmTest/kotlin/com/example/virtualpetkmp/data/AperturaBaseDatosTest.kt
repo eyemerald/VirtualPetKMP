@@ -65,6 +65,12 @@ class AperturaBaseDatosTest {
                     "VALUES ('Luna', 'Perro', 'Labrador', '2024-02-04', 'Hembra', 'Negro', " +
                     "'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1', 1)"
             )
+            // El fichero tiene que ser el de una version ANTERIOR de verdad: se le quitan las
+            // columnas que anade la ultima migracion (16). Antes no hacia falta porque la ultima
+            // migracion era un CREATE INDEX IF NOT EXISTS y se podia repetir; un ALTER TABLE ADD
+            // COLUMN no, y repetirlo da "duplicate column name".
+            driver.ejecutar("ALTER TABLE tratamientos DROP COLUMN vecesAlDia;")
+            driver.ejecutar("ALTER TABLE tratamientos DROP COLUMN horas;")
             driver.ejecutar("PRAGMA user_version = $version;")
         } finally {
             driver.close()

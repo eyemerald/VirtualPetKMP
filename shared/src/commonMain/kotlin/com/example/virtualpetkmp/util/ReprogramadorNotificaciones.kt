@@ -142,21 +142,11 @@ object ReprogramadorNotificaciones {
         posposicion: (Long) -> Long? = { Posposiciones.leer(it) }
     ) {
         val id = tratamiento.id ?: return
-        val (hora, minuto) = RecordatoriosTratamiento.leerHora(tratamiento.hora) ?: return
+        // Una alarma por toma: un tratamiento de tres tomas al día tiene que avisar tres veces,
+        // cada una con su propio botón de Aceptar y su propio Posponer.
+        val horas = HorasDeToma.horasDelTratamiento(tratamiento)
+        if (horas.isEmpty()) return
         val zona = TimeZone.currentSystemDefault()
-
-        val pospuestoMillis = posposicion(id)?.takeIf { millis ->
-            // Solo vale si cae dentro del tratamiento: posponer no puede alargar una medicación.
-            RecordatoriosTratamiento.dentroDelTratamiento(
-                Instant.fromEpochMilliseconds(millis).toLocalDateTime(zona).date,
-                tratamiento.fechaFin
-            )
-        }
-
-        val millis = pospuestoMillis ?: run {
-            val proximo = RecordatoriosTratamiento.proximoAviso(tratamiento, ahora) ?: return
-            proximo.toInstant(zona).toEpochMilliseconds()
-        }
 
         // El medicamento y su dosis en una sola línea: "Oticoear · 4 gotas".
         val medicamento = listOfNotNull(
@@ -164,34 +154,62 @@ object ReprogramadorNotificaciones {
             tratamiento.dosis?.takeIf { it.isNotBlank() }
         ).joinToString(" · ")
 
-        try {
-            programador.programarTratamiento(
-                AvisoTratamiento(
-                    notificacionId = RecordatoriosTratamiento.idNotificacion(id),
-                    tratamientoId = id,
-                    mascotaId = tratamiento.mascotaId,
-                    titulo = getString(Res.string.aviso_tratamiento_titulo),
-                    mensaje = getString(Res.string.aviso_tratamiento_mensaje, nombreMascota, medicamento),
-                    fechaDisparoMillis = millis,
-                    hora = RecordatoriosTratamiento.formatearHora(hora, minuto),
-                    fechaFin = tratamiento.fechaFin,
-                    // Los dos botones se traducen AQUÍ, mientras hay corrutina y recursos: el
-                    // receptor que los pinta corre con la app cerrada y no puede leerlos.
-                    textoAceptar = getString(Res.string.aviso_aceptar),
-                    textoPosponer = getString(
-                        Res.string.aviso_posponer,
-                        RecordatoriosTratamiento.POSPOSICION_MINUTOS
+        horas.forEachIndexed { toma, hora ->
+            val notificacionId = RecordatoriosTratamiento.idNotificacion(id, toma)
+
+            val pospuestoMillis = posposicion(notificacionId)?.takeIf { millis ->
+                // Solo vale si cae dentro del tratamiento: posponer no puede alargar una medicación.
+                RecordatoriosTratamiento.dentroDelTratamiento(
+                    Instant.fromEpochMilliseconds(millis).toLocalDateTime(zona).date,
+                    tratamiento.fechaFin
+                )
+            }
+
+            val millis = pospuestoMillis ?: run {
+                val proximo = RecordatoriosTratamiento.proximoAviso(tratamiento, toma, ahora)
+                    ?: return@forEachIndexed
+                proximo.toInstant(zona).toEpochMilliseconds()
+            }
+
+            try {
+                programador.programarTratamiento(
+                    AvisoTratamiento(
+                        notificacionId = notificacionId,
+                        tratamientoId = id,
+                        mascotaId = tratamiento.mascotaId,
+                        titulo = getString(Res.string.aviso_tratamiento_titulo),
+                        mensaje = getString(Res.string.aviso_tratamiento_mensaje, nombreMascota, medicamento),
+                        fechaDisparoMillis = millis,
+                        // La hora de ESTA toma: es la que se usa para reprogramar la de mañana.
+                        hora = hora,
+                        toma = toma,
+                        fechaFin = tratamiento.fechaFin,
+                        // Los dos botones se traducen AQUÍ, mientras hay corrutina y recursos: el
+                        // receptor que los pinta corre con la app cerrada y no puede leerlos.
+                        textoAceptar = getString(Res.string.aviso_aceptar),
+                        textoPosponer = getString(
+                            Res.string.aviso_posponer,
+                            RecordatoriosTratamiento.POSPOSICION_MINUTOS
+                        )
                     )
                 )
-            )
-        } catch (e: Exception) {
-            println("Error programando el recordatorio del tratamiento: ${e.message}")
+            } catch (e: Exception) {
+                println("Error programando el recordatorio del tratamiento: ${e.message}")
+            }
         }
     }
 
-    /** Cancela el recordatorio de un tratamiento. */
+    /**
+     * Cancela **todas** las tomas de un tratamiento.
+     *
+     * Se cancelan los seis huecos posibles y no solo los de las horas guardadas: al editar un
+     * tratamiento de tres tomas a dos, la tercera ya tenía su alarma programada y, si solo se
+     * cancelaran las dos nuevas, seguiría sonando. Con seis llamadas a `cancelar` sobra.
+     */
     fun cancelarTratamiento(programador: ProgramadorNotificaciones, id: Long) {
-        programador.cancelar(RecordatoriosTratamiento.idNotificacion(id))
+        (0 until HorasDeToma.MAXIMO).forEach { toma ->
+            programador.cancelar(RecordatoriosTratamiento.idNotificacion(id, toma))
+        }
     }
 
     private fun programar(

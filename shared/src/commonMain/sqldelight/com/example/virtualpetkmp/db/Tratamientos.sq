@@ -14,6 +14,12 @@ CREATE TABLE tratamientos (
     notificar INTEGER NOT NULL DEFAULT 0,
     uuid TEXT NOT NULL,
     actualizadoEn INTEGER NOT NULL,
+    -- Veces al dia (1..6) y las horas de cada toma ("08:00,14:00,22:00"). NULL en los tratamientos
+    -- anteriores a la 1.14: esos se comportan como una sola toma a la hora de `hora`.
+    -- Van al final a proposito: `ALTER TABLE ... ADD COLUMN` (migracion 16) las deja ahi, y una
+    -- instalacion nueva tiene que quedar identica a una base migrada.
+    vecesAlDia INTEGER,
+    horas TEXT,
     FOREIGN KEY (mascotaId) REFERENCES mascotas(id) ON DELETE CASCADE
 );
 
@@ -34,12 +40,12 @@ JOIN mascotas ON mascotas.id = tratamientos.mascotaId
 WHERE tratamientos.notificar = 1;
 
 insert:
-INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin, hora, notificar, uuid, actualizadoEn)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin, hora, notificar, vecesAlDia, horas, uuid, actualizadoEn)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE tratamientos 
-SET nombreMedicamento = ?, dosis = ?, frecuencia = ?, fechaInicio = ?, fechaFin = ?, hora = ?, notificar = ?, actualizadoEn = ?
+SET nombreMedicamento = ?, dosis = ?, frecuencia = ?, fechaInicio = ?, fechaFin = ?, hora = ?, notificar = ?, vecesAlDia = ?, horas = ?, actualizadoEn = ?
 WHERE id = ?;
 
 delete:

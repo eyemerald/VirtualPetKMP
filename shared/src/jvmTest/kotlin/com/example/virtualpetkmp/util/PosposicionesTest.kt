@@ -96,7 +96,10 @@ class PosposicionesTest {
             tratamiento = tratamiento,
             nombreMascota = "Luna",
             ahora = ahora,
-            posposicion = { id -> if (id == 7L) pospuesto else null }
+            // La clave es el id de la ALARMA (que desde la 1.14 incluye la toma), no el id
+            // del tratamiento: si fuera el del tratamiento, posponer la toma de la manana
+            // pospondria tambien la de la noche.
+            posposicion = { id -> if (id == RecordatoriosTratamiento.idNotificacion(7L)) pospuesto else null }
         )
 
         assertEquals(

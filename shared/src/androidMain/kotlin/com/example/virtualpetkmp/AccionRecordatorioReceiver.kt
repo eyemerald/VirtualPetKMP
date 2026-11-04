@@ -39,7 +39,7 @@ class AccionRecordatorioReceiver : BroadcastReceiver() {
             posponer(context, aviso)
         } else {
             // Aceptar: no hay nada pendiente de este tratamiento.
-            Posposiciones.borrar(aviso.tratamientoId)
+            Posposiciones.borrar(aviso.notificacionId)
         }
     }
 
@@ -63,11 +63,11 @@ class AccionRecordatorioReceiver : BroadcastReceiver() {
 
         if (!RecordatoriosTratamiento.dentroDelTratamiento(destino.date, aviso.fechaFin)) {
             // Se acabó el tratamiento: se limpia lo que hubiera y no se programa nada.
-            Posposiciones.borrar(aviso.tratamientoId)
+            Posposiciones.borrar(aviso.notificacionId)
             return
         }
 
-        Posposiciones.guardar(aviso.tratamientoId, nuevo.fechaDisparoMillis)
+        Posposiciones.guardar(aviso.notificacionId, nuevo.fechaDisparoMillis)
         crearProgramadorNotificaciones(context).programarTratamiento(nuevo)
     }
 }

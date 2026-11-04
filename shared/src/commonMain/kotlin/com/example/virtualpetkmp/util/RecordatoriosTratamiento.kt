@@ -40,8 +40,27 @@ object RecordatoriosTratamiento {
      */
     const val POSPOSICION_MINUTOS = 30
 
-    /** Id de notificación de un tratamiento. */
-    fun idNotificacion(tratamientoId: Long): Long = tratamientoId + DESPLAZAMIENTO_TRATAMIENTO
+    /** Separación entre los ids de dos tomas del mismo tratamiento (ver [idNotificacion]). */
+    private const val PASO_TOMA = 100_000L
+
+    /** Id de notificación de la **primera** toma de un tratamiento. */
+    fun idNotificacion(tratamientoId: Long): Long = idNotificacion(tratamientoId, toma = 0)
+
+    /**
+     * Id de notificación de una toma concreta.
+     *
+     * Cada toma necesita su propio id porque cada una lleva su propia alarma y su propia
+     * notificación: con un id por tratamiento, la segunda toma del día habría sobrescrito a la
+     * primera y el usuario solo habría recibido un aviso.
+     *
+     * El reparto es `2.000.000.000 + toma·100.000 + idTratamiento`, que mantiene los tres rangos
+     * separados (vacunas 0…, preventivos 1.000.000.000…, tratamientos 2.000.000.000…). Con la
+     * toma 0 el id es **exactamente el de antes de la 1.14**, así que las alarmas viejas se
+     * sobrescriben en vez de quedar sueltas, y todo cabe en un `Int` (que es lo que pide
+     * `PendingIntent`).
+     */
+    fun idNotificacion(tratamientoId: Long, toma: Int): Long =
+        DESPLAZAMIENTO_TRATAMIENTO + toma.coerceIn(0, HorasDeToma.MAXIMO - 1) * PASO_TOMA + tratamientoId
 
     /**
      * Si un aviso que saltaría el día [objetivo] sigue estando dentro del tratamiento.
@@ -109,18 +128,36 @@ object RecordatoriosTratamiento {
     }
 
     /**
-     * El próximo aviso de este tratamiento, con sus propios datos. Es el atajo que usan la
-     * pantalla y el aviso de arranque para no repetir los tres campos en cada sitio.
+     * El próximo aviso de la primera toma de este tratamiento. Se mantiene por comodidad (y por
+     * los sitios que solo necesitan "¿hay aviso y cuándo es el siguiente?"), pero lo que programa
+     * las alarmas recorre todas las tomas con [proximosAvisos].
      */
     fun proximoAviso(tratamiento: Tratamiento, desde: LocalDateTime): LocalDateTime? =
-        if (!tratamiento.notificar) {
-            null
-        } else {
-            proximoAviso(
-                hora = tratamiento.hora,
-                inicio = tratamiento.fechaInicio,
-                fin = tratamiento.fechaFin,
-                desde = desde
-            )
-        }
+        proximoAviso(tratamiento, toma = 0, desde = desde)
+
+    /**
+     * El próximo aviso de **una** toma, con los datos del tratamiento.
+     *
+     * @param toma índice dentro de [HorasDeToma.horasDelTratamiento]; si no existe, no hay aviso.
+     */
+    fun proximoAviso(tratamiento: Tratamiento, toma: Int, desde: LocalDateTime): LocalDateTime? {
+        val hora = HorasDeToma.horasDelTratamiento(tratamiento).getOrNull(toma) ?: return null
+        return proximoAviso(
+            hora = hora,
+            inicio = tratamiento.fechaInicio,
+            fin = tratamiento.fechaFin,
+            desde = desde
+        )
+    }
+
+    /**
+     * Los próximos avisos de **todas** las tomas del tratamiento, en el orden de sus horas.
+     *
+     * Es lo que recorre quien programa las alarmas: una por toma y día. Un tratamiento sin
+     * recordatorio, sin horas o ya terminado devuelve la lista vacía.
+     */
+    fun proximosAvisos(tratamiento: Tratamiento, desde: LocalDateTime): List<LocalDateTime> =
+        HorasDeToma.horasDelTratamiento(tratamiento)
+            .indices
+            .mapNotNull { toma -> proximoAviso(tratamiento, toma, desde) }
 }

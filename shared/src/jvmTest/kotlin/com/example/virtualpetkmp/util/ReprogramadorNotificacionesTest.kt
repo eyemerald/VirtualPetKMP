@@ -264,11 +264,43 @@ class ReprogramadorNotificacionesTest {
     }
 
     @Test
-    fun `cancelar un tratamiento usa el id desplazado con el que se programo`() = runBlocking {
+    fun `cancelar un tratamiento cancela todas sus tomas`() = runBlocking {
         val programador = ProgramadorFalso()
 
         ReprogramadorNotificaciones.cancelarTratamiento(programador, 5L)
 
-        assertEquals(listOf(RecordatoriosTratamiento.idNotificacion(5L)), programador.canceladas)
+        // Se cancelan los seis huecos posibles y no solo los de las horas guardadas: al editar de
+        // tres tomas a dos, la tercera ya estaba programada y tambien tiene que dejar de sonar.
+        val esperadas = (0 until HorasDeToma.MAXIMO).map { toma ->
+            RecordatoriosTratamiento.idNotificacion(5L, toma)
+        }
+        assertEquals(esperadas, programador.canceladas)
+        assertEquals(esperadas.first(), RecordatoriosTratamiento.idNotificacion(5L))
+    }
+
+    @Test
+    fun `un tratamiento de tres tomas programa tres alarmas distintas`() = runBlocking {
+        val programador = ProgramadorFalso()
+        val ahora = LocalDateTime(2026, 5, 20, 7, 0)
+        val tratamiento = Tratamiento(
+            id = 9L,
+            mascotaId = 1L,
+            nombreMedicamento = "Amoxicilina",
+            fechaInicio = ahora.date,
+            hora = "08:00",
+            notificar = true,
+            vecesAlDia = 3,
+            horas = "08:00,14:00,22:00"
+        )
+
+        ReprogramadorNotificaciones.programarTratamiento(programador, tratamiento, "Luna", ahora)
+
+        val ids = (0 until 3).map { RecordatoriosTratamiento.idNotificacion(9L, it) }
+        assertEquals(ids.toSet(), programador.programadas.keys, "faltan tomas por programar")
+        assertEquals(
+            listOf("08:00", "14:00", "22:00"),
+            ids.map { programador.recordatorios.getValue(it).first },
+            "cada alarma tiene que llevar la hora de SU toma"
+        )
     }
 }
