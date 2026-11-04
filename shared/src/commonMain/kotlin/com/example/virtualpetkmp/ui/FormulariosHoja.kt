@@ -1,6 +1,8 @@
 package com.example.virtualpetkmp.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -463,7 +465,13 @@ fun FormularioTratamiento(
         onDismissRequest = onCancelar,
         title = { Text(stringResource(if (tratamiento == null) Res.string.form_anadir_tratamiento else Res.string.form_editar_tratamiento)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Con seis tomas al día el formulario es más alto que el diálogo, así que tiene que
+            // poder desplazarse: sin esto, las últimas horas y el propio botón de guardar quedaban
+            // fuera de la pantalla y no había forma de llegar a ellos.
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
                 OutlinedTextField(
                     value = nombre,
                     onValueChange = { nombre = it },
