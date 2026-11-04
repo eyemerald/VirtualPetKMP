@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import org.jetbrains.compose.resources.getString
 import virtualpetkmp.shared.generated.resources.Res
 import virtualpetkmp.shared.generated.resources.error_borrar_mascota
@@ -52,6 +55,18 @@ class MascotaViewModel(
     private val _ultimoPesoPorMascota = MutableStateFlow<Map<Long, Double>>(emptyMap())
     val ultimoPesoPorMascota: StateFlow<Map<Long, Double>> = _ultimoPesoPorMascota.asStateFlow()
 
+    /**
+     * Ids de las mascotas con vacunas / preventivos pendientes, para los dos filtros de la lista.
+     *
+     * Se calculan en la base de datos (ver `MascotaRepository`) y no recorriendo la lista: el
+     * filtro tiene que costar lo mismo con 4 mascotas que con 500. Se recargan con la lista.
+     */
+    private val _vacunasPendientes = MutableStateFlow<Set<Long>>(emptySet())
+    val vacunasPendientes: StateFlow<Set<Long>> = _vacunasPendientes.asStateFlow()
+
+    private val _preventivosPendientes = MutableStateFlow<Set<Long>>(emptySet())
+    val preventivosPendientes: StateFlow<Set<Long>> = _preventivosPendientes.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -74,6 +89,18 @@ class MascotaViewModel(
                     pesoRepository?.getUltimoPesoDeCadaMascota().orEmpty()
                 } catch (e: Exception) {
                     emptyMap()
+                }
+                // Igual que los pesos: si fallara, la lista se sigue viendo sin los filtros.
+                val hoy = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                _vacunasPendientes.value = try {
+                    repository.getIdsConVacunaPendiente(hoy)
+                } catch (e: Exception) {
+                    emptySet()
+                }
+                _preventivosPendientes.value = try {
+                    repository.getIdsConPreventivoPendiente(hoy)
+                } catch (e: Exception) {
+                    emptySet()
                 }
             } catch (e: Exception) {
                 registrarFallo(e)

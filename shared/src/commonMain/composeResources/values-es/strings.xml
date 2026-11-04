@@ -496,4 +496,7 @@
     <string name="buscar_mascota_sin_resultados">Ninguna mascota coincide con ese nombre.</string>
     <string name="a11y_ver_como_listado">Ver como listado</string>
     <string name="a11y_ver_como_tarjetas">Ver como tarjetas</string>
+    <string name="filtro_vacunas_pendientes">Vacunas pendientes</string>
+    <string name="filtro_preventivos_pendientes">Preventivos pendientes</string>
+    <string name="filtro_sin_resultados">Ninguna mascota cumple el filtro</string>
 </resources>

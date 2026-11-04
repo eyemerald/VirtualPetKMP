@@ -500,4 +500,7 @@
     <string name="buscar_mascota_sin_resultados">No pet matches that name.</string>
     <string name="a11y_ver_como_listado">Show as a list</string>
     <string name="a11y_ver_como_tarjetas">Show as cards</string>
+    <string name="filtro_vacunas_pendientes">Pending vaccines</string>
+    <string name="filtro_preventivos_pendientes">Pending preventives</string>
+    <string name="filtro_sin_resultados">No pet matches the filter</string>
 </resources>

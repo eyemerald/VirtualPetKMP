@@ -9,3 +9,7 @@
 -- `horas`: las horas de esas tomas, en "HH:mm" separadas por comas ("08:00,14:00,22:00").
 ALTER TABLE tratamientos ADD COLUMN vecesAlDia INTEGER;
 ALTER TABLE tratamientos ADD COLUMN horas TEXT;
+-- Indices de los filtros de la lista de mascotas (vacunas y preventivos pendientes). Van en esta
+-- misma migracion y no en otra para que la version del esquema siga siendo 16.
+CREATE INDEX IF NOT EXISTS idx_vacunas_mascota_nombre ON vacunas(mascotaId, nombre);
+CREATE INDEX IF NOT EXISTS idx_preventivos_mascota_nombre ON preventivos(mascotaId, nombre);

@@ -4,6 +4,7 @@ import com.example.virtualpetkmp.Mascota
 import com.example.virtualpetkmp.db.VirtualPetDatabase
 import com.example.virtualpetkmp.util.ErrorApp
 import com.example.virtualpetkmp.util.ErrorAppException
+import com.example.virtualpetkmp.util.Pendientes
 import com.example.virtualpetkmp.util.ahoraMillis
 import com.example.virtualpetkmp.util.nuevoIdentificadorUniversal
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +27,33 @@ class MascotaRepository(private val database: VirtualPetDatabase) {
         database.mascotasQueries.selectAll()
             .executeAsList()
             .map { it.toMascota() }
+    }
+
+    /**
+     * Ids de las mascotas con alguna **vacuna pendiente** (vencida o con la próxima dosis en los
+     * próximos [Pendientes.VENTANA_DIAS] días).
+     *
+     * Se resuelve en SQL y no recorriendo mascotas en Kotlin: con 40 animales daría igual, pero la
+     * lista tiene que seguir abriendo igual de rápida con 500, y esto se llama cada vez que se
+     * recarga. La cuenta la hace la base de datos con un `EXISTS` e índice por `(mascotaId, nombre)`.
+     *
+     * Solo se miran los **últimos** registros de cada vacuna: la misma vacuna puesta cinco veces es
+     * una vacuna, no cinco pendientes.
+     */
+    suspend fun getIdsConVacunaPendiente(hoy: LocalDate): Set<Long> = withContext(Dispatchers.IO) {
+        database.mascotasQueries
+            .selectIdsConVacunaPendiente(Pendientes.limite(hoy).toString())
+            .executeAsList()
+            .toSet()
+    }
+
+    /** Lo mismo que [getIdsConVacunaPendiente], para preventivos. Es independiente: un animal
+     *  puede tener la vacuna al día y la pipeta vencida. */
+    suspend fun getIdsConPreventivoPendiente(hoy: LocalDate): Set<Long> = withContext(Dispatchers.IO) {
+        database.mascotasQueries
+            .selectIdsConPreventivoPendiente(Pendientes.limite(hoy).toString())
+            .executeAsList()
+            .toSet()
     }
 
     suspend fun getMascotaById(id: Long): Mascota? = withContext(Dispatchers.IO) {

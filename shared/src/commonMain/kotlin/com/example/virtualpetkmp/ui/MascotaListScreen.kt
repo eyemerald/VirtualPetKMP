@@ -37,6 +37,9 @@ import virtualpetkmp.shared.generated.resources.accion_eliminar
 import virtualpetkmp.shared.generated.resources.borrar_mascota_mensaje
 import virtualpetkmp.shared.generated.resources.borrar_mascota_mensaje_sin_nombre
 import virtualpetkmp.shared.generated.resources.borrar_mascota_titulo
+import virtualpetkmp.shared.generated.resources.filtro_vacunas_pendientes
+import virtualpetkmp.shared.generated.resources.filtro_preventivos_pendientes
+import virtualpetkmp.shared.generated.resources.filtro_sin_resultados
 import virtualpetkmp.shared.generated.resources.buscar_mascota
 import virtualpetkmp.shared.generated.resources.buscar_mascota_sin_resultados
 import virtualpetkmp.shared.generated.resources.lista_mascotas_reintentar
@@ -62,6 +65,8 @@ fun MascotaListScreen(
 ) {
     val mascotas by viewModel.mascotas.collectAsState()
     val ultimoPesoPorMascota by viewModel.ultimoPesoPorMascota.collectAsState()
+    val vacunasPendientes by viewModel.vacunasPendientes.collectAsState()
+    val preventivosPendientes by viewModel.preventivosPendientes.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     var showDeleteDialog by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -151,6 +156,10 @@ fun MascotaListScreen(
                     // para que no se desplacen: con muchas mascotas, el buscador tiene que estar
                     // siempre a mano.
                     var consulta by rememberSaveable { mutableStateOf("") }
+                    // Los dos filtros son independientes y se combinan con la busqueda: "las que
+                    // tienen la vacuna pendiente y se llaman Luna" es una pregunta legitima.
+                    var filtroVacunas by rememberSaveable { mutableStateOf(false) }
+                    var filtroPreventivos by rememberSaveable { mutableStateOf(false) }
                     // La vista elegida se recuerda entre arranques (no solo al girar la pantalla):
                     // quien pone el listado con muchos animales no quiere volver a ponerlo cada vez.
                     var modo by rememberSaveable {
@@ -159,7 +168,25 @@ fun MascotaListScreen(
                         )
                     }
 
-                    val visibles = remember(mascotas, consulta) { filtrarMascotas(mascotas, consulta) }
+                    // Las cuentas de cada filtro se hacen sobre la busqueda actual: si el
+                    // usuario ha escrito "luna", "3 vacunas pendientes" no puede referirse a las
+                    // mascotas que no se estan viendo.
+                    val buscadas = remember(mascotas, consulta) { filtrarMascotas(mascotas, consulta) }
+                    val cuantasVacunas = remember(buscadas, vacunasPendientes) {
+                        buscadas.count { it.id != null && it.id in vacunasPendientes }
+                    }
+                    val cuantosPreventivos = remember(buscadas, preventivosPendientes) {
+                        buscadas.count { it.id != null && it.id in preventivosPendientes }
+                    }
+                    val visibles = remember(buscadas, filtroVacunas, filtroPreventivos, vacunasPendientes, preventivosPendientes) {
+                        buscadas.filter { mascota ->
+                            val id = mascota.id
+                            val vacunaOk = !filtroVacunas || (id != null && id in vacunasPendientes)
+                            val preventivoOk = !filtroPreventivos || (id != null && id in preventivosPendientes)
+                            vacunaOk && preventivoOk
+                        }
+                    }
+                    val hayFiltro = filtroVacunas || filtroPreventivos
 
                     Column(modifier = Modifier.fillMaxSize()) {
                         BarraBusqueda(
@@ -172,6 +199,15 @@ fun MascotaListScreen(
                             }
                         )
 
+                        FiltrosPendientes(
+                            filtroVacunas = filtroVacunas,
+                            cuantasVacunas = cuantasVacunas,
+                            filtroPreventivos = filtroPreventivos,
+                            cuantosPreventivos = cuantosPreventivos,
+                            onVacunas = { filtroVacunas = it },
+                            onPreventivos = { filtroPreventivos = it }
+                        )
+
                         if (visibles.isEmpty()) {
                             // Solo puede pasar buscando: sin búsqueda, la lista vacía la cubre el
                             // caso de arriba ("no hay mascotas registradas").
@@ -182,7 +218,13 @@ fun MascotaListScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = stringResource(Res.string.buscar_mascota_sin_resultados),
+                                    // Con filtros puestos, "no hay resultados" tiene que decir
+                                    // que es por el filtro; sin ellos, la busqueda vacia se
+                                    // explica sola.
+                                    text = stringResource(
+                                        if (hayFiltro) Res.string.filtro_sin_resultados
+                                        else Res.string.buscar_mascota_sin_resultados
+                                    ),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
@@ -581,6 +623,44 @@ private fun IndicadorPeso(
             ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/**
+ * Los dos filtros de pendientes de la lista, con cuántas mascotas hay en cada uno.
+ *
+ * Van como chips y no como un desplegable porque son dos estados que se ven de un vistazo: quien
+ * entra a revisar quiere saber si hay algo pendiente **sin** tener que abrir nada.
+ */
+@Composable
+private fun FiltrosPendientes(
+    filtroVacunas: Boolean,
+    cuantasVacunas: Int,
+    filtroPreventivos: Boolean,
+    cuantosPreventivos: Int,
+    onVacunas: (Boolean) -> Unit,
+    onPreventivos: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        FilterChip(
+            selected = filtroVacunas,
+            onClick = { onVacunas(!filtroVacunas) },
+            label = {
+                Text("${stringResource(Res.string.filtro_vacunas_pendientes)} ($cuantasVacunas)")
+            }
+        )
+        FilterChip(
+            selected = filtroPreventivos,
+            onClick = { onPreventivos(!filtroPreventivos) },
+            label = {
+                Text("${stringResource(Res.string.filtro_preventivos_pendientes)} ($cuantosPreventivos)")
+            }
         )
     }
 }

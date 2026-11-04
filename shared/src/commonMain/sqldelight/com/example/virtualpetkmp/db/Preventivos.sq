@@ -15,6 +15,10 @@ CREATE TABLE preventivos (
 
 -- Búsqueda por identificador universal, que es la que hace la fusión al importar.
 CREATE INDEX idx_preventivos_uuid ON preventivos(uuid);
+-- Indice para los filtros de pendientes de la lista de mascotas: la consulta busca por
+-- mascota y agrupa por nombre, que es justo este par de columnas.
+CREATE INDEX idx_preventivos_mascota_nombre ON preventivos(mascotaId, nombre);
+
 
 
 selectByMascotaId:
