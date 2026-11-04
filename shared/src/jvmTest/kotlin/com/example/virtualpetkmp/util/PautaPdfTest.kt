@@ -62,6 +62,27 @@ class PautaPdfTest {
         assertEquals("20:30", pauta.single { it.etiqueta == Res.string.pdf_horas }.valor)
     }
 
+    /**
+     * Imprime el texto que la seccion de tratamientos entrega al PDF, con las etiquetas ya
+     * traducidas: es la comprobacion de que "Veces al dia" y "Horas" llegan al documento sin
+     * tener que abrir el PDF.
+     */
+    @Test
+    fun `la seccion del PDF lleva las dos lineas con su texto traducido`() = kotlinx.coroutines.runBlocking {
+        val conHoras = pautaTratamientoPdf(tratamiento(vecesAlDia = 3, horas = "08:00,14:00,22:00"))
+            .map { "${org.jetbrains.compose.resources.getString(it.etiqueta)}: ${it.valor}" }
+        val sinHoras = pautaTratamientoPdf(tratamiento(vecesAlDia = 2, horas = null))
+            .map { "${org.jetbrains.compose.resources.getString(it.etiqueta)}: ${it.valor}" }
+
+        println("PAUTA_PDF_CON_HORAS  -> " + conHoras.joinToString(" | "))
+        println("PAUTA_PDF_SIN_HORAS  -> " + sinHoras.joinToString(" | "))
+
+        assertEquals(2, conHoras.size)
+        assertTrue(conHoras[0].startsWith("Veces al día: 3"), "salio: ${conHoras[0]}")
+        assertTrue(conHoras[1].startsWith("Horas: 08:00"), "salio: ${conHoras[1]}")
+        assertEquals(1, sinHoras.size, "sin horas no puede salir la linea de horas: $sinHoras")
+    }
+
     private fun tratamiento(vecesAlDia: Int?, horas: String?) = Tratamiento(
         id = 1L,
         mascotaId = 1L,

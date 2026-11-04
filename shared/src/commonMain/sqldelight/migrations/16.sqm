@@ -13,3 +13,9 @@ ALTER TABLE tratamientos ADD COLUMN horas TEXT;
 -- misma migracion y no en otra para que la version del esquema siga siendo 16.
 CREATE INDEX IF NOT EXISTS idx_vacunas_mascota_nombre ON vacunas(mascotaId, nombre);
 CREATE INDEX IF NOT EXISTS idx_preventivos_mascota_nombre ON preventivos(mascotaId, nombre);
+
+-- OJO con el numero del fichero: SQLDelight calcula la version del esquema como
+-- (numero mas alto + 1), asi que este `16.sqm` deja las bases en la version **17**, no en la 16.
+-- Se queda asi a proposito: renombrarlo a `15.sqm` volveria a marcar 16 y las bases ya migradas
+-- (la de desarrollo y la del movil de pruebas) quedarian "mas nuevas que la app" y la app se
+-- negaria a abrirlas.
