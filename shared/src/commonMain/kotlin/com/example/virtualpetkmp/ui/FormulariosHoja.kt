@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -394,7 +396,7 @@ fun FormularioPreventivo(
 }
 
 /** Diálogo de tratamiento, para alta o edición. */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun FormularioTratamiento(
     tratamiento: com.example.virtualpetkmp.Tratamiento? = null,
@@ -529,7 +531,9 @@ fun FormularioTratamiento(
                     text = stringResource(Res.string.form_veces_al_dia),
                     style = androidx.compose.material3.MaterialTheme.typography.bodyLarge
                 )
-                androidx.compose.foundation.layout.Row(
+                // FlowRow y no Row: con seis chips y una pantalla estrecha, el 6 se quedaba
+                // fuera y no había forma de elegirlo. Así pasan a una segunda fila.
+                FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
