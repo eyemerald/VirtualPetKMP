@@ -32,7 +32,8 @@ class VacunaRepository(private val database: VirtualPetDatabase) {
                     fechaAplicacion = LocalDate.parse(fila.fechaAplicacion),
                     fechaProximaDosis = LocalDate.parse(fila.fechaProximaDosis),
                     veterinario = fila.veterinario,
-                    lote = fila.lote
+                    lote = fila.lote,
+                    uuid = fila.uuid
                 )
             }
     }
@@ -48,9 +49,31 @@ class VacunaRepository(private val database: VirtualPetDatabase) {
                     fechaAplicacion = LocalDate.parse(fila.fechaAplicacion),
                     fechaProximaDosis = LocalDate.parse(fila.fechaProximaDosis),
                     veterinario = fila.veterinario,
-                    lote = fila.lote
+                    lote = fila.lote,
+                    uuid = fila.uuid
                 )
             }
+    }
+
+    /**
+     * Una vacuna por su identificador universal.
+     *
+     * La consulta el aviso **al sonar**: el id local del intent ya no identifica la fila (al
+     * restaurar una copia se reinserta con otro id), el `uuid` sí.
+     */
+    suspend fun getVacunaPorUuid(uuid: String): Vacuna? = withContext(Dispatchers.IO) {
+        database.vacunasQueries.selectByUuid(uuid).executeAsList().firstOrNull()?.let { fila ->
+            Vacuna(
+                id = fila.id,
+                mascotaId = fila.mascotaId,
+                nombre = fila.nombre,
+                fechaAplicacion = LocalDate.parse(fila.fechaAplicacion),
+                fechaProximaDosis = LocalDate.parse(fila.fechaProximaDosis),
+                veterinario = fila.veterinario,
+                lote = fila.lote,
+                uuid = fila.uuid
+            )
+        }
     }
 
     /**

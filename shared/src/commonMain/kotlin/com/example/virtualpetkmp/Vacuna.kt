@@ -22,5 +22,10 @@ data class Vacuna(
     val fechaAplicacion: LocalDate,
     val fechaProximaDosis: LocalDate,
     val veterinario: String? = null,
-    val lote: String? = null
+    val lote: String? = null,
+    /**
+     * Identificador universal de la fila, que es lo que reconoce el aviso ya programado aunque el
+     * `id` local haya cambiado al restaurar una copia.
+     */
+    val uuid: String? = null
 )

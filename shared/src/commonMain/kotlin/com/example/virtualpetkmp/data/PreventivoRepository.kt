@@ -28,7 +28,8 @@ class PreventivoRepository(private val database: VirtualPetDatabase) {
                     fechaAplicacion = LocalDate.parse(fila.fechaAplicacion),
                     fechaProximaDosis = LocalDate.parse(fila.fechaProximaDosis),
                     veterinario = fila.veterinario,
-                    lote = fila.lote
+                    lote = fila.lote,
+                    uuid = fila.uuid
                 )
             }
     }
@@ -45,7 +46,8 @@ class PreventivoRepository(private val database: VirtualPetDatabase) {
                     fechaAplicacion = LocalDate.parse(fila.fechaAplicacion),
                     fechaProximaDosis = LocalDate.parse(fila.fechaProximaDosis),
                     veterinario = fila.veterinario,
-                    lote = fila.lote
+                    lote = fila.lote,
+                    uuid = fila.uuid
                 )
             }
     }
@@ -62,9 +64,27 @@ class PreventivoRepository(private val database: VirtualPetDatabase) {
                     fechaAplicacion = LocalDate.parse(fila.fechaAplicacion),
                     fechaProximaDosis = LocalDate.parse(fila.fechaProximaDosis),
                     veterinario = fila.veterinario,
-                    lote = fila.lote
+                    lote = fila.lote,
+                    uuid = fila.uuid
                 )
             }
+    }
+
+    /** Un preventivo por su identificador universal: es lo que consulta su aviso al sonar. */
+    suspend fun getPreventivoPorUuid(uuid: String): Preventivo? = withContext(Dispatchers.IO) {
+        database.preventivosQueries.selectByUuid(uuid).executeAsList().firstOrNull()?.let { fila ->
+            Preventivo(
+                id = fila.id,
+                mascotaId = fila.mascotaId,
+                tipo = fila.tipo,
+                nombre = fila.nombre,
+                fechaAplicacion = LocalDate.parse(fila.fechaAplicacion),
+                fechaProximaDosis = LocalDate.parse(fila.fechaProximaDosis),
+                veterinario = fila.veterinario,
+                lote = fila.lote,
+                uuid = fila.uuid
+            )
+        }
     }
 
     suspend fun insertPreventivo(

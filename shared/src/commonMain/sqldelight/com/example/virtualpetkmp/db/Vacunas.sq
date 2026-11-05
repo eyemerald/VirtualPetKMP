@@ -42,6 +42,11 @@ SELECT last_insert_rowid() AS id;
 selectAll:
 SELECT * FROM vacunas ORDER BY fechaAplicacion DESC;
 
+-- Una vacuna por su identificador universal: es lo que usa su aviso al sonar, porque el id local
+-- cambia al restaurar una copia.
+selectByUuid:
+SELECT * FROM vacunas WHERE uuid = ?;
+
 
 -- Vaciar la tabla. Solo lo usa la restauración de una copia, que reemplaza el contenido entero
 -- dentro de una transacción; en el uso normal nada borra filas por esta consulta.

@@ -39,6 +39,15 @@ FROM tratamientos
 JOIN mascotas ON mascotas.id = tratamientos.mascotaId
 WHERE tratamientos.notificar = 1;
 
+-- Un tratamiento por su identificador universal, con el nombre de su mascota.
+-- Es la consulta que hace un aviso al sonar: el `id` local no sirve para reconocerlo (al
+-- restaurar una copia la fila se reinserta con otro id), el `uuid` sí.
+selectByUuid:
+SELECT tratamientos.*, mascotas.nombre AS nombreMascota
+FROM tratamientos
+JOIN mascotas ON mascotas.id = tratamientos.mascotaId
+WHERE tratamientos.uuid = ?;
+
 insert:
 INSERT INTO tratamientos(mascotaId, nombreMedicamento, dosis, frecuencia, fechaInicio, fechaFin, hora, notificar, vecesAlDia, horas, uuid, actualizadoEn)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);

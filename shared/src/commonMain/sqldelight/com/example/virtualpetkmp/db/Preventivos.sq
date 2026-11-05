@@ -45,6 +45,10 @@ SELECT last_insert_rowid() AS id;
 selectAll:
 SELECT * FROM preventivos ORDER BY fechaAplicacion DESC;
 
+-- Un preventivo por su identificador universal: es lo que usa su aviso al sonar.
+selectByUuid:
+SELECT * FROM preventivos WHERE uuid = ?;
+
 
 -- Vaciar la tabla. Solo lo usa la restauración de una copia, que reemplaza el contenido entero
 -- dentro de una transacción; en el uso normal nada borra filas por esta consulta.

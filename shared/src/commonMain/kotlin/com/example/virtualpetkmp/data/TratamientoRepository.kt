@@ -38,7 +38,8 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
                     hora = fila.hora,
                     notificar = fila.notificar,
                     vecesAlDia = fila.vecesAlDia,
-                    horas = fila.horas
+                    horas = fila.horas,
+                    uuid = fila.uuid
                 )
             }
     }
@@ -65,7 +66,38 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
                         hora = fila.hora,
                         notificar = fila.notificar,
                         vecesAlDia = fila.vecesAlDia,
-                        horas = fila.horas
+                        horas = fila.horas,
+                        uuid = fila.uuid
+                    ) to fila.nombreMascota
+                }
+        }
+
+    /**
+     * Un tratamiento por su identificador universal, con el nombre de su mascota.
+     *
+     * Lo consulta el aviso **al sonar**, cuando la app puede estar cerrada: el id local del intent
+     * ya no vale (al restaurar una copia la fila se reinserta con otro id), así que la única forma
+     * de saber si el tratamiento sigue existiendo y a qué hora avisa hoy es el `uuid`.
+     */
+    suspend fun getTratamientoPorUuid(uuid: String): Pair<Tratamiento, String>? =
+        withContext(Dispatchers.IO) {
+            database.tratamientosQueries.selectByUuid(uuid)
+                .executeAsList()
+                .firstOrNull()
+                ?.let { fila ->
+                    aModelo(
+                        id = fila.id,
+                        mascotaId = fila.mascotaId,
+                        nombreMedicamento = fila.nombreMedicamento,
+                        dosis = fila.dosis,
+                        frecuencia = fila.frecuencia,
+                        fechaInicio = fila.fechaInicio,
+                        fechaFin = fila.fechaFin,
+                        hora = fila.hora,
+                        notificar = fila.notificar,
+                        vecesAlDia = fila.vecesAlDia,
+                        horas = fila.horas,
+                        uuid = fila.uuid
                     ) to fila.nombreMascota
                 }
         }
@@ -165,7 +197,8 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
         hora: String?,
         notificar: Long,
         vecesAlDia: Long?,
-        horas: String?
+        horas: String?,
+        uuid: String
     ): Tratamiento =
         Tratamiento(
             id = id,
@@ -178,6 +211,7 @@ class TratamientoRepository(private val database: VirtualPetDatabase) {
             hora = hora,
             notificar = notificar == 1L,
             vecesAlDia = vecesAlDia?.toInt(),
-            horas = horas
+            horas = horas,
+            uuid = uuid
         )
 }

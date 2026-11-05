@@ -20,5 +20,7 @@ data class Preventivo(
     val fechaAplicacion: LocalDate,
     val fechaProximaDosis: LocalDate,
     val veterinario: String? = null,
-    val lote: String? = null
+    val lote: String? = null,
+    /** Identificador universal de la fila; es lo que reconoce el aviso ya programado. */
+    val uuid: String? = null
 )

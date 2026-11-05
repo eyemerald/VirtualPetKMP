@@ -36,5 +36,13 @@ data class Tratamiento(
     val hora: String? = null,
     val notificar: Boolean = false,
     val vecesAlDia: Int? = null,
-    val horas: String? = null
+    val horas: String? = null,
+    /**
+     * Identificador universal de la fila en `tratamientos`.
+     *
+     * No es decorativo: es lo que permite que un aviso ya programado se reconozca al sonar aunque
+     * los ids locales hayan cambiado (al restaurar una copia, la fila se vuelve a insertar con otro
+     * `id`). Ver `VerificacionAviso` y `RegistroAvisos`.
+     */
+    val uuid: String? = null
 )
