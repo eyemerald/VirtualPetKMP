@@ -17,10 +17,13 @@ import kotlinx.datetime.LocalDate
  *
  * @param notificacionId el id de la notificación, que es también el de la alarma y el de los
  *   `PendingIntent` (ver `RecordatoriosTratamiento.idNotificacion`).
- * @param tratamientoId el id real de la fila en `tratamientos`.
+ * @param tratamientoId el id real de la fila en `tratamientos`. **No sirve para reconocer la fila**
+ *   al sonar: al restaurar una copia se reinserta con otro id. Para eso está [tratamientoUuid].
  * @param mascotaId para poder abrir la ficha de esa mascota al tocar el aviso.
  * @param hora "HH:mm" tal y como se guarda, para reprogramar el de mañana a la misma hora.
  * @param fechaFin último día del tratamiento, o `null` si es crónico.
+ * @param tratamientoUuid identificador universal de la fila: es lo que comprueba el receptor cuando
+ *   la alarma salta. Una alarma de una versión anterior lo trae vacío y se trata como zombi.
  */
 data class AvisoTratamiento(
     val notificacionId: Long,
@@ -34,7 +37,8 @@ data class AvisoTratamiento(
     val toma: Int = 0,
     val fechaFin: LocalDate? = null,
     val textoAceptar: String = "",
-    val textoPosponer: String = ""
+    val textoPosponer: String = "",
+    val tratamientoUuid: String = ""
 ) {
 
     /**

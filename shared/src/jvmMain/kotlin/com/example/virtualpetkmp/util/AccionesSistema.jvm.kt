@@ -44,10 +44,14 @@ actual fun rememberAbridorMapa(): (String) -> Boolean {
 actual fun rememberProgramadorNotificaciones(): ProgramadorNotificaciones {
     return remember {
         object : ProgramadorNotificaciones {
-            override fun programar(id: Long, titulo: String, mensaje: String, fechaDisparoMillis: Long) {
+            override fun programar(aviso: AvisoDosis) {
                 // En JVM/Desktop no hay notificaciones nativas programadas.
                 // Simplemente dejamos constancia en consola para debug.
-                println("[Notificación programada] id=$id | $titulo | $mensaje | disparo a las $fechaDisparoMillis")
+                println(
+                    "[Notificación programada] id=${aviso.notificacionId} | ${aviso.titulo} | " +
+                        "${aviso.mensaje} | (${aviso.tipo} ${aviso.uuid}) | disparo a las " +
+                        aviso.fechaDisparoMillis
+                )
             }
 
             override fun programarTratamiento(aviso: AvisoTratamiento) {

@@ -38,10 +38,15 @@ import virtualpetkmp.shared.generated.resources.error_guardar_peso_ideal_corto
  *   tests y en pantallas que no necesitan pesos.
  * @param dispatcher hilo en el que corre el estado. Se puede cambiar solo para los tests:
  *   `Dispatchers.Main` no existe en jvmTest. En la app se deja el valor por defecto.
+ * @param sincronizar deja las alarmas como dicen los datos. Se llama al borrar una mascota: el
+ *   borrado arrastra sus tratamientos, vacunas y preventivos (`ON DELETE CASCADE`), y sin esto sus
+ *   avisos se quedaban programados y seguían sonando por una mascota que ya no existía. Si es
+ *   `null`, el ViewModel funciona igual pero sin tocar notificaciones.
  */
 class MascotaViewModel(
     private val repository: MascotaRepository,
     private val pesoRepository: PesoRepository? = null,
+    private val sincronizar: (suspend () -> Unit)? = null,
     dispatcher: CoroutineDispatcher = Dispatchers.Main
 ) {
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
@@ -188,6 +193,9 @@ class MascotaViewModel(
             _errorMessage.value = null
             try {
                 repository.deleteMascota(id)
+                // Los avisos de sus tratamientos, vacunas y preventivos se han quedado sin fila:
+                // hay que cancelarlos aquí, porque ya no hay datos que los reclamen.
+                sincronizar?.invoke()
                 loadMascotas()
                 onSuccess()
             } catch (e: Exception) {

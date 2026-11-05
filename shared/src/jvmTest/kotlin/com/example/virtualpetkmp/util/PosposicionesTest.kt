@@ -21,6 +21,11 @@ import kotlin.test.assertNull
  */
 class PosposicionesTest {
 
+    private companion object {
+        /** Cualquier identificador vale: lo único que hace falta es que no esté vacío. */
+        const val UUID = "e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1"
+    }
+
     private lateinit var carpeta: File
 
     @BeforeTest
@@ -85,7 +90,8 @@ class PosposicionesTest {
             fechaInicio = LocalDate(2026, 10, 20),
             fechaFin = LocalDate(2026, 10, 30),
             hora = "13:34",
-            notificar = true
+            notificar = true,
+            uuid = UUID
         )
         // Se pospuso 30 minutos desde las 13:34, así que toca a las 14:04.
         val pospuesto = LocalDateTime(2026, 10, 22, 14, 4).toInstant(zona).toEpochMilliseconds()
@@ -120,7 +126,8 @@ class PosposicionesTest {
             fechaInicio = LocalDate(2026, 10, 20),
             fechaFin = LocalDate(2026, 10, 30),
             hora = "13:34",
-            notificar = true
+            notificar = true,
+            uuid = UUID
         )
 
         val programador = ProgramadorQueApunta()
@@ -140,8 +147,8 @@ class PosposicionesTest {
     private class ProgramadorQueApunta : ProgramadorNotificaciones {
         var millis: Long = -1
 
-        override fun programar(id: Long, titulo: String, mensaje: String, fechaDisparoMillis: Long) {
-            millis = fechaDisparoMillis
+        override fun programar(aviso: AvisoDosis) {
+            millis = aviso.fechaDisparoMillis
         }
 
         override fun programarTratamiento(aviso: AvisoTratamiento) {

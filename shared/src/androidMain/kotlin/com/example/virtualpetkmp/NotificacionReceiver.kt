@@ -7,43 +7,193 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.app.NotificationCompat
+import com.example.virtualpetkmp.data.DatabaseFactory
+import com.example.virtualpetkmp.db.VirtualPetDatabase
+import com.example.virtualpetkmp.util.AvisoDosis
 import com.example.virtualpetkmp.util.AvisoTratamiento
+import com.example.virtualpetkmp.util.DecisionAviso
+import com.example.virtualpetkmp.util.EntidadDeAviso
+import com.example.virtualpetkmp.util.Localizacion
+import com.example.virtualpetkmp.util.MotivoZombi
 import com.example.virtualpetkmp.util.Posposiciones
-import com.example.virtualpetkmp.util.RecordatoriosTratamiento
+import com.example.virtualpetkmp.util.ProgramadorNotificaciones
+import com.example.virtualpetkmp.util.RegistroAvisosEnFichero
+import com.example.virtualpetkmp.util.ReprogramadorNotificaciones
+import com.example.virtualpetkmp.util.TipoAviso
 import com.example.virtualpetkmp.util.crearProgramadorNotificaciones
+import com.example.virtualpetkmp.util.decidirAviso
+import com.example.virtualpetkmp.util.entidadDeAviso
+import com.example.virtualpetkmp.util.localizacionFueraDeComposicion
+import com.example.virtualpetkmp.util.sincronizarAvisos
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
 /**
- * Muestra un recordatorio y, si es de un tratamiento, programa el del día siguiente.
+ * Muestra un recordatorio cuando su alarma salta.
  *
- * Los avisos de vacunas y preventivos son de **una sola vez**: se programan con días de
- * antelación y, cuando saltan, ya han cumplido; su texto ya lo lee el usuario y su edición se
- * hace en la app, así que la notificación solo informa. Los de tratamiento, en cambio, son una
- * **medicina que hay que dar**: por eso su aviso se puede **aceptar** o **posponer** (como una
- * alarma) y, al tocarlo, abre la ficha de esa mascota para ver el tratamiento. Además se repiten
- * **cada día a su hora** mientras dure, y como este receptor corre con la app posiblemente
- * cerrada, es aquí donde se encadena el siguiente.
+ * **Antes de notificar, el aviso se verifica contra la base de datos.** Hasta la 1.14 este receptor
+ * se fiaba de lo que llevaba dentro la alarma (el título, el mensaje y las fechas se guardaban ya
+ * formateados) y volvía a programar el aviso del día siguiente sin comprobar nada. Eso hacía que una
+ * alarma de una mascota borrada —o de un tratamiento que una restauración había sustituido— sonara
+ * **todos los días para siempre**: se reprodujo en el emulador con cuatro alarmas de una mascota de
+ * prueba que ya no existía.
+ *
+ * Ahora, al sonar:
+ *
+ * 1. Se busca la entidad por su **`uuid`** (el id local cambia al restaurar una copia).
+ * 2. Si no existe, si la hora de esa toma ya no es una de las horas del tratamiento o si el
+ *    tratamiento ya no está vigente, **no se notifica**: la alarma se cancela a sí misma, se quita
+ *    del registro y no se reprograma. Es lo que limpia además las alarmas zombi que dejaron las
+ *    versiones anteriores, que ni siquiera llevan `uuid`.
+ * 3. Si sigue valiendo, el texto se construye **desde la base de datos actual** (no desde los
+ *    extras, que pueden ser de una versión anterior o de otro idioma) y se deja el conjunto de
+ *    avisos sincronizado, que es lo que programa el de mañana.
+ *
+ * Los avisos de vacunas y preventivos son de **una sola vez**: cuando saltan ya han cumplido. Los
+ * de tratamiento se repiten **cada día a su hora** mientras dure, y su aviso se puede **aceptar** o
+ * **posponer** (ver [AccionRecordatorioReceiver]).
  */
 class NotificacionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        // Un aviso de tratamiento llega completo (con su mascota y los textos de los botones);
-        // el de una dosis llega solo con título y mensaje.
-        val aviso = intent.avisoDeTratamiento()
-        val titulo = aviso?.titulo ?: intent.getStringExtra(EXTRA_TITULO) ?: "Recordatorio"
-        val mensaje = aviso?.mensaje ?: intent.getStringExtra(EXTRA_MENSAJE).orEmpty()
-        val notificacionId = aviso?.notificacionId?.toInt()
-            ?: intent.getIntExtra(EXTRA_NOTIFICACION_ID, 0)
+        // Un receptor tiene unos segundos de vida: `goAsync()` mantiene el proceso despierto
+        // mientras se consulta la base de datos, y hay que cerrarlo siempre.
+        val pendiente = goAsync()
+        val aplicacion = context.applicationContext
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                atender(aplicacion, intent)
+            } catch (e: Exception) {
+                android.util.Log.e(ETIQUETA, "no se pudo atender el aviso", e)
+            } finally {
+                pendiente.finish()
+            }
+        }
+    }
 
-        val canal = if (aviso != null) CANAL_TRATAMIENTOS else CANAL_RECORDATORIOS
+    /** Todo lo que hace el receptor, ya con corrutina y con la base de datos abierta. */
+    private suspend fun atender(context: Context, intent: Intent) {
+        val notificacionId = intent.getIntExtra(EXTRA_NOTIFICACION_ID, 0).toLong()
+        val tipo = TipoAviso.desdeNombre(intent.getStringExtra(EXTRA_TIPO))
+        val uuid = intent.getStringExtra(EXTRA_UUID)
+        val hora = intent.getStringExtra(EXTRA_HORA)
+        val diaDelAviso = intent.getLongExtra(EXTRA_DISPARO_MILLIS, 0L)
+
+        val programador = crearProgramadorNotificaciones(context)
+        val localizacion = localizacionFueraDeComposicion()
+        val db = abrirBaseDeDatos(context)
+
+        val ahora = Clock.System.now()
+        val hoy = ahora.toLocalDateTime(TimeZone.currentSystemDefault()).date
+
+        // 1. ¿Sigue teniendo sentido este aviso? La respuesta se calcula con los datos de AHORA.
+        val entidad = if (tipo != null && !uuid.isNullOrBlank()) {
+            entidadDeAviso(db, tipo, uuid, diaDelAviso, hoy)
+        } else {
+            null
+        }
+
+        when (val decision = decidirAviso(tipo, uuid, hora, entidad?.estado)) {
+            is DecisionAviso.Zombi -> limpiarZombi(
+                context = context,
+                db = db,
+                notificacionId = notificacionId,
+                motivo = decision.motivo,
+                programador = programador,
+                localizacion = localizacion
+            )
+
+            DecisionAviso.Sonar -> {
+                android.util.Log.i(
+                    ETIQUETA,
+                    "aviso vigente ($tipo $uuid a las $hora): se notifica el $notificacionId"
+                )
+                mostrar(
+                    context = context,
+                    entidad = entidad,
+                    horaDeLaToma = hora,
+                    momentoDelAviso = ahora.toEpochMilliseconds(),
+                    notificacionId = notificacionId,
+                    localizacion = localizacion
+                )
+                // El aviso ha vuelto a salir: la posposición ya está consumida. Se limpia ANTES de
+                // sincronizar, porque la sincronización reprograma esa misma alarma y no debe
+                // encontrarse viva la posposición.
+                Posposiciones.borrar(notificacionId)
+                // Deja el aviso de mañana programado (si toca) y el registro al día.
+                sincronizarAvisos(programador, db, localizacion, ahora = ahora.toLocalDateTime(
+                    TimeZone.currentSystemDefault()
+                ))
+            }
+        }
+    }
+
+    /**
+     * Cancela una alarma que ya no debería existir y deja el registro correcto.
+     *
+     * No se notifica nada y **no se reprograma**: si se reprogramara, el aviso zombi volvería
+     * mañana y el problema no se arreglaría nunca. Después se llama a `sincronizarAvisos()`, que
+     * vuelve a programar lo que sí hay que avisar con el formato nuevo (con `uuid`), así que un
+     * móvil que venía de la versión anterior queda arreglado solo.
+     */
+    private suspend fun limpiarZombi(
+        context: Context,
+        db: VirtualPetDatabase,
+        notificacionId: Long,
+        motivo: MotivoZombi,
+        programador: ProgramadorNotificaciones,
+        localizacion: Localizacion
+    ) {
+        android.util.Log.i(ETIQUETA, "aviso zombi ($motivo): se cancela el $notificacionId")
+        programador.cancelar(notificacionId)
+        quitarNotificacion(context, notificacionId)
+        Posposiciones.borrar(notificacionId)
+        RegistroAvisosEnFichero.quitar(notificacionId)
+
+        try {
+            sincronizarAvisos(
+                programador = programador,
+                db = db,
+                localizacion = localizacion,
+                registro = RegistroAvisosEnFichero
+            )
+        } catch (e: Exception) {
+            android.util.Log.w(ETIQUETA, "no se pudo sincronizar tras limpiar el aviso", e)
+        }
+    }
+
+    /** Pinta la notificación con el texto leído de los datos actuales. */
+    private suspend fun mostrar(
+        context: Context,
+        entidad: EntidadDeAviso?,
+        horaDeLaToma: String?,
+        momentoDelAviso: Long,
+        notificacionId: Long,
+        localizacion: Localizacion
+    ) {
+        if (entidad == null) return
+
         val gestor = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         // Nombre y descripción de los canales salen de los recursos de idioma. Se reescriben aquí
         // para que un cambio de idioma del sistema se vea aunque la app lleve días cerrada.
         crearCanalesDeNotificacion(context)
 
+        val avisoTratamiento = avisoDelTratamiento(entidad, horaDeLaToma, momentoDelAviso)
+        val (titulo, mensaje) = when (entidad) {
+            is EntidadDeAviso.DeTratamiento ->
+                // Sin aviso no hay nada que enseñar: el tratamiento ya no tiene esa toma.
+                if (avisoTratamiento == null) return else
+                    avisoTratamiento.titulo to avisoTratamiento.mensaje
+            is EntidadDeAviso.DeVacuna ->
+                ReprogramadorNotificaciones.textoVacuna(entidad.vacuna, localizacion)
+            is EntidadDeAviso.DePreventivo ->
+                ReprogramadorNotificaciones.textoPreventivo(entidad.preventivo, localizacion)
+        }
+
+        val canal = if (avisoTratamiento != null) CANAL_TRATAMIENTOS else CANAL_RECORDATORIOS
         val builder = NotificationCompat.Builder(context, canal)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(titulo)
@@ -53,56 +203,60 @@ class NotificacionReceiver : BroadcastReceiver() {
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setAutoCancel(true)
 
-        if (aviso != null) {
+        if (avisoTratamiento != null) {
             // Tocar el aviso abre la ficha de la mascota a la que pertenece el tratamiento.
-            builder.setContentIntent(pendingIntentAbrirFicha(context, aviso))
-            if (aviso.textoAceptar.isNotBlank()) {
-                builder.addAction(0, aviso.textoAceptar, pendingIntentAccion(context, aviso, ACCION_ACEPTAR))
+            builder.setContentIntent(pendingIntentAbrirFicha(context, avisoTratamiento))
+            if (avisoTratamiento.textoAceptar.isNotBlank()) {
+                builder.addAction(
+                    0,
+                    avisoTratamiento.textoAceptar,
+                    pendingIntentAccion(context, avisoTratamiento, ACCION_ACEPTAR)
+                )
             }
-            if (aviso.textoPosponer.isNotBlank()) {
-                builder.addAction(0, aviso.textoPosponer, pendingIntentAccion(context, aviso, ACCION_POSPONER))
+            if (avisoTratamiento.textoPosponer.isNotBlank()) {
+                builder.addAction(
+                    0,
+                    avisoTratamiento.textoPosponer,
+                    pendingIntentAccion(context, avisoTratamiento, ACCION_POSPONER)
+                )
             }
         }
 
-        gestor.notify(notificacionId, builder.build())
-
-        aviso?.let {
-            // El aviso ha vuelto a salir: la posposición ya está consumida. Se limpia ANTES de
-            // programar el de mañana, porque `programarSiguiente` escribe en la misma alarma y
-            // no debe encontrarse la posposición todavía viva.
-            Posposiciones.borrar(it.notificacionId)
-            programarSiguiente(context, it)
-        }
+        gestor.notify(notificacionId.toInt(), builder.build())
     }
 
     /**
-     * Programa el aviso de mañana a la misma hora, si el tratamiento sigue en curso.
-     *
-     * El cálculo es el mismo que al programarlo la primera vez (`RecordatoriosTratamiento`), así
-     * que la cadena no puede desviarse de hora ni avisar después de la fecha de fin.
-     *
-     * Si el usuario pulsó "Posponer", esa alarma sustituye a la de mañana (comparten id) y al
-     * sonar vuelve a entrar aquí, que es lo que restaura la de mañana. Es decir: el encadenado se
-     * repara solo y por eso posponer no puede "perder" el aviso del día siguiente.
+     * El aviso de tratamiento, reconstruido con los datos actuales (texto incluido) y posicionado
+     * en la toma que está sonando.
      */
-    private fun programarSiguiente(context: Context, aviso: AvisoTratamiento) {
-        val ahora = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-
-        val proximo = RecordatoriosTratamiento.proximoAviso(
-            hora = aviso.hora,
-            // Ya estamos dentro del tratamiento: no se avisa antes de hoy.
-            inicio = ahora.date,
-            fin = aviso.fechaFin,
-            desde = ahora
-        ) ?: return
-
-        crearProgramadorNotificaciones(context).programarTratamiento(
-            aviso.copy(
-                fechaDisparoMillis = proximo.toInstant(TimeZone.currentSystemDefault())
-                    .toEpochMilliseconds()
-            )
+    private suspend fun avisoDelTratamiento(
+        entidad: EntidadDeAviso?,
+        horaDeLaToma: String?,
+        momentoDelAviso: Long
+    ): AvisoTratamiento? {
+        if (entidad !is EntidadDeAviso.DeTratamiento) return null
+        // La toma que suena es la que la alarma lleva escrita; si esa hora ya no está en el
+        // tratamiento, el aviso se habría descartado antes de llegar aquí.
+        val toma = entidad.estado.horasDeAviso.indexOf(horaDeLaToma ?: return null)
+        if (toma < 0) return null
+        return ReprogramadorNotificaciones.avisoDeToma(
+            tratamiento = entidad.tratamiento,
+            nombreMascota = entidad.nombreMascota,
+            toma = toma,
+            // La hora real del aviso viaja en los botones: el de Posponer calcula desde el momento
+            // en que se pulsa, pero el intent tiene que llevar la identidad completa del aviso.
+            fechaDisparoMillis = momentoDelAviso
         )
     }
+
+    private fun quitarNotificacion(context: Context, notificacionId: Long) {
+        val gestor = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        gestor.cancel(notificacionId.toInt())
+    }
+
+    /** La base de datos de la app, abierta desde un receptor. */
+    private fun abrirBaseDeDatos(context: Context): VirtualPetDatabase =
+        DatabaseFactory(context).createDatabase()
 
     /**
      * El `PendingIntent` que abre la app en la ficha de la mascota del aviso.
@@ -169,6 +323,17 @@ class NotificacionReceiver : BroadcastReceiver() {
         const val EXTRA_TEXTO_ACEPTAR = "extra_texto_aceptar"
         const val EXTRA_TEXTO_POSPONER = "extra_texto_posponer"
 
+        /**
+         * Identidad de la entidad del aviso.
+         *
+         * [EXTRA_UUID] es el identificador universal de la fila (tratamiento, vacuna o preventivo) y
+         * [EXTRA_TIPO] dice en qué tabla buscarla. Sin los dos, el aviso no se puede verificar y se
+         * trata como zombi — que es justo lo que pasa con las alarmas de la versión anterior.
+         */
+        const val EXTRA_TIPO = "extra_tipo"
+        const val EXTRA_UUID = "extra_uuid"
+        const val EXTRA_DISPARO_MILLIS = "extra_disparo_millis"
+
         /** Extras que recibe la pantalla al abrirse desde un aviso. */
         const val EXTRA_AVISO_MASCOTA_ID = "aviso_mascota_id"
         const val EXTRA_AVISO_TRATAMIENTO_ID = "aviso_tratamiento_id"
@@ -183,12 +348,22 @@ class NotificacionReceiver : BroadcastReceiver() {
         const val ACCION_ACEPTAR = "virtualpet.ACEPTAR_RECORDATORIO"
         const val ACCION_POSPONER = "virtualpet.POSPONER_RECORDATORIO"
 
-
+        /**
+         * Etiqueta de `logcat` para lo que hace este receptor sin la app abierta.
+         *
+         * Se escribe con `android.util.Log` y no con `println` porque este código corre en un
+         * proceso que Android puede arrancar solo para atender la alarma: aquí sí hay logcat, y
+         * los mensajes aparecen con `adb logcat -s VirtualPet`.
+         */
+        const val ETIQUETA = "VirtualPet"
     }
 }
 
 /** Mete el aviso completo en el intent de la alarma: el receptor corre sin la app abierta. */
 internal fun Intent.conAvisoDeTratamiento(aviso: AvisoTratamiento): Intent = apply {
+    putExtra(NotificacionReceiver.EXTRA_TIPO, TipoAviso.TRATAMIENTO.name)
+    putExtra(NotificacionReceiver.EXTRA_UUID, aviso.tratamientoUuid)
+    putExtra(NotificacionReceiver.EXTRA_DISPARO_MILLIS, aviso.fechaDisparoMillis)
     putExtra(NotificacionReceiver.EXTRA_TITULO, aviso.titulo)
     putExtra(NotificacionReceiver.EXTRA_MENSAJE, aviso.mensaje)
     putExtra(NotificacionReceiver.EXTRA_NOTIFICACION_ID, aviso.notificacionId.toInt())
@@ -198,6 +373,16 @@ internal fun Intent.conAvisoDeTratamiento(aviso: AvisoTratamiento): Intent = app
     putExtra(NotificacionReceiver.EXTRA_TEXTO_ACEPTAR, aviso.textoAceptar)
     putExtra(NotificacionReceiver.EXTRA_TEXTO_POSPONER, aviso.textoPosponer)
     aviso.fechaFin?.let { putExtra(NotificacionReceiver.EXTRA_FECHA_FIN, it.toString()) }
+}
+
+/** Mete el aviso de una dosis en el intent de la alarma, con su tipo y su `uuid`. */
+internal fun Intent.conAvisoDeDosis(aviso: AvisoDosis): Intent = apply {
+    putExtra(NotificacionReceiver.EXTRA_TIPO, aviso.tipo.name)
+    putExtra(NotificacionReceiver.EXTRA_UUID, aviso.uuid)
+    putExtra(NotificacionReceiver.EXTRA_DISPARO_MILLIS, aviso.fechaDisparoMillis)
+    putExtra(NotificacionReceiver.EXTRA_TITULO, aviso.titulo)
+    putExtra(NotificacionReceiver.EXTRA_MENSAJE, aviso.mensaje)
+    putExtra(NotificacionReceiver.EXTRA_NOTIFICACION_ID, aviso.notificacionId.toInt())
 }
 
 /** Recupera el aviso de un intent, o `null` si el aviso no era de un tratamiento. */
@@ -212,11 +397,12 @@ internal fun Intent.avisoDeTratamiento(): AvisoTratamiento? {
         mascotaId = getLongExtra(NotificacionReceiver.EXTRA_MASCOTA_ID, -1L),
         titulo = getStringExtra(NotificacionReceiver.EXTRA_TITULO).orEmpty(),
         mensaje = getStringExtra(NotificacionReceiver.EXTRA_MENSAJE).orEmpty(),
-        fechaDisparoMillis = 0L,
+        fechaDisparoMillis = getLongExtra(NotificacionReceiver.EXTRA_DISPARO_MILLIS, 0L),
         hora = hora,
         fechaFin = getStringExtra(NotificacionReceiver.EXTRA_FECHA_FIN)
-            ?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
+            ?.let { runCatching { kotlinx.datetime.LocalDate.parse(it) }.getOrNull() },
         textoAceptar = getStringExtra(NotificacionReceiver.EXTRA_TEXTO_ACEPTAR).orEmpty(),
-        textoPosponer = getStringExtra(NotificacionReceiver.EXTRA_TEXTO_POSPONER).orEmpty()
+        textoPosponer = getStringExtra(NotificacionReceiver.EXTRA_TEXTO_POSPONER).orEmpty(),
+        tratamientoUuid = getStringExtra(NotificacionReceiver.EXTRA_UUID).orEmpty()
     )
 }

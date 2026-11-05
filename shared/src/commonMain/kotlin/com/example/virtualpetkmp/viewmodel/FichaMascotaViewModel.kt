@@ -14,9 +14,6 @@ import com.example.virtualpetkmp.data.PreventivoRepository
 import com.example.virtualpetkmp.data.RevisionRepository
 import com.example.virtualpetkmp.data.TratamientoRepository
 import com.example.virtualpetkmp.data.VacunaRepository
-import com.example.virtualpetkmp.util.Localizacion
-import com.example.virtualpetkmp.util.ProgramadorNotificaciones
-import com.example.virtualpetkmp.util.ReprogramadorNotificaciones
 import com.example.virtualpetkmp.util.Dosis
 import com.example.virtualpetkmp.util.FilaDosis
 import com.example.virtualpetkmp.util.registrarFallo
@@ -101,16 +98,18 @@ data class DatosFichaPdf(
  * 1. **Se crea uno por mascota** (desde `App`, con `remember(mascotaId)`) y se comparte entre
  *    la pantalla y todas sus hojas modales. Por eso el resumen y las listas son coherentes:
  *    hay una sola fuente de verdad mientras la ficha está abierta.
- * 2. **Al cargar el resumen se reprograman los avisos** de esa mascota: se cancelan y se
- *    vuelven a programar sus dosis pendientes. Es lo que mantiene las notificaciones al día
- *    sin necesidad de un servicio en segundo plano.
+ * 2. **Al cargar el resumen se sincronizan los avisos**: se cancelan todos los que la app tenía
+ *    programados y se programan los que dicen los datos. Es lo que mantiene las notificaciones al
+ *    día sin necesidad de un servicio en segundo plano, y lo que quita de una vez los avisos de un
+ *    registro que se acaba de borrar (antes se intentaba cancelar por id, y los de una fila ya
+ *    ausente se quedaban sonando para siempre).
  *
  * Los cálculos de estado (vencida / próxima / al día, tratamiento activo) se hacen **aquí**, a
  * partir de la fecha de hoy, no en los repositorios: la base de datos guarda fechas, no
  * conclusiones.
  *
- * @param programador si es `null`, la ficha funciona igual pero sin tocar notificaciones. Así
- *   el ViewModel se puede probar sin Android por medio.
+ * @param sincronizar deja las alarmas como dicen los datos. Si es `null`, la ficha funciona igual
+ *   pero sin tocar notificaciones: así el ViewModel se puede probar sin Android por medio.
  */
 class FichaMascotaViewModel(
     private val mascotaId: Long,
@@ -121,19 +120,11 @@ class FichaMascotaViewModel(
     private val informeRepository: InformeRepository,
     private val notaRepository: NotaRepository,
     private val preventivoRepository: PreventivoRepository,
-    /** Programador de avisos: la ficha es ahora quien da de alta vacunas y preventivos. */
-    private val programador: ProgramadorNotificaciones? = null,
     /**
-     * Nombre de la mascota, para el texto de los recordatorios de tratamiento ("Luna · Oticoear").
-     * Se pasa ya resuelto porque el aviso se monta fuera de la composición, donde no se puede
-     * consultar el listado de mascotas.
+     * Sincronización de avisos: la ficha es quien da de alta, edita y borra vacunas, preventivos y
+     * tratamientos, y cada uno de esos cambios puede dejar una alarma que ya no vale.
      */
-    private val nombreMascota: String = "",
-    /**
-     * Configuración regional activa. La necesita el texto de las **notificaciones**, que se
-     * monta fuera de la composición y tiene que escribir la fecha como la espera el usuario.
-     */
-    private val localizacion: Localizacion = Localizacion.desdeRegion("es-ES"),
+    private val sincronizar: (suspend () -> Unit)? = null,
     /**
      * Hilo en el que corre el estado. Se puede cambiar solo para los tests: `Dispatchers.Main`
      * no existe en jvmTest. En la app se deja el valor por defecto.
@@ -279,32 +270,11 @@ class FichaMascotaViewModel(
             _notas.value = notas
             _pesos.value = pesos
 
-            // Reprograma los avisos de esta mascota: al abrir su ficha se cancelan y se
-            // vuelven a programar sus dosis pendientes, que es lo que mantenía antes el
-            // bloque de arranque de la app.
-            programador?.let { prog ->
-                vacunas.forEach { vacuna ->
-                    vacuna.id?.let { id ->
-                        ReprogramadorNotificaciones.cancelar(prog, id)
-                        ReprogramadorNotificaciones.programarVacuna(prog, vacuna, localizacion)
-                    }
-                }
-                preventivos.forEach { preventivo ->
-                    preventivo.id?.let { id ->
-                        ReprogramadorNotificaciones.cancelarPreventivo(prog, id)
-                        ReprogramadorNotificaciones.programarPreventivo(prog, preventivo, localizacion)
-                    }
-                }
-                // Los tratamientos se reprograman igual: cancelar y volver a programar deja el
-                // recordatorio de cada día en su hora, y es lo que quita el aviso de un
-                // tratamiento borrado o terminado sin tener que hacer nada especial.
-                tratamientos.forEach { tratamiento ->
-                    tratamiento.id?.let { id ->
-                        ReprogramadorNotificaciones.cancelarTratamiento(prog, id)
-                        ReprogramadorNotificaciones.programarTratamiento(prog, tratamiento, nombreMascota)
-                    }
-                }
-            }
+            // Sincroniza los avisos: al abrir la ficha se cancelan todos los que había y se
+            // programan los que dicen los datos. Antes se intentaba cancelar solo los de esta
+            // mascota recalculando su id, así que el aviso de un registro borrado (o de una fila
+            // que una restauración sustituyó) se quedaba sonando todos los días.
+            sincronizar?.invoke()
     }
 
     /** Quita el aviso de error de la pantalla. */
@@ -417,30 +387,13 @@ class FichaMascotaViewModel(
                     lote = lote
                 )
             }
-            // El aviso solo se programa si la vacuna llegó a guardarse: si falló, el id no
-            // existe y programar una notificación para una vacuna fantasma sería peor.
-            programador?.let { prog ->
-                resultado.getOrNull()?.let { id ->
-                    ReprogramadorNotificaciones.programarVacuna(
-                        prog,
-                        Vacuna(
-                            id = id,
-                            mascotaId = mascotaId,
-                            nombre = nombre,
-                            fechaAplicacion = fechaAplicacion,
-                            fechaProximaDosis = fechaProximaDosis,
-                            veterinario = veterinario,
-                            lote = lote
-                        ),
-                        localizacion
-                    )
-                }
-            }
+            // El aviso lo programa `cargarResumen` (que sincroniza al terminar), y solo si la
+            // vacuna llegó a guardarse: si falló, no hay fila que avisar.
             cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
 
-    /** Alta de preventivo desde la hoja de la ficha, programando su aviso. */
+    /** Alta de preventivo desde la hoja de la ficha. */
     fun agregarPreventivo(
         tipo: String,
         nombre: String,
@@ -459,24 +412,6 @@ class FichaMascotaViewModel(
                     veterinario = null,
                     lote = null
                 )
-            }
-            programador?.let { prog ->
-                resultado.getOrNull()?.let { id ->
-                    ReprogramadorNotificaciones.programarPreventivo(
-                        prog,
-                        Preventivo(
-                            id = id,
-                            mascotaId = mascotaId,
-                            tipo = tipo,
-                            nombre = nombre,
-                            fechaAplicacion = fechaAplicacion,
-                            fechaProximaDosis = fechaProximaDosis,
-                            veterinario = null,
-                            lote = null
-                        ),
-                        localizacion
-                    )
-                }
             }
             cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
@@ -520,7 +455,6 @@ class FichaMascotaViewModel(
             // El aviso se cancela pase lo que pase: si el borrado falló, la vacuna sigue ahí y
             // su notificación también debe seguir; si funcionó, ya no tiene sentido.
             val resultado = conResultado { vacunaRepository.deleteVacuna(id) }
-            programador?.let { prog -> ReprogramadorNotificaciones.cancelar(prog, id) }
             cerrarOperacion(resultado, Res.string.error_borrar_dato)
         }
     }
@@ -529,7 +463,6 @@ class FichaMascotaViewModel(
     fun borrarPreventivo(id: Long) {
         scope.launch {
             val resultado = conResultado { preventivoRepository.deletePreventivo(id) }
-            programador?.let { prog -> ReprogramadorNotificaciones.cancelarPreventivo(prog, id) }
             cerrarOperacion(resultado, Res.string.error_borrar_dato)
         }
     }
@@ -538,10 +471,8 @@ class FichaMascotaViewModel(
     fun borrarTratamiento(id: Long) {
         scope.launch {
             val resultado = conResultado { tratamientoRepository.deleteTratamiento(id) }
-            // El aviso se cancela aquí porque, al borrar, la recarga del resumen ya no ve este
-            // tratamiento y no podría quitarlo: la alarma seguiría sonando por un medicamento
-            // que ya no existe.
-            programador?.let { prog -> ReprogramadorNotificaciones.cancelarTratamiento(prog, id) }
+            // El aviso lo quita la sincronización que hace `cargarResumen` al terminar: recorre
+            // también lo que ya no está en la base de datos, que era justo lo que se quedaba vivo.
             cerrarOperacion(resultado, Res.string.error_borrar_dato)
         }
     }
@@ -567,26 +498,8 @@ class FichaMascotaViewModel(
                     lote = lote
                 )
             }
-            // Solo se reprograma el aviso si el cambio llegó a guardarse: si no, la notificación
-            // estaría avisando de una fecha que la base de datos no tiene.
-            if (resultado.isSuccess) {
-                programador?.let { prog ->
-                    ReprogramadorNotificaciones.cancelar(prog, id)
-                    ReprogramadorNotificaciones.programarVacuna(
-                        prog,
-                        Vacuna(
-                            id = id,
-                            mascotaId = mascotaId,
-                            nombre = nombre,
-                            fechaAplicacion = fechaAplicacion,
-                            fechaProximaDosis = fechaProximaDosis,
-                            veterinario = veterinario,
-                            lote = lote
-                        ),
-                        localizacion
-                    )
-                }
-            }
+            // Los avisos los deja al día la sincronización de `cargarResumen`, que además ve lo
+            // que ya no existe. Solo se reprograma si el cambio llegó a guardarse.
             cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }
     }
@@ -611,25 +524,6 @@ class FichaMascotaViewModel(
                     veterinario = null,
                     lote = null
                 )
-            }
-            if (resultado.isSuccess) {
-                programador?.let { prog ->
-                    ReprogramadorNotificaciones.cancelarPreventivo(prog, id)
-                    ReprogramadorNotificaciones.programarPreventivo(
-                        prog,
-                        Preventivo(
-                            id = id,
-                            mascotaId = mascotaId,
-                            tipo = tipo,
-                            nombre = nombre,
-                            fechaAplicacion = fechaAplicacion,
-                            fechaProximaDosis = fechaProximaDosis,
-                            veterinario = null,
-                            lote = null
-                        ),
-                        localizacion
-                    )
-                }
             }
             cerrarOperacion(resultado, Res.string.error_guardar_dato)
         }

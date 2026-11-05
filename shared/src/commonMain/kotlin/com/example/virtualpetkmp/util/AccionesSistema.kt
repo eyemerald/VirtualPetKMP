@@ -26,13 +26,12 @@ expect fun rememberProgramadorNotificaciones(): ProgramadorNotificaciones
 
 interface ProgramadorNotificaciones {
     /**
-     * Programa una notificación que se mostrará en la fecha indicada.
-     * @param id Identificador único (usar el id del registro de la BD).
-     * @param titulo Título de la notificación.
-     * @param mensaje Cuerpo de la notificación.
-     * @param fechaDisparoMillis Timestamp en milisegundos desde epoch.
+     * Programa el aviso de **una dosis** (vacuna o preventivo) en la fecha indicada.
+     *
+     * Lleva dentro el tipo y el `uuid` de su fila: cuando salte, el receptor tiene que poder
+     * comprobar que esa vacuna o ese preventivo siguen existiendo antes de notificar nada.
      */
-    fun programar(id: Long, titulo: String, mensaje: String, fechaDisparoMillis: Long)
+    fun programar(aviso: AvisoDosis)
 
     /**
      * Programa un recordatorio **de tratamiento**, que es un aviso que se repite cada día.

@@ -40,13 +40,18 @@ class ReprogramadorNotificacionesTest {
         /** El aviso completo, que es lo que se lleva la alarma a Android. */
         val avisos = mutableMapOf<Long, AvisoTratamiento>()
 
-        override fun programar(id: Long, titulo: String, mensaje: String, fechaDisparoMillis: Long) {
-            programadas[id] = fechaDisparoMillis
-            textos[id] = titulo to mensaje
+        /** El aviso de cada dosis, con el tipo y el uuid que lleva dentro. */
+        val dosis = mutableMapOf<Long, AvisoDosis>()
+
+        override fun programar(aviso: AvisoDosis) {
+            programadas[aviso.notificacionId] = aviso.fechaDisparoMillis
+            textos[aviso.notificacionId] = aviso.titulo to aviso.mensaje
+            dosis[aviso.notificacionId] = aviso
         }
 
         override fun programarTratamiento(aviso: AvisoTratamiento) {
-            programar(aviso.notificacionId, aviso.titulo, aviso.mensaje, aviso.fechaDisparoMillis)
+            programadas[aviso.notificacionId] = aviso.fechaDisparoMillis
+            textos[aviso.notificacionId] = aviso.titulo to aviso.mensaje
             recordatorios[aviso.notificacionId] = aviso.hora to aviso.fechaFin?.toString()
             avisos[aviso.notificacionId] = aviso
         }
@@ -58,12 +63,16 @@ class ReprogramadorNotificacionesTest {
 
     private val hoy = LocalDate.parse("2026-10-09")
 
+    /** Identificador universal de mentira, único por fila: sin él no se programa nada. */
+    private fun uuidDe(fila: Long): String = fila.toString().padStart(32, 'a')
+
     private fun vacuna(id: Long, venceEnDias: Int) = Vacuna(
         id = id,
         mascotaId = 1L,
         nombre = "Rabia",
         fechaAplicacion = hoy,
-        fechaProximaDosis = LocalDate.fromEpochDays(hoy.toEpochDays() + venceEnDias)
+        fechaProximaDosis = LocalDate.fromEpochDays(hoy.toEpochDays() + venceEnDias),
+        uuid = uuidDe(id)
     )
 
     private fun preventivo(id: Long, venceEnDias: Int) = Preventivo(
@@ -72,7 +81,8 @@ class ReprogramadorNotificacionesTest {
         tipo = "Pipeta",
         nombre = "Frontline",
         fechaAplicacion = hoy,
-        fechaProximaDosis = LocalDate.fromEpochDays(hoy.toEpochDays() + venceEnDias)
+        fechaProximaDosis = LocalDate.fromEpochDays(hoy.toEpochDays() + venceEnDias),
+        uuid = uuidDe(id)
     )
 
     @Test
@@ -194,7 +204,8 @@ class ReprogramadorNotificacionesTest {
             fechaInicio = ahora.date,
             fechaFin = LocalDate.parse("2026-05-30"),
             hora = "08:30",
-            notificar = true
+            notificar = true,
+            uuid = uuidDe(3L)
         )
 
         ReprogramadorNotificaciones.programarTratamiento(programador, tratamiento, "Luna", ahora)
@@ -227,7 +238,8 @@ class ReprogramadorNotificacionesTest {
             nombreMedicamento = "Oticoear",
             fechaInicio = ahora.date,
             hora = "08:30",
-            notificar = true
+            notificar = true,
+            uuid = uuidDe(7L)
         )
 
         ReprogramadorNotificaciones.programarTratamiento(programador, tratamiento, "Luna", ahora)
@@ -290,7 +302,8 @@ class ReprogramadorNotificacionesTest {
             hora = "08:00",
             notificar = true,
             vecesAlDia = 3,
-            horas = "08:00,14:00,22:00"
+            horas = "08:00,14:00,22:00",
+            uuid = uuidDe(9L)
         )
 
         ReprogramadorNotificaciones.programarTratamiento(programador, tratamiento, "Luna", ahora)
@@ -302,5 +315,67 @@ class ReprogramadorNotificacionesTest {
             ids.map { programador.recordatorios.getValue(it).first },
             "cada alarma tiene que llevar la hora de SU toma"
         )
+    }
+
+    /**
+     * El aviso tiene que llevar el `uuid` de su fila: es lo único que sobrevive a una restauración
+     * (los ids locales se recalculan), y sin él el receptor no podría comprobar si el aviso sigue
+     * valiendo.
+     */
+    @Test
+    fun `el aviso lleva el uuid de su fila y no solo el id`() = runBlocking {
+        val programador = ProgramadorFalso()
+        val ahora = LocalDateTime(2026, 5, 20, 7, 0)
+        val uuid = "e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7"
+
+        val puesto = ReprogramadorNotificaciones.programarTratamiento(
+            programador = programador,
+            tratamiento = Tratamiento(
+                id = 2L,
+                mascotaId = 1L,
+                nombreMedicamento = "Oticoear",
+                fechaInicio = ahora.date,
+                hora = "08:30",
+                notificar = true,
+                uuid = uuid
+            ),
+            nombreMascota = "Luna",
+            ahora = ahora
+        )
+
+        val aviso = programador.avisos.getValue(RecordatoriosTratamiento.idNotificacion(2L))
+        assertEquals(uuid, aviso.tratamientoUuid)
+        assertEquals(
+            listOf(AvisoProgramado(aviso.notificacionId, TipoAviso.TRATAMIENTO, uuid, "08:30")),
+            puesto,
+            "lo programado se devuelve para poder apuntarlo en el registro"
+        )
+    }
+
+    /**
+     * Sin `uuid` no se programa nada: sería una alarma que al sonar no se puede verificar y que el
+     * receptor cancelaría como zombi, así que el aviso se perdería sin que el usuario lo supiera.
+     */
+    @Test
+    fun `un tratamiento sin uuid no programa nada`() = runBlocking {
+        val programador = ProgramadorFalso()
+        val ahora = LocalDateTime(2026, 5, 20, 7, 0)
+
+        val puesto = ReprogramadorNotificaciones.programarTratamiento(
+            programador = programador,
+            tratamiento = Tratamiento(
+                id = 2L,
+                mascotaId = 1L,
+                nombreMedicamento = "Oticoear",
+                fechaInicio = ahora.date,
+                hora = "08:30",
+                notificar = true
+            ),
+            nombreMascota = "Luna",
+            ahora = ahora
+        )
+
+        assertTrue(puesto.isEmpty())
+        assertTrue(programador.programadas.isEmpty())
     }
 }

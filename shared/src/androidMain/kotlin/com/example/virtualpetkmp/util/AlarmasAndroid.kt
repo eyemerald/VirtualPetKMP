@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import com.example.virtualpetkmp.NotificacionReceiver
+import com.example.virtualpetkmp.conAvisoDeDosis
 import com.example.virtualpetkmp.conAvisoDeTratamiento
 
 /**
@@ -23,19 +24,18 @@ import com.example.virtualpetkmp.conAvisoDeTratamiento
 fun crearProgramadorNotificaciones(context: Context): ProgramadorNotificaciones =
     object : ProgramadorNotificaciones {
 
-        override fun programar(
-            id: Long,
-            titulo: String,
-            mensaje: String,
-            fechaDisparoMillis: Long
-        ) {
-            programarAlarma(context, id, intento(context, id, titulo, mensaje), fechaDisparoMillis)
+        override fun programar(aviso: AvisoDosis) {
+            // El aviso de una dosis lleva su tipo y su uuid: cuando salte, el receptor comprobará
+            // que esa vacuna o ese preventivo siguen existiendo antes de notificar.
+            val intent = Intent(context, NotificacionReceiver::class.java)
+                .conAvisoDeDosis(aviso)
+            programarAlarma(context, aviso.notificacionId, intent, aviso.fechaDisparoMillis)
         }
 
         override fun programarTratamiento(aviso: AvisoTratamiento) {
             // El aviso viaja completo dentro de la alarma: cuando salte, la app puede estar
             // cerrada, y con esos extras el receptor sabe a qué mascota pertenece, puede abrir su
-            // ficha, pintar los botones Aceptar/Posponer y programar el aviso de mañana.
+            // ficha, pintar los botones Aceptar/Posponer y reprogramar el aviso de mañana.
             val intent = Intent(context, NotificacionReceiver::class.java)
                 .conAvisoDeTratamiento(aviso)
             programarAlarma(context, aviso.notificacionId, intent, aviso.fechaDisparoMillis)
@@ -56,14 +56,6 @@ fun crearProgramadorNotificaciones(context: Context): ProgramadorNotificaciones 
                 pendingIntent.cancel()
             }
         }
-    }
-
-/** El intent que recibe [NotificacionReceiver] para mostrar el aviso. */
-private fun intento(context: Context, id: Long, titulo: String, mensaje: String): Intent =
-    Intent(context, NotificacionReceiver::class.java).apply {
-        putExtra(NotificacionReceiver.EXTRA_TITULO, titulo)
-        putExtra(NotificacionReceiver.EXTRA_MENSAJE, mensaje)
-        putExtra(NotificacionReceiver.EXTRA_NOTIFICACION_ID, id.toInt())
     }
 
 private fun programarAlarma(context: Context, id: Long, intent: Intent, fechaDisparoMillis: Long) {

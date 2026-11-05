@@ -19,7 +19,7 @@ import com.example.virtualpetkmp.ui.DialogoGuardarCopia
 import com.example.virtualpetkmp.ui.DialogoImportarFusion
 import com.example.virtualpetkmp.ui.DialogoRestaurarCopia
 import com.example.virtualpetkmp.util.rememberCarpetasApp
-import com.example.virtualpetkmp.util.reprogramarAvisosDeTodo
+import com.example.virtualpetkmp.util.sincronizarAvisos
 import com.example.virtualpetkmp.ui.FichaMascotaScreen
 import com.example.virtualpetkmp.ui.MainScreen
 import com.example.virtualpetkmp.ui.MascotaFormScreen
@@ -91,9 +91,22 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
     val informeRepository = remember { InformeRepository(database) }
     val veterinarioRepository = remember { VeterinarioRepository(database) }
     val preventivoRepository = remember { PreventivoRepository(database) }
-    val viewModel = remember { MascotaViewModel(repository, pesoRepository) }
-    val veterinarioViewModel = remember { VeterinarioViewModel(veterinarioRepository) }
     val programador = rememberProgramadorNotificaciones()
+    // Una sola sincronización de avisos, compartida por la lista, la ficha y los diálogos de copia:
+    // cancela lo que había y programa lo que dicen los datos.
+    val sincronizar: suspend () -> Unit = {
+        sincronizarAvisos(programador, database, localizacion)
+    }
+    val viewModel = remember {
+        MascotaViewModel(
+            repository = repository,
+            pesoRepository = pesoRepository,
+            // Borrar una mascota se lleva por delante sus tratamientos, vacunas y preventivos: sus
+            // avisos tienen que desaparecer con ella.
+            sincronizar = sincronizar
+        )
+    }
+    val veterinarioViewModel = remember { VeterinarioViewModel(veterinarioRepository) }
     val alcance = rememberCoroutineScope()
 
     // Al arrancar se reprograman los avisos de todas las mascotas. Abrir la ficha de una
@@ -102,7 +115,7 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
     // reinicio del móvil: antes había dos copias y una se olvidó de las dosis.
     LaunchedEffect(Unit) {
         try {
-            reprogramarAvisosDeTodo(programador, database, localizacion)
+            sincronizar()
         } catch (e: Exception) {
             println("Error reprogramando notificaciones al arrancar: ${e.message}")
         }
@@ -138,8 +151,8 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
     // Un único ViewModel de ficha por mascota, compartido por todas las hojas: así el
     // resumen, las listas y los avisos son los mismos en toda la pantalla.
     val fichaViewModel = selectedMascotaId?.let { mascotaId ->
-        // La clave incluye el nombre: el ViewModel lo necesita para los recordatorios de
-        // tratamiento, así que si se renombra la mascota se recrea con el nombre nuevo.
+        // La clave incluye el nombre: si se renombra la mascota se recrea el ViewModel y la
+        // pantalla se redibuja con el nombre nuevo.
         remember(mascotaId, mascotaActual?.nombre) {
             FichaMascotaViewModel(
                 mascotaId = mascotaId,
@@ -150,9 +163,9 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
                 informeRepository = informeRepository,
                 notaRepository = notaRepository,
                 preventivoRepository = preventivoRepository,
-                programador = programador,
-                nombreMascota = mascotaActual?.nombre.orEmpty(),
-                localizacion = localizacion
+                // La ficha no cancela ni programa avisos por su cuenta: pide la sincronización
+                // completa, que es lo único que también quita los de lo que se acaba de borrar.
+                sincronizar = sincronizar
             )
         }
     }
@@ -195,7 +208,7 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
             onAbrirMenuSistema = {
                 alcance.launch {
                     try {
-                        reprogramarAvisosDeTodo(programador, database, localizacion)
+                        sincronizar()
                     } catch (e: Exception) {
                         println("Error reprogramando avisos: ${e.message}")
                     }
@@ -296,7 +309,7 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
                     alRestaurar = {
                         // Los datos han cambiado por completo: se reprograman los avisos para que
                         // no queden alarmas de mascotas que ya no existen ni falten las nuevas.
-                        reprogramarAvisosDeTodo(programador, database, localizacion)
+                        sincronizar()
                     },
                     onCerrar = {
                         dialogoCopia = null
@@ -324,7 +337,7 @@ fun App(databaseFactory: DatabaseFactory, solicitud: SolicitudNavegacion? = null
                 DialogoImportarFusion(
                     db = database,
                     carpetas = carpetas,
-                    alFusionar = { reprogramarAvisosDeTodo(programador, database, localizacion) },
+                    alFusionar = { sincronizarAvisos(programador, database, localizacion) },
                     onCerrar = {
                         dialogoCopia = null
                         // La lista que se veía puede haber cambiado: llegan mascotas del paquete.
