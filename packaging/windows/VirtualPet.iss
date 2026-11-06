@@ -106,14 +106,45 @@ Filename: "{app}\Virtual Pet.exe"; Description: "{cm:AbrirApp}"; Flags: nowait p
 
 [Code]
 { Cierra la aplicación si está abierta: con el proceso vivo, Windows deja bloqueados el .exe y las
-  .dll del runtime y la instalación o la desinstalación fallarían a medias. Es el equivalente al
-  bloque que tenían los scripts de antes, pero con un comando nativo de Windows y sin ventana. }
+  .dll del runtime y la instalación o la desinstalación fallarían a medias.
+  Va por pasos, de lo más suave a lo más brusco:
+    1. `taskkill` SIN /F: es lo mismo que pulsar la X de la ventana, y la app se cierra ordenadamente.
+    2. se espera hasta 3 segundos, mirando cada medio segundo si el proceso sigue.
+    3. solo si sigue abierta, `taskkill /F`.
+  Son dos comandos nativos de Windows con la ventana oculta: no se ejecuta ningún script.
+  Se usa al instalar y al desinstalar. Además sigue puesto CloseApplications=yes, que es el mecanismo
+  de Inno (Restart Manager) para los ficheros en uso; pero ese solo actúa al instalar y no fuerza el
+  cierre, así que el que decide es este. }
+function AppSigueAbierta: Boolean;
+var
+  Codigo: Integer;
+begin
+  Exec(ExpandConstant('{cmd}'),
+    '/C tasklist /FI "IMAGENAME eq Virtual Pet.exe" /NH | find /I "Virtual Pet.exe" >nul',
+    '', SW_HIDE, ewWaitUntilTerminated, Codigo);
+  Result := Codigo = 0;
+end;
+
 procedure CerrarAplicacion;
 var
-  CodigoSalida: Integer;
+  Codigo: Integer;
+  Intentos: Integer;
 begin
+  if not AppSigueAbierta then
+    exit;
+
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/IM "Virtual Pet.exe"', '',
+    SW_HIDE, ewWaitUntilTerminated, Codigo);
+
+  for Intentos := 1 to 6 do
+  begin
+    Sleep(500);
+    if not AppSigueAbierta then
+      exit;
+  end;
+
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM "Virtual Pet.exe"', '',
-    SW_HIDE, ewWaitUntilTerminated, CodigoSalida);
+    SW_HIDE, ewWaitUntilTerminated, Codigo);
 end;
 
 { Deja la carpeta del programa limpia al desinstalar, pero SOLO si de verdad es la carpeta de la app.
