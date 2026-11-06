@@ -74,9 +74,11 @@ def main() -> int:
         salida.unlink()
 
     orden = [str(iscc), f"/DVersion={version}", f"/O{DIST}", str(GUION)]
-    print("ISCC       :", iscc)
-    print("version    :", version)
     resultado = subprocess.run(orden, capture_output=True, text=True, errors="replace")
+
+    # La version de Inno Setup la dice el propio compilador ("Compiler engine version: Inno Setup
+    # 6.7.3"); ISCC.exe no la lleva en las propiedades del fichero (marcan 0.0.0.0).
+    motor = re.search(r"Inno Setup (\d+\.\d+\.\d+)", resultado.stdout)
 
     # ISCC escribe mucho; solo se enseña lo que ha ido mal.
     for linea in resultado.stdout.splitlines():
@@ -91,6 +93,10 @@ def main() -> int:
 
     if not salida.is_file():
         sys.exit(f"ISCC ha terminado bien pero no está {salida}")
+
+    print("ISCC       :", iscc)
+    print("Inno Setup :", motor.group(1) if motor else "desconocida")
+    print("version    :", version)
 
     hash_ = hashlib.sha256()
     with open(salida, "rb") as f:
