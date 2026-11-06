@@ -54,6 +54,19 @@ COMO DESINSTALARLO
 Tus datos se quedan; si quieres borrarlos tambien, elimina la carpeta .virtualpet.
 
 
+QUE QUIERE DECIR "PENDIENTE"
+- Una vacuna o un preventivo esta pendiente si su proxima dosis ya paso o cae dentro de los
+  proximos 30 dias. Es la misma cuenta en los dos filtros de la lista y en el resumen de la ficha.
+- Si apuntas dos veces la MISMA vacuna (o el mismo preventivo) con el mismo nombre en la misma
+  mascota, cuenta solo el ultimo registro: una dosis vieja no sale como vencida si hay una mas
+  reciente, y ese nombre no se cuenta dos veces.
+
+
+AVISOS Y RECORDATORIOS
+- Solo funcionan en la version de Android. En Windows la app lleva la cuenta y te lo ensena en la
+  lista y en la ficha, pero no programa notificaciones: aqui no va a sonar nada.
+
+
 QUE INCLUYE
 - La aplicacion con su propio Java incluido: no hay que instalar nada mas.
 - Tus datos son locales: la app no se conecta a internet.
