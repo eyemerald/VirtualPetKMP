@@ -4,6 +4,7 @@ Reglas de trabajo de este proyecto. Se cumplen siempre.
 
 ## Reglas
 
+- **Responde siempre en español**, aunque el encargo o un fichero lleguen en otro idioma.
 - Guarda siempre en UTF-8 sin BOM. **Excepción, y solo esta**: `packaging/windows/instalar.ps1`, `packaging/windows/desinstalar.ps1` y `packaging/windows/LEEME.txt` van en UTF-8 **con** BOM, porque los lee Windows PowerShell 5.1 y sin BOM se come las tildes. Nunca a `packaging/windows/INSTALAR.bat` (un BOM rompe su primera línea) ni a `packaging/windows/empaquetar.py`.
 - Android solo en el emulador: nunca toques móviles físicos ni la app `com.example.virtualpetkmp` sin que se te diga.
 - Nunca hagas push ni fusiones sin que se te diga. Un commit por tema.
@@ -37,7 +38,7 @@ Queda en `androidApp\build\outputs\bundle\release\androidApp-release.aab`. La 1.
 .\gradlew.bat :desktopApp:createDistributable
 python packaging\windows\empaquetar.py
 ```
-La app queda en `desktopApp\build\compose\binaries\main\app\Virtual Pet\`; el ZIP, en `dist\VirtualPet-<versión>-windows.zip`. Resultado real de la 1.14: **219 ficheros, 110,8 MB, SHA-256 `F57F4D16868ADBAE71E7DB9B6FE22BF49D0904874A3E0F61606DDCF2D4757B26`**, con `INSTALAR.bat`, `instalar.ps1`, `desinstalar.ps1`, `LEEME.txt` y `Virtual Pet/Virtual Pet.exe` dentro.
+La app queda en `desktopApp\build\compose\binaries\main\app\Virtual Pet\`; el ZIP, en `dist\VirtualPet-<versión>-windows.zip`. Resultado real de la 1.14: **219 ficheros, 110,8 MB, SHA-256 `6B5AC2326F7058522C4F05EB9FAB0A0FA406FAC8B79DAFBFDFF43252BD083D7E`**, con `INSTALAR.bat`, `instalar.ps1`, `desinstalar.ps1`, `LEEME.txt` y `Virtual Pet/Virtual Pet.exe` dentro.
 
 ## Trampas conocidas
 
