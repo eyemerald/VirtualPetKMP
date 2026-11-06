@@ -494,6 +494,7 @@
     <string name="deshacer">Undo</string>
     <string name="deshacer_aviso">You can undo: it will go back to how it was before importing. Anything you changed since then will be lost.</string>
     <string name="deshacer_ok">Undone: the data is back to how it was before importing.</string>
+    <string name="deshacer_vacio">There is nothing to undo: the previous copy had no data.</string>
 
     <!-- Buscador y vista de la lista de mascotas -->
     <string name="buscar_mascota">Search by name</string>

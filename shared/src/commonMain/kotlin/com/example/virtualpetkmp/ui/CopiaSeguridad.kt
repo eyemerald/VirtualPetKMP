@@ -52,6 +52,7 @@ import virtualpetkmp.shared.generated.resources.copia_menu_restaurar
 import virtualpetkmp.shared.generated.resources.deshacer
 import virtualpetkmp.shared.generated.resources.deshacer_aviso
 import virtualpetkmp.shared.generated.resources.deshacer_ok
+import virtualpetkmp.shared.generated.resources.deshacer_vacio
 import virtualpetkmp.shared.generated.resources.copia_ok
 import virtualpetkmp.shared.generated.resources.copia_ok_detalle
 import virtualpetkmp.shared.generated.resources.error_desconocido
@@ -86,7 +87,24 @@ enum class DialogoCopia { GUARDAR, RESTAURAR, IMPORTAR, EXPORTAR_MASCOTA }
  * No se guarda el texto del error sino el motivo: es lo mismo que hace el resto de la app con
  * `ErrorApp`, porque un mensaje guardado como texto se queda en el idioma que había al fallar.
  */
-internal enum class FalloCopia { ILEGIBLE, AJENO, NUEVO, DATOS, GUARDANDO, ESCRITURA, DESCONOCIDO }
+internal enum class FalloCopia {
+    ILEGIBLE,
+    AJENO,
+    NUEVO,
+    DATOS,
+    GUARDANDO,
+    ESCRITURA,
+    DESCONOCIDO,
+
+    /**
+     * Deshacer no se puede: la copia previa de la fusión no tenía datos.
+     *
+     * Es lo que pasa al fusionar en un dispositivo recién instalado: la copia que se guarda antes de
+     * fusionar está vacía y el lector de paquetes no la acepta como copia. No es un archivo roto, así
+     * que no se puede contar como "copia dañada" sin confundir al usuario.
+     */
+    DESHACER_VACIO
+}
 
 internal fun falloDeError(error: ErrorCopia): FalloCopia = when (error) {
     ErrorCopia.PAQUETE_ILEGIBLE -> FalloCopia.ILEGIBLE
@@ -106,6 +124,7 @@ internal fun textoDeFallo(fallo: FalloCopia, detalle: String): String {
         FalloCopia.NUEVO -> stringResource(Res.string.restaurar_error_nuevo)
         FalloCopia.DATOS -> stringResource(Res.string.restaurar_error_datos)
         FalloCopia.GUARDANDO -> stringResource(Res.string.restaurar_error_guardando)
+        FalloCopia.DESHACER_VACIO -> stringResource(Res.string.deshacer_vacio)
         FalloCopia.ESCRITURA, FalloCopia.DESCONOCIDO -> stringResource(Res.string.copia_error, detalleFinal)
     }
 }

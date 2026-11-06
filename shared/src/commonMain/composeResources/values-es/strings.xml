@@ -490,6 +490,7 @@
     <string name="deshacer">Deshacer</string>
     <string name="deshacer_aviso">Puedes deshacer: se volverá a como estaba antes de importar. Lo que hayas cambiado desde entonces se perderá.</string>
     <string name="deshacer_ok">Deshecho: los datos han vuelto a como estaban antes de importar.</string>
+    <string name="deshacer_vacio">No hay nada que deshacer: la copia anterior no tenía datos.</string>
 
     <!-- Buscador y vista de la lista de mascotas -->
     <string name="buscar_mascota">Buscar por nombre</string>

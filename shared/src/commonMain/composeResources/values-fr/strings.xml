@@ -491,6 +491,7 @@
     <string name="deshacer">Annuler</string>
     <string name="deshacer_aviso">Tu peux annuler : retour à l'état d'avant l'import. Ce que tu as modifié depuis sera perdu.</string>
     <string name="deshacer_ok">Annulé : les données sont revenues à l'état d'avant l'import.</string>
+    <string name="deshacer_vacio">Il n'y a rien à annuler : la copie précédente n'avait aucune donnée.</string>
 
     <!-- Buscador y vista de la lista de mascotas -->
     <string name="buscar_mascota">Rechercher par nom</string>

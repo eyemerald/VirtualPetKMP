@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.db.VirtualPetDatabase
 import com.example.virtualpetkmp.util.CarpetasApp
 import com.example.virtualpetkmp.util.copia.DecisionConflicto
+import com.example.virtualpetkmp.util.copia.ErrorCopia
 import com.example.virtualpetkmp.util.copia.ErrorCopiaException
 import com.example.virtualpetkmp.util.copia.ExportadorCopia
 import com.example.virtualpetkmp.util.copia.ImportadorCopia
@@ -132,6 +133,14 @@ fun DialogoImportarFusion(
 
                     leyendo -> Unit
 
+                    // Un fallo se enseña SIEMPRE, también cuando ya hay un resultado en pantalla:
+                    // deshacer puede fallar después de que la fusión saliera bien y, si el fallo se
+                    // callaba, el botón parecía no hacer nada.
+                    fallo != null -> Text(
+                        textoDeFallo(fallo!!.first, fallo!!.second),
+                        color = MaterialTheme.colorScheme.error
+                    )
+
                     resultado != null -> {
                         val r = resultado!!
                         if (r.filasNuevas + r.filasActualizadas == 0) {
@@ -231,6 +240,11 @@ fun DialogoImportarFusion(
                         color = MaterialTheme.colorScheme.error
                     )
 
+                    fallo != null -> Text(
+                        textoDeFallo(fallo!!.first, fallo!!.second),
+                        color = MaterialTheme.colorScheme.error
+                    )
+
                     else -> Text(stringResource(Res.string.fusion_explicacion))
                 }
             }
@@ -252,11 +266,16 @@ fun DialogoImportarFusion(
                                     deshecho = true
                                     alFusionar()
                                 } else {
-                                    fallo = (
-                                        (vuelta.exceptionOrNull() as? ErrorCopiaException)
-                                            ?.let { falloDeError(it.error) }
-                                            ?: FalloCopia.DESCONOCIDO
-                                        ) to vuelta.exceptionOrNull()?.message.orEmpty()
+                                    // Un dispositivo recién instalado guarda una copia previa vacía:
+                                    // el lector la rechaza y antes el botón no decía nada. Se
+                                    // distingue ese caso para poder explicarlo.
+                                    val error = (vuelta.exceptionOrNull() as? ErrorCopiaException)?.error
+                                    fallo = if (error == ErrorCopia.DATOS_INCOMPLETOS) {
+                                        FalloCopia.DESHACER_VACIO to ""
+                                    } else {
+                                        (error?.let { falloDeError(it) } ?: FalloCopia.DESCONOCIDO) to
+                                            vuelta.exceptionOrNull()?.message.orEmpty()
+                                    }
                                 }
                             }
                         }
