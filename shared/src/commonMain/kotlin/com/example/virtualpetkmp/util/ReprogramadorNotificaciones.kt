@@ -200,7 +200,12 @@ object ReprogramadorNotificaciones {
                     notificacionId = notificacionId,
                     tipo = TipoAviso.TRATAMIENTO,
                     uuid = uuid,
-                    hora = hora
+                    hora = hora,
+                    toma = toma,
+                    // La hora a la que va a sonar de verdad: si está pospuesta, la pospuesta. Es lo
+                    // que permite que la sincronización compruebe que sigue viva en vez de creerla
+                    // perdida.
+                    objetivoMillis = millis
                 )
             } catch (e: Exception) {
                 println("Error programando el recordatorio del tratamiento: ${e.message}")
@@ -307,7 +312,12 @@ object ReprogramadorNotificaciones {
                         fechaDisparoMillis = millis
                     )
                 )
-                AvisoProgramado(notificacionId = id, tipo = tipo, uuid = uuid)
+                AvisoProgramado(
+                    notificacionId = id,
+                    tipo = tipo,
+                    uuid = uuid,
+                    objetivoMillis = millis
+                )
             } else {
                 null
             }

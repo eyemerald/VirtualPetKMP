@@ -346,7 +346,17 @@ class ReprogramadorNotificacionesTest {
         val aviso = programador.avisos.getValue(RecordatoriosTratamiento.idNotificacion(2L))
         assertEquals(uuid, aviso.tratamientoUuid)
         assertEquals(
-            listOf(AvisoProgramado(aviso.notificacionId, TipoAviso.TRATAMIENTO, uuid, "08:30")),
+            listOf(
+                AvisoProgramado(
+                    notificacionId = aviso.notificacionId,
+                    tipo = TipoAviso.TRATAMIENTO,
+                    uuid = uuid,
+                    hora = "08:30",
+                    toma = 0,
+                    // La hora a la que sonará: la de la toma, que es lo que dice el registro.
+                    objetivoMillis = aviso.fechaDisparoMillis
+                )
+            ),
             puesto,
             "lo programado se devuelve para poder apuntarlo en el registro"
         )

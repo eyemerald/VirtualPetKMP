@@ -33,12 +33,19 @@ enum class TipoAviso {
  * @param tipo a qué tabla pertenece.
  * @param uuid identificador universal de la fila. Vacío solo en alarmas de versiones anteriores.
  * @param hora "HH:mm" de la toma, para los tratamientos; `null` en vacunas y preventivos.
+ * @param toma índice de la toma dentro del tratamiento (`null` en dosis y en filas antiguas).
+ *   Distingue las alarmas de un mismo tratamiento: posponer la de la mañana no toca la de la noche.
+ * @param objetivoMillis cuándo va a sonar **de verdad** esta alarma. Normalmente es la hora de la
+ *   toma de hoy, pero si el usuario la pospuso es la hora pospuesta: así el registro dice la
+ *   verdad, y una posposición viva se puede comprobar (y conservar) sin deducirla de la fecha.
  */
 data class AvisoProgramado(
     val notificacionId: Long,
     val tipo: TipoAviso,
     val uuid: String,
-    val hora: String? = null
+    val hora: String? = null,
+    val toma: Int? = null,
+    val objetivoMillis: Long? = null
 )
 
 /**
@@ -75,9 +82,12 @@ interface RegistroAvisos {
  * usuario, así que no necesita una tabla ni una migración del esquema. Una línea por aviso:
  *
  * ```
- * 2000000003|TRATAMIENTO|e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1|08:00
- * 1000000002|VACUNA|c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1|
+ * 2000000003|TRATAMIENTO|e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1|08:00|0|1779602400000
+ * 1000000002|VACUNA|c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1|||
  * ```
+ *
+ * Las dos últimas columnas ([AvisoProgramado.toma] y [AvisoProgramado.objetivoMillis]) son
+ * opcionales: una línea escrita por la 1.14 no las tiene y se sigue leyendo bien.
  *
  * Si el fichero no existe o tiene una línea rota, se ignora esa línea: un registro corrupto no
  * puede impedir que se programen los avisos.
@@ -106,7 +116,9 @@ object RegistroAvisosEnFichero : RegistroAvisos {
                 notificacionId = id,
                 tipo = tipo,
                 uuid = uuid,
-                hora = partes.getOrNull(3)?.trim()?.takeIf { it.isNotEmpty() }
+                hora = partes.getOrNull(3)?.trim()?.takeIf { it.isNotEmpty() },
+                toma = partes.getOrNull(4)?.trim()?.toIntOrNull(),
+                objetivoMillis = partes.getOrNull(5)?.trim()?.toLongOrNull()
             )
         }.toList()
     }
@@ -119,7 +131,9 @@ object RegistroAvisosEnFichero : RegistroAvisos {
                 aviso.notificacionId.toString(),
                 aviso.tipo.name,
                 aviso.uuid,
-                aviso.hora.orEmpty()
+                aviso.hora.orEmpty(),
+                aviso.toma?.toString().orEmpty(),
+                aviso.objetivoMillis?.toString().orEmpty()
             ).joinToString(SEPARADOR)
         }
         // Se escribe siempre, aunque quede vacío: así "borrar todo" deja el fichero limpio.

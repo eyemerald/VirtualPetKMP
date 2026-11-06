@@ -31,8 +31,18 @@ import kotlinx.datetime.toLocalDateTime
  * miedo al arrancar, al reiniciar el móvil, al actualizar la app, después de restaurar, de fusionar,
  * de deshacer, al borrar una mascota o cualquiera de sus registros y al editar.
  *
+ * **Un aviso pospuesto no se pierde.** Cancelar todo y volver a programar desde los datos podría
+ * parecer que se come la posposición —el momento nuevo solo vive en `AlarmManager` y en
+ * [Posposiciones]—, así que hay dos cosas que lo impiden: al programar cada toma se mira primero su
+ * posposición viva (la usa quien programa, ver [ReprogramadorNotificaciones.programarTratamiento]) y,
+ * al final, se retiran solo las posposiciones cuya alarma **no** ha quedado programada. Con eso, una
+ * posposición se mantiene mientras su tratamiento y su toma existan y su hora sea futura, y se
+ * cancela si el tratamiento se borró o la toma se quitó al editar.
+ *
  * @param registro dónde se apunta lo programado. Es una interfaz para que las pruebas usen una
  *   implementación en memoria y no el fichero real de la app.
+ * @param posposiciones de dónde se leen las posposiciones vivas. Igual que [registro], es una
+ *   interfaz para no tocar la carpeta de la app desde las pruebas.
  * @param ahora momento desde el que se calcula el próximo aviso de cada toma.
  * @return los avisos que han quedado programados, que es también lo que se ha escrito en el
  *   registro.
@@ -42,6 +52,7 @@ suspend fun sincronizarAvisos(
     db: VirtualPetDatabase,
     localizacion: Localizacion,
     registro: RegistroAvisos = RegistroAvisosEnFichero,
+    posposiciones: PosposicionesDeAvisos = PosposicionesEnFichero(),
     ahora: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 ): List<AvisoProgramado> {
     // 1. Cancelar TODO lo que la app cree que tiene programado, aunque su fila ya no exista. Es el
@@ -64,7 +75,10 @@ suspend fun sincronizarAvisos(
                 programador = programador,
                 tratamiento = tratamiento,
                 nombreMascota = nombreMascota,
-                ahora = ahora
+                ahora = ahora,
+                // Un aviso pospuesto sigue siendo el de esa toma: se programa su hora, no la del
+                // día siguiente. Es la pieza que hace que sincronizar no pierda la posposición.
+                posposicion = posposiciones::leer
             )
         }
     }
@@ -84,5 +98,11 @@ suspend fun sincronizarAvisos(
     // 3. Un solo registro, sin ids repetidos: dos filas distintas no pueden compartir una alarma.
     val unicos = esperados.distinctBy { it.notificacionId }
     registro.escribir(unicos)
+
+    // 4. Las posposiciones que han sobrevivido al paso 2 están en [unicos]; las demás son de tomas
+    //    que ya no existen (o de tratamientos borrados) y no pueden volver a sonar: se tiran para
+    //    que no queden ahí para siempre y no reprogramen una alarma a una hora vieja.
+    posposiciones.depurar(unicos.map { it.notificacionId }.toSet())
+
     return unicos
 }

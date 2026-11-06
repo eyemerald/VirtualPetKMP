@@ -16,6 +16,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
+import kotlinx.datetime.toInstant
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -39,17 +40,27 @@ class SincronizacionAvisosTest {
     private val localizacion = Localizacion.desdeRegion("es-ES")
     private val ahora = LocalDateTime(2026, 5, 20, 7, 0)
 
+    private val zona = TimeZone.currentSystemDefault()
+
+    /** Milisegundos de un momento de la prueba, para hablar de posposiciones. */
+    private fun millisDe(momento: LocalDateTime): Long = momento.toInstant(zona).toEpochMilliseconds()
+
     /** Programador de mentira: apunta qué se programa y qué se cancela, sin tocar Android. */
     private class ProgramadorDePrueba : ProgramadorNotificaciones {
         val programadas = linkedMapOf<Long, AvisoProgramado>()
+
+        /** A qué hora quedó cada alarma: es lo que distingue una pospuesta de la del día siguiente. */
+        val millis = mutableMapOf<Long, Long>()
         val canceladas = mutableListOf<Long>()
 
         override fun programar(aviso: AvisoDosis) {
             programadas[aviso.notificacionId] = AvisoProgramado(
                 notificacionId = aviso.notificacionId,
                 tipo = aviso.tipo,
-                uuid = aviso.uuid
+                uuid = aviso.uuid,
+                objetivoMillis = aviso.fechaDisparoMillis
             )
+            millis[aviso.notificacionId] = aviso.fechaDisparoMillis
         }
 
         override fun programarTratamiento(aviso: AvisoTratamiento) {
@@ -57,8 +68,10 @@ class SincronizacionAvisosTest {
                 notificacionId = aviso.notificacionId,
                 tipo = TipoAviso.TRATAMIENTO,
                 uuid = aviso.tratamientoUuid,
-                hora = aviso.hora
+                hora = aviso.hora,
+                objetivoMillis = aviso.fechaDisparoMillis
             )
+            millis[aviso.notificacionId] = aviso.fechaDisparoMillis
         }
 
         override fun cancelar(id: Long) {
@@ -67,6 +80,7 @@ class SincronizacionAvisosTest {
 
         fun olvidar() {
             programadas.clear()
+            millis.clear()
             canceladas.clear()
         }
     }
@@ -117,11 +131,14 @@ class SincronizacionAvisosTest {
             .first { it.uuid == uuid }.id
     }
 
-    private suspend fun sincronizar() = sincronizarAvisos(
+    private suspend fun sincronizar(
+        posposiciones: PosposicionesDeAvisos = PosposicionesEnMemoria()
+    ) = sincronizarAvisos(
         programador = programador,
         db = db,
         localizacion = localizacion,
         registro = registro,
+        posposiciones = posposiciones,
         ahora = ahora
     )
 
@@ -304,5 +321,110 @@ class SincronizacionAvisosTest {
             "la alarma del tratamiento borrado tiene que cancelarse"
         )
         assertTrue(registro.actuales.isEmpty())
+    }
+
+    /**
+     * La pregunta que abrió este trabajo: **¿sincronizar se come el aviso pospuesto?** No.
+     *
+     * Sincronizar cancela todo y reprograma desde los datos, así que la posposición (que solo vive en
+     * `AlarmManager` y en `posposiciones.txt`) podría perderse en el camino. No se pierde porque
+     * quien programa cada toma mira antes su posposición viva: la alarma vuelve a quedar a la hora
+     * pospuesta, el registro lo dice con `objetivoMillis` y la posposición sigue guardada.
+     */
+    @Test
+    fun `un aviso pospuesto sigue puesto despues de sincronizar`() = runBlocking {
+        val mascotaId = crearMascota("Luna", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        val tratamiento = crearTratamiento(
+            mascotaId = mascotaId,
+            uuid = "e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1",
+            horas = "08:00",
+            vecesAlDia = 1
+        )
+        val idAviso = RecordatoriosTratamiento.idNotificacion(tratamiento, 0)
+        // Se pulsó "Posponer 30 min" a las 08:00: la alarma tiene que volver a las 08:30.
+        val pospuesto = millisDe(LocalDateTime(2026, 5, 20, 8, 30))
+        val posposiciones = PosposicionesEnMemoria(mapOf(idAviso to pospuesto))
+
+        val quedan = sincronizar(posposiciones)
+
+        assertEquals(listOf(idAviso), quedan.map { it.notificacionId }, "la toma sigue teniendo su alarma")
+        assertEquals(
+            pospuesto,
+            programador.millis[idAviso],
+            "después de sincronizar tiene que sonar a la hora pospuesta, no a las 08:00 de mañana"
+        )
+        assertEquals(
+            pospuesto,
+            quedan.single().objetivoMillis,
+            "el registro tiene que decir a qué hora va a sonar de verdad"
+        )
+        assertEquals(0, quedan.single().toma, "y de qué toma es")
+        assertEquals(
+            mapOf(idAviso to pospuesto),
+            posposiciones.actuales,
+            "la posposición no se puede borrar al sincronizar"
+        )
+    }
+
+    /**
+     * Lo contrario: si la entidad se borró, su posposición tampoco puede volver.
+     *
+     * Sin esto, la posposición de un tratamiento borrado se quedaba en `posposiciones.txt` para
+     * siempre y, si alguna vez se programaba una alarma con ese id, volvía a sonar a una hora vieja.
+     */
+    @Test
+    fun `un aviso pospuesto de una entidad borrada se cancela y se tira`() = runBlocking {
+        val mascotaId = crearMascota("Luna", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        val tratamiento = crearTratamiento(
+            mascotaId = mascotaId,
+            uuid = "e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1",
+            horas = "08:00",
+            vecesAlDia = 1
+        )
+        val idAviso = RecordatoriosTratamiento.idNotificacion(tratamiento, 0)
+        sincronizar(PosposicionesEnMemoria(mapOf(idAviso to millisDe(LocalDateTime(2026, 5, 20, 8, 30)))))
+        programador.olvidar()
+
+        // Borrar la mascota arrastra el tratamiento: el pospuesto se queda sin dueño.
+        val posposiciones = PosposicionesEnMemoria(mapOf(idAviso to millisDe(LocalDateTime(2026, 5, 20, 8, 30))))
+        MascotaRepository(db).deleteMascota(mascotaId)
+        val quedan = sincronizar(posposiciones)
+
+        assertTrue(quedan.isEmpty(), "sin tratamiento no hay nada que programar")
+        assertTrue(programador.canceladas.contains(idAviso), "la alarma pospuesta tiene que cancelarse")
+        assertTrue(
+            posposiciones.actuales.isEmpty(),
+            "y su posposición no puede quedarse guardada: [${posposiciones.actuales}]"
+        )
+        assertTrue(registro.actuales.isEmpty())
+    }
+
+    /** Tampoco sobrevive la posposición de una toma que se quitó al editar el horario. */
+    @Test
+    fun `un aviso pospuesto de una toma que ya no existe se cancela`() = runBlocking {
+        val mascotaId = crearMascota("Luna", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        val tratamiento = crearTratamiento(
+            mascotaId = mascotaId,
+            uuid = "e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1",
+            horas = "08:00",
+            vecesAlDia = 1
+        )
+        // Quedó en el fichero de cuando el tratamiento tenía dos tomas.
+        val tomaDeMas = RecordatoriosTratamiento.idNotificacion(tratamiento, 1)
+        val posposiciones = PosposicionesEnMemoria(
+            mapOf(tomaDeMas to millisDe(LocalDateTime(2026, 5, 20, 21, 10)))
+        )
+
+        val quedan = sincronizar(posposiciones)
+
+        assertEquals(
+            listOf(RecordatoriosTratamiento.idNotificacion(tratamiento, 0)),
+            quedan.map { it.notificacionId },
+            "solo la toma que existe"
+        )
+        assertTrue(
+            posposiciones.actuales.isEmpty(),
+            "la posposición de la toma de más no puede quedarse: [${posposiciones.actuales}]"
+        )
     }
 }

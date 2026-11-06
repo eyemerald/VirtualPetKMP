@@ -40,7 +40,7 @@ class PosposicionesTest {
 
     @Test
     fun `una posposicion guardada se lee mientras no haya pasado`() {
-        Posposiciones.guardar(tratamientoId = 7L, avisoMillis = 2_000L, carpeta = carpeta.absolutePath)
+        Posposiciones.guardar(notificacionId = 7L, avisoMillis = 2_000L, carpeta = carpeta.absolutePath)
 
         assertEquals(2_000L, Posposiciones.leer(7L, ahora = 1_000L, carpeta = carpeta.absolutePath))
     }
