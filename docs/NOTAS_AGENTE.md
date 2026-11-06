@@ -30,14 +30,14 @@ Queda en `androidApp\build\outputs\apk\release\androidApp-release.apk`; sin `key
 ```
 .\gradlew.bat :androidApp:bundleRelease
 ```
-Queda en `androidApp\build\outputs\bundle\release\androidApp-release.aab`. La 1.14, `versionCode = 15` y `versionName = "1.14"` (que está dentro del manifiesto del `.aab`): 17.211.433 bytes, SHA-256 `6FEBC184E3F5BDC6A40163597B728FA4A26AA8CD35C9A24AE39272B6B030C6B2`.
+Queda en `androidApp\build\outputs\bundle\release\androidApp-release.aab`. La 1.14, `versionCode = 15` y `versionName = "1.14"` (que está dentro del manifiesto del `.aab`): 17.210.898 bytes, SHA-256 `3BE09E7A0F23F8A0DF87BA323D45173296A136EC7A8856CF5654E5BB614B7F74`.
 
 **ZIP de Windows** — VERIFICADO: `createDistributable` compila y el script empaqueta, comprueba los cinco ficheros críticos del ZIP y no encuentra corrupción.
 ```
 .\gradlew.bat :desktopApp:createDistributable
 python packaging\windows\empaquetar.py
 ```
-La app queda en `desktopApp\build\compose\binaries\main\app\Virtual Pet\`; el ZIP, en `dist\VirtualPet-<versión>-windows.zip`. Resultado real de la 1.14: **219 ficheros, 110,8 MB, SHA-256 `5F0D278CE512CCBFA22EAC28264172ECA7A3452E852178B03D0A914A48345DC7`**, con `INSTALAR.bat`, `instalar.ps1`, `desinstalar.ps1`, `LEEME.txt` y `Virtual Pet/Virtual Pet.exe` dentro.
+La app queda en `desktopApp\build\compose\binaries\main\app\Virtual Pet\`; el ZIP, en `dist\VirtualPet-<versión>-windows.zip`. Resultado real de la 1.14: **219 ficheros, 110,8 MB, SHA-256 `F57F4D16868ADBAE71E7DB9B6FE22BF49D0904874A3E0F61606DDCF2D4757B26`**, con `INSTALAR.bat`, `instalar.ps1`, `desinstalar.ps1`, `LEEME.txt` y `Virtual Pet/Virtual Pet.exe` dentro.
 
 ## Trampas conocidas
 
