@@ -1,4 +1,4 @@
-# Instalador de Virtual Pet para Windows.
+﻿# Instalador de Virtual Pet para Windows.
 #
 # Instala por usuario (en %LOCALAPPDATA%\Programs), así que **no pide permisos de administrador** y
 # no toca nada del sistema fuera de tus accesos directos y su entrada en "Aplicaciones instaladas".
@@ -12,7 +12,7 @@ $ErrorActionPreference = "Stop"
 $nombre = "Virtual Pet"
 # Versión que se muestra en "Aplicaciones instaladas". jpackage no deja la versión en ningún sitio
 # que se pueda leer en tiempo de instalación, así que se escribe aquí en cada entrega.
-$version = "1.12"
+$version = "1.14"
 $origen = Join-Path $PSScriptRoot $nombre
 $destino = Join-Path $env:LOCALAPPDATA "Programs\$nombre"
 $ejecutable = Join-Path $destino "$nombre.exe"
@@ -25,6 +25,17 @@ if (-not (Test-Path (Join-Path $origen "$nombre.exe"))) {
 }
 
 Write-Host "Instalando $nombre en $destino ..."
+
+# Cerrar la app si está abierta, antes de copiar: con el proceso vivo, Windows deja los .exe y las
+# .dll bloqueados y robocopy no puede reemplazarlos (es el mismo bloque que usa desinstalar.ps1).
+Get-Process -Name $nombre -ErrorAction SilentlyContinue | ForEach-Object {
+    Write-Host "  cerrando la aplicación (proceso $($_.Id))"
+    $_.CloseMainWindow() | Out-Null
+    Start-Sleep -Milliseconds 800
+    if (-not $_.HasExited) { $_.Kill() }
+}
+Start-Sleep -Milliseconds 500
+
 New-Item -ItemType Directory -Force -Path $destino | Out-Null
 
 # robocopy devuelve 0-7 cuando ha ido bien (1 = copió ficheros).

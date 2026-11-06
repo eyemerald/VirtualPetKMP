@@ -1,4 +1,4 @@
-# Desinstalador de Virtual Pet (Windows).
+﻿# Desinstalador de Virtual Pet (Windows).
 #
 # Quita la aplicación, sus accesos directos y su entrada en "Aplicaciones instaladas".
 # **No borra tus datos**: están en %USERPROFILE%\.virtualpet (mascotas, historial, copias de
