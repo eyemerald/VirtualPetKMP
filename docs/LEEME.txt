@@ -1,0 +1,65 @@
+VIRTUAL PET PARA WINDOWS
+========================
+
+Cómo instalarlo
+1. Descarga el instalador (VirtualPet-x.y.z-setup.exe) y ábrelo con doble clic.
+2. Siguiente, siguiente, instalar: no pide administrador y no hay que instalar nada más, porque la
+   aplicación lleva su propio Java dentro.
+3. Al terminar deja marcada la casilla "Abrir Virtual Pet" y la app se abre sola.
+
+Se instala solo para tu usuario, en %LOCALAPPDATA%\Programs\Virtual Pet. Crea un acceso directo en el
+menú Inicio y, si marcas la casilla, también en el escritorio. Para quitarlo, usa "Desinstalar Virtual
+Pet" del menú Inicio o el botón Desinstalar de "Aplicaciones instaladas".
+
+
+Si Windows avisa al instalar
+- "Windows protegió su PC" (SmartScreen): pulsa "Más información" y luego "Ejecutar de todas formas".
+  Sale porque el programa no está firmado con un certificado de pago; el SHA-256 del instalador va en
+  el mensaje de entrega, por si quieres comprobarlo.
+- El instalador es un instalador normal de Windows: no abre ventanas negras, no ejecuta PowerShell y
+  no pide permisos de administrador.
+
+
+Dónde están tus datos
+- En %USERPROFILE%\.virtualpet (base de datos, fotos, informes y copias de seguridad).
+- Instalar una versión nueva no toca esa carpeta: tus mascotas siguen ahí, con su historial.
+- Desinstalar la aplicación NO borra esos datos, y el desinstalador te lo recuerda y te dice dónde
+  están. Si quieres borrarlos, elimina la carpeta .virtualpet a mano.
+
+
+Cómo hacer una copia (hazla antes de tocar el ordenador)
+1. En la app: ajustes (la rueda, arriba a la derecha) → "Copia de seguridad".
+2. "Guardar copia" y elige dónde: un pendrive, una carpeta de OneDrive o de Drive…
+3. El archivo se llama VirtualPet-AAAA-MM-DD.vpet y lleva TODO: mascotas, historial, fotos e
+   informes. Guárdalo fuera del PC: si el ordenador se rompe, ese archivo es lo único que hace falta
+   para recuperarlo todo.
+4. Para recuperarlo: ajustes → "Restaurar copia" y elige el .vpet. La app guarda sola una copia de lo
+   que había antes de restaurar, por si te equivocas (se puede deshacer desde el aviso).
+
+
+Cómo actualizar sin perder datos
+1. Haz la copia del apartado anterior (por si acaso).
+2. Abre el instalador nuevo y sigue los mismos pasos: se instala ENCIMA de la versión anterior.
+3. Abre la app: tus mascotas siguen ahí, porque los datos viven en %USERPROFILE%\.virtualpet.
+No hace falta desinstalar antes. Si un día la app no arranca después de actualizar, desinstala, vuelve
+a instalar la versión anterior y restaura la copia del paso 1.
+
+
+Qué quiere decir "pendiente"
+- Una vacuna o un preventivo está pendiente si su próxima dosis ya pasó o cae dentro de los próximos
+  30 días. Es la misma cuenta en los dos filtros de la lista y en el resumen de la ficha.
+- Si apuntas dos veces la MISMA vacuna (o el mismo preventivo) con el mismo nombre en la misma
+  mascota, cuenta solo el último registro: una dosis vieja no sale como vencida si hay una más
+  reciente, y ese nombre no se cuenta dos veces.
+
+
+Avisos y recordatorios
+- Solo funcionan en la versión de Android. En Windows la app lleva la cuenta y te lo enseña en la
+  lista y en la ficha, pero no programa notificaciones: aquí no va a sonar nada.
+
+
+Qué incluye
+- La aplicación con su propio Java incluido: no hay que instalar nada más.
+- Tus datos son locales: la app no se conecta a internet.
+- Un tratamiento puede tener varias tomas al día (cada una con su hora y su aviso), y la lista de
+  mascotas tiene dos filtros para ver de un vistazo quién tiene vacunas o preventivos pendientes.
