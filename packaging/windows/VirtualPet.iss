@@ -104,6 +104,13 @@ Name: "{userdesktop}\Virtual Pet"; Filename: "{app}\Virtual Pet.exe"; Comment: "
 [Run]
 Filename: "{app}\Virtual Pet.exe"; Description: "{cm:AbrirApp}"; Flags: nowait postinstall skipifsilent
 
+[UninstallDelete]
+; Al desinstalar se borran SOLO las dos carpetas que crea este instalador. Nada de borrar {app} entero:
+; así el desinstalador no puede llevarse por delante ninguna otra carpeta aunque los datos del
+; desinstalador estuvieran manipulados. Inno quita {app} al final, y solo si se ha quedado vacía.
+Type: filesandordirs; Name: "{app}\app"
+Type: filesandordirs; Name: "{app}\runtime"
+
 [Code]
 { Cierra la aplicación si está abierta: con el proceso vivo, Windows deja bloqueados el .exe y las
   .dll del runtime y la instalación o la desinstalación fallarían a medias.
@@ -147,49 +154,6 @@ begin
     SW_HIDE, ewWaitUntilTerminated, Codigo);
 end;
 
-{ Deja la carpeta del programa limpia al desinstalar, pero SOLO si de verdad es la carpeta de la app.
-  Antes de borrar se comprueban dos cosas:
-    1. que la carpeta se llame "Virtual Pet", y
-    2. que no esté colgando de una carpeta del sistema (Windows, System32, tu perfil, Escritorio,
-       Documentos, Program Files, la raíz de una unidad...).
-  Si alguien manipuló los datos del desinstalador y la carpeta apunta a otro sitio, no se borra nada: se
-  apunta en el registro del desinstalador y se sigue. Los datos del usuario
-  (%USERPROFILE%\.virtualpet) no están aquí dentro y no se tocan nunca. }
-function PadreProtegido(Padre: String): Boolean;
-begin
-  Result := False;
-  if CompareText(Padre, RemoveBackslashUnlessRoot(ExpandConstant('{win}'))) = 0 then exit;
-  if CompareText(Padre, RemoveBackslashUnlessRoot(ExpandConstant('{sys}'))) = 0 then exit;
-  if CompareText(Padre, RemoveBackslashUnlessRoot(ExpandConstant('{userprofile}'))) = 0 then exit;
-  if CompareText(Padre, RemoveBackslashUnlessRoot(ExpandConstant('{localappdata}'))) = 0 then exit;
-  if CompareText(Padre, RemoveBackslashUnlessRoot(ExpandConstant('{userdesktop}'))) = 0 then exit;
-  if CompareText(Padre, RemoveBackslashUnlessRoot(ExpandConstant('{userdocs}'))) = 0 then exit;
-  if CompareText(Padre, RemoveBackslashUnlessRoot(ExpandConstant('{commonappdata}'))) = 0 then exit;
-  if CompareText(Padre, RemoveBackslashUnlessRoot(ExpandConstant('{sd}'))) = 0 then exit;
-  if CompareText(Padre, RemoveBackslashUnlessRoot(ExpandConstant('{pf}'))) = 0 then exit;
-  if CompareText(Padre, RemoveBackslashUnlessRoot(ExpandConstant('{pf32}'))) = 0 then exit;
-  Result := True;
-end;
-
-procedure BorrarCarpetaDelPrograma;
-var
-  Carpeta: String;
-begin
-  Carpeta := RemoveBackslashUnlessRoot(ExpandConstant('{app}'));
-  if CompareText(ExtractFileName(Carpeta), 'Virtual Pet') <> 0 then
-  begin
-    Log('No se borra "' + Carpeta + '": la carpeta no se llama "Virtual Pet".');
-    exit;
-  end;
-  if not PadreProtegido(RemoveBackslashUnlessRoot(ExtractFileDir(Carpeta))) then
-  begin
-    Log('No se borra "' + Carpeta + '": está colgando de una carpeta del sistema.');
-    exit;
-  end;
-  if DirExists(Carpeta) then
-    DelTree(Carpeta, True, True, True);
-end;
-
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   CerrarAplicacion;
@@ -199,13 +163,21 @@ end;
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   Mensaje: String;
+  Datos: String;
 begin
   if CurUninstallStep = usUninstall then
     CerrarAplicacion;
   if CurUninstallStep = usPostUninstall then
   begin
-    BorrarCarpetaDelPrograma;
-    Mensaje := FmtMessage(ExpandConstant('{cm:DatosSeQuedan}'), [ExpandConstant('{userprofile}\.virtualpet')]);
+    { La constante del perfil solo existe en el instalador: en el desinstalador, ExpandConstant
+      lanzaba "Unknown constant userprofile". Se usa la variable de entorno, que sí está. }
+    Datos := GetEnv('USERPROFILE');
+    if Datos <> '' then
+      Datos := Datos + '\.virtualpet';
+    Log('Datos que se conservan: ' + Datos);
+    Mensaje := FmtMessage(ExpandConstant('{cm:DatosSeQuedan}'), [Datos]);
+    Log(Mensaje);
+
     { SuppressibleMsgBox y no MsgBox: en una desinstalación silenciosa (/VERYSILENT) no puede
       quedarse esperando a que alguien pulse Aceptar. }
     SuppressibleMsgBox(Mensaje, mbInformation, MB_OK, IDOK);
