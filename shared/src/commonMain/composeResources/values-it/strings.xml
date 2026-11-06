@@ -494,8 +494,8 @@
     <string name="buscar_mascota_sin_resultados">Nessun animale corrisponde a quel nome.</string>
     <string name="a11y_ver_como_listado">Mostra come elenco</string>
     <string name="a11y_ver_como_tarjetas">Mostra come schede</string>
-    <string name="filtro_vacunas_pendientes">Vaccinazioni: scadute o entro 30 giorni</string>
-    <string name="filtro_preventivos_pendientes">Preventivi: scaduti o entro 30 giorni</string>
+    <string name="filtro_vacunas_pendientes">Vaccini in sospeso</string>
+    <string name="filtro_preventivos_pendientes">Preventivi in sospeso</string>
     <string name="filtro_sin_resultados">Nessun animale corrisponde al filtro</string>
     <string name="filtro_vencida">scaduta il %1$s</string>
     <string name="filtro_proxima">prevista il %1$s</string>

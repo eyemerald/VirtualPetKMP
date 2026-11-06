@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.virtualpetkmp.Mascota
@@ -657,6 +658,12 @@ private fun IndicadorPeso(
  *
  * Van como chips y no como un desplegable porque son dos estados que se ven de un vistazo: quien
  * entra a revisar quiere saber si hay algo pendiente **sin** tener que abrir nada.
+ *
+ * Los dos chips **se reparten la fila a partes iguales** (`weight`) y su texto va en una sola línea y
+ * con la letra un punto más pequeña. Antes cada chip medía lo que pedía su texto, así que, al
+ * traducirlo, el de la derecha se partía en dos líneas y quedaba más estrecho y más alto que el de
+ * la izquierda: la fila se descuadraba. Con el reparto y una sola línea, los dos cuadros son siempre
+ * iguales, y la etiqueta corta (sin "vencidas o en 30 días") cabe en los seis idiomas.
  */
 @Composable
 private fun FiltrosPendientes(
@@ -670,21 +677,37 @@ private fun FiltrosPendientes(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         FilterChip(
             selected = filtroVacunas,
             onClick = { onVacunas(!filtroVacunas) },
+            modifier = Modifier.weight(1f),
             label = {
-                Text("${stringResource(Res.string.filtro_vacunas_pendientes)} ($cuantasVacunas)")
+                Text(
+                    text = "${stringResource(Res.string.filtro_vacunas_pendientes)} ($cuantasVacunas)",
+                    style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         )
         FilterChip(
             selected = filtroPreventivos,
             onClick = { onPreventivos(!filtroPreventivos) },
+            modifier = Modifier.weight(1f),
             label = {
-                Text("${stringResource(Res.string.filtro_preventivos_pendientes)} ($cuantosPreventivos)")
+                Text(
+                    text = "${stringResource(Res.string.filtro_preventivos_pendientes)} ($cuantosPreventivos)",
+                    style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         )
     }

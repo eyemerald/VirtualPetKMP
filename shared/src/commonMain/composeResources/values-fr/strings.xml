@@ -498,8 +498,8 @@
     <string name="buscar_mascota_sin_resultados">Aucun animal ne correspond à ce nom.</string>
     <string name="a11y_ver_como_listado">Afficher en liste</string>
     <string name="a11y_ver_como_tarjetas">Afficher en cartes</string>
-    <string name="filtro_vacunas_pendientes">Vaccins : en retard ou sous 30 jours</string>
-    <string name="filtro_preventivos_pendientes">Préventifs : en retard ou sous 30 jours</string>
+    <string name="filtro_vacunas_pendientes">Vaccins en attente</string>
+    <string name="filtro_preventivos_pendientes">Préventifs en attente</string>
     <string name="filtro_sin_resultados">Aucun animal ne correspond au filtre</string>
     <string name="filtro_vencida">en retard depuis le %1$s</string>
     <string name="filtro_proxima">prévue le %1$s</string>

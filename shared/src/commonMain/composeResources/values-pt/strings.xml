@@ -497,8 +497,8 @@
     <string name="buscar_mascota_sin_resultados">Nenhum animal corresponde a esse nome.</string>
     <string name="a11y_ver_como_listado">Ver como lista</string>
     <string name="a11y_ver_como_tarjetas">Ver como cartões</string>
-    <string name="filtro_vacunas_pendientes">Vacinas: vencidas ou em 30 dias</string>
-    <string name="filtro_preventivos_pendientes">Preventivos: vencidos ou em 30 dias</string>
+    <string name="filtro_vacunas_pendientes">Vacinas pendentes</string>
+    <string name="filtro_preventivos_pendientes">Preventivos pendentes</string>
     <string name="filtro_sin_resultados">Nenhum animal cumpre o filtro</string>
     <string name="filtro_vencida">vencida a %1$s</string>
     <string name="filtro_proxima">próxima a %1$s</string>
