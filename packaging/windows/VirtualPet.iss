@@ -1,4 +1,4 @@
-; Instalador de Virtual Pet para Windows (Inno Setup 6).
+﻿; Instalador de Virtual Pet para Windows (Inno Setup 6).
 ;
 ; Sustituye al INSTALAR.bat + instalar.ps1 de antes: no abre una ventana negra, no pide
 ; administrador (se instala por usuario en %LOCALAPPDATA%\Programs\Virtual Pet), no descarga nada, no
