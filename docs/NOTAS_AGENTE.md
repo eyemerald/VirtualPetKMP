@@ -38,11 +38,12 @@ Queda en `androidApp\build\outputs\bundle\release\androidApp-release.aab`. La 1.
 .\gradlew.bat :desktopApp:createDistributable
 python packaging\windows\empaquetar.py
 ```
-La app queda en `desktopApp\build\compose\binaries\main\app\Virtual Pet\`; el ZIP, en `dist\VirtualPet-<versión>-windows.zip`. Resultado real de la 1.14: **219 ficheros, 110,8 MB, SHA-256 `6B5AC2326F7058522C4F05EB9FAB0A0FA406FAC8B79DAFBFDFF43252BD083D7E`**, con `INSTALAR.bat`, `instalar.ps1`, `desinstalar.ps1`, `LEEME.txt` y `Virtual Pet/Virtual Pet.exe` dentro.
+La app queda en `desktopApp\build\compose\binaries\main\app\Virtual Pet\`; el ZIP, en `dist\VirtualPet-<versión>-windows.zip`. Resultado real de la 1.14: **219 ficheros, 110,8 MB, SHA-256 `B7D9F43A00E4184B1E8444BCF02E2D678701B55FB9EA6A7750DEDD84D0572D22`**, con `INSTALAR.bat`, `instalar.ps1`, `desinstalar.ps1`, `LEEME.txt` y `Virtual Pet/Virtual Pet.exe` dentro.
 
 ## Trampas conocidas
 
 - **La versión va a mano en dos sitios.** No sale sola del `versionName` de Android: al subir de versión hay que cambiarla en `packaging/windows/empaquetar.py` (**línea 18**, el nombre del ZIP) **y** en `packaging/windows/instalar.ps1` (`$version`, lo que se ve en "Aplicaciones instaladas"). Si se cambia solo una, el ZIP y la versión instalada dicen cosas distintas.
+- **El icono `.ico` va con transparencia y sale de `logo.png`.** Son siete PNG de 32 bits (de 16 a 256 px) y el canal alfa se respeta: si se aplana sobre blanco, el ejecutable y los accesos directos salen con un cuadro detrás (fue el fallo de la 1.14, ya corregido). Se usa el logo del **corazón solo** (`desktopApp\src\main\resources\logo.png`), sin el nombre: el nombre ya lo pone la etiqueta del acceso directo.
 - **Un BOM rompe la primera línea de un `.bat`** (y el shebang de un `.py`): de ahí que `INSTALAR.bat` y `empaquetar.py` se guarden sin BOM aunque los `.ps1` y el `LEEME.txt` sí lo lleven.
 - **Un aviso pospuesto vive en `posposiciones.txt`**, con el **id de la alarma** como clave (que ya incluye la toma: posponer la de la mañana no toca la de la noche). `sincronizarAvisos()` **no lo borra**: lo conserva mientras su tratamiento y su toma sigan existiendo y la hora sea futura, y retira solo las posposiciones de tratamientos borrados o de tomas que se quitaron al editar el horario.
 - **Deshacer sobre una base vacía no puede hacer nada**: la copia previa de una fusión hecha en un dispositivo recién instalado no tiene datos y el lector la rechaza (`DATOS_INCOMPLETOS`). Desde la 1.14 se avisa con un texto propio (`deshacer_vacio`) en vez de dejar el botón sin respuesta; los datos fusionados no se tocan.
